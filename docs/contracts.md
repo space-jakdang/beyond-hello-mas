@@ -50,3 +50,18 @@ Resource v2는 `eligibility_tags`, `active`, 만료일 포함 `valid_until`을 �
 임시 `provisional-1` 정책은 단계 1~2=low, 3=medium, 4~5=high로 매핑합니다. `map_needs`는 명시적 원인 라벨만 사용하며 미상 원인은 빈 목록입니다. 임상적 위험 환산이 아니며 `MatchPolicy`로 수정할 때 버전과 hash를 기록합니다. 단계가 없으면 낮은 강도로 임의 매핑하지 않습니다.
 
 CLI: `uv run python -m scripts.match request.json --catalog data/sample/resources.csv`. 출력에는 비공개 입력이 반영될 수 있으므로 local 파생 결과는 `runtime/local/`에만 보관합니다. 추천은 실제 외부 전달이 아닙니다.
+
+## 영속 이벤트와 SSE
+
+단일 로컬 서버가 `runtime/{sample|local}/events.sqlite3`에 run/trace/alert/클라이언트 수신을 저장합니다. 쓰기는 SQLite `BEGIN IMMEDIATE` 트랜잭션, 외래키 및 유일성 제약을 사용합니다. 알림과 감사 trace는 함께 커밋되거나 함께 롤백됩니다. run의 data_mode가 저장소와 다르면 거부합니다. 다중 서버/사용자 인증을 제공하는 배포 서비스는 아닙니다.
+
+- `POST /runs`: Run 등록, `GET /runs` 및 `/runs/{id}`: 조회.
+- `POST /runs/{id}/alerts`: 알림 생성(type, approval_id, sim_ts), `GET /alerts`: cursor 순 조회.
+- `GET /runs/{id}/traces`: run별 seq 순 조회. 조회는 after/limit으로 페이지를 나눕니다.
+- `GET /runs/{id}/traces/stream`, `GET /alerts/stream`: SSE. `Last-Event-ID` 또는 after 이후 이벤트를 최대 100개씩 DB에서 재조회하며 15초 heartbeat를 전송합니다. 알림 cursor는 모든 run에 걸쳐 증가합니다. 느린 구독자용 무제한 메모리 큐를 만들지 않으며 연결 종료 시 generator가 취소됩니다.
+- `POST /alerts/{id}/receipt`: client_id, browser_received_at, sim_ts. client_id는 브라우저별 안정적인 ID이며 같은 알림/클라이언트의 최초 기록을 보존합니다. 브라우저 시계 원시값과 UTC 서버 수신 시각은 분리합니다.
+- `POST /alerts/{id}/acknowledge`: client_id, operator, sim_ts. 그 클라이언트의 수신 기록이 있어야 합니다. 사람의 확인은 승인 결정과 별개이며 최초 확인과 감사 trace만 기록합니다.
+
+run 등록부터 서버 receipt까지는 같은 프로세스의 단조 시계로 `run_to_receipt_ms`를 계산합니다. 재시작 후 시계 원점이 달라진 실행은 null로 남깁니다. 브라우저 시각을 빼서 시스템 지연을 계산하지 않으며 미수신·재시작 결측을 0으로 보고하지 않습니다. 시뮬레이션 시각은 성능 지연에 쓰지 않습니다. 아직 실제 브라우저 수신 지연 평가나 그래프 실행은 구현되지 않았습니다.
+
+SQLite 연결/트랜잭션 의미는 [Python 공식 문서](https://docs.python.org/3/library/sqlite3.html)를 따릅니다.
