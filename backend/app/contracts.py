@@ -53,6 +53,41 @@ class Segment(Contract):
         return self
 
 
+AgeGroup = Literal["youth", "midlife", "prime", "elderly"]
+
+
+class SegmentV3(Contract):
+    schema_version: Literal["3"] = "3"
+    ym: Month | None  # None means the source is a period aggregate, not a monthly observation.
+    sgg: District
+    dong_cd: Code
+    dong_nm: Nonempty
+    sex: Literal["M", "F"]
+    age_group: AgeGroup
+    source_bands: dict[Nonempty, list[Nonempty]] = Field(min_length=1)
+    index_name: Literal["S1", "G_seoul", "G_gangnam_rank", "G_chuncheon", "v3"]
+    risk_direction: Literal["low_is_risk", "high_is_risk"]
+    value: float | None
+    residents: float | None = Field(default=None, ge=0)
+    flags: list[Nonempty] = Field(default_factory=list)
+    source_period: Nonempty
+    source_file: Nonempty
+    x: float
+    y: float
+    crs: Nonempty
+    coordinate_source: Nonempty
+
+    @model_validator(mode="after")
+    def consistent(self):
+        if not self.dong_cd.startswith(self.sgg):
+            raise ValueError("dong_cd must belong to sgg")
+        if any(not bands for bands in self.source_bands.values()):
+            raise ValueError("source bands cannot be empty")
+        if (self.index_name == "S1") != (self.risk_direction == "low_is_risk"):
+            raise ValueError("index risk direction mismatch")
+        return self
+
+
 class Scenario(Contract):
     id: Nonempty
     type: Literal["monthly", "case", "crisis", "question", "policy"]

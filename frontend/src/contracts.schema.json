@@ -112,6 +112,176 @@
     "title": "Segment",
     "type": "object"
   },
+  "SegmentV3": {
+    "additionalProperties": false,
+    "properties": {
+      "schema_version": {
+        "const": "3",
+        "default": "3",
+        "title": "Schema Version",
+        "type": "string"
+      },
+      "ym": {
+        "anyOf": [
+          {
+            "pattern": "^2025-(0[7-9]|1[0-2])$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Ym"
+      },
+      "sgg": {
+        "pattern": "^\\d{5}$",
+        "title": "Sgg",
+        "type": "string"
+      },
+      "dong_cd": {
+        "pattern": "^\\d{8}$",
+        "title": "Dong Cd",
+        "type": "string"
+      },
+      "dong_nm": {
+        "minLength": 1,
+        "title": "Dong Nm",
+        "type": "string"
+      },
+      "sex": {
+        "enum": [
+          "M",
+          "F"
+        ],
+        "title": "Sex",
+        "type": "string"
+      },
+      "age_group": {
+        "enum": [
+          "youth",
+          "midlife",
+          "prime",
+          "elderly"
+        ],
+        "title": "Age Group",
+        "type": "string"
+      },
+      "source_bands": {
+        "additionalProperties": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "minProperties": 1,
+        "propertyNames": {
+          "minLength": 1
+        },
+        "title": "Source Bands",
+        "type": "object"
+      },
+      "index_name": {
+        "enum": [
+          "S1",
+          "G_seoul",
+          "G_gangnam_rank",
+          "G_chuncheon",
+          "v3"
+        ],
+        "title": "Index Name",
+        "type": "string"
+      },
+      "risk_direction": {
+        "enum": [
+          "low_is_risk",
+          "high_is_risk"
+        ],
+        "title": "Risk Direction",
+        "type": "string"
+      },
+      "value": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Value"
+      },
+      "residents": {
+        "anyOf": [
+          {
+            "minimum": 0,
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Residents"
+      },
+      "flags": {
+        "items": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "title": "Flags",
+        "type": "array"
+      },
+      "source_period": {
+        "minLength": 1,
+        "title": "Source Period",
+        "type": "string"
+      },
+      "source_file": {
+        "minLength": 1,
+        "title": "Source File",
+        "type": "string"
+      },
+      "x": {
+        "title": "X",
+        "type": "number"
+      },
+      "y": {
+        "title": "Y",
+        "type": "number"
+      },
+      "crs": {
+        "minLength": 1,
+        "title": "Crs",
+        "type": "string"
+      },
+      "coordinate_source": {
+        "minLength": 1,
+        "title": "Coordinate Source",
+        "type": "string"
+      }
+    },
+    "required": [
+      "ym",
+      "sgg",
+      "dong_cd",
+      "dong_nm",
+      "sex",
+      "age_group",
+      "source_bands",
+      "index_name",
+      "risk_direction",
+      "value",
+      "source_period",
+      "source_file",
+      "x",
+      "y",
+      "crs",
+      "coordinate_source"
+    ],
+    "title": "SegmentV3",
+    "type": "object"
+  },
   "Scenario": {
     "additionalProperties": false,
     "properties": {
