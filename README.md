@@ -1,6 +1,6 @@
 # beyond-hello-mas
 
-고립을 탐지하고 대응하기 위한 멀티에이전트 시스템. 현재는 FastAPI API와 React 화면의 실행 기반입니다. 분류·매칭·승인·LLM·평가는 아직 구현되지 않았습니다.
+고립을 탐지하고 대응하기 위한 멀티에이전트 시스템. 현재는 FastAPI API와 React 화면의 실행 기반입니다. 결정적 세그먼트 분류를 지원하며 매칭·승인·LLM·전체 평가는 아직 구현되지 않았습니다.
 
 ## 로컬 실행
 
@@ -44,3 +44,7 @@ uv run python scripts/check_public.py --tracked
 hook 설치는 기존 hook을 덮어쓰지 않습니다. 기본 검사는 staged Git blob, `--tracked`는 커밋된 HEAD blob 전체를 검사합니다. 로컬 계획·실제 입력·runtime·로컬 평가·환경파일·SQLite 및 부속 파일 경로와 흔한 API 토큰/개인키 패턴을 차단합니다. 임의 경로에 복사한 개인정보·집계나 모든 종류의 비밀값을 탐지하는 검사는 아닙니다. 실제 데이터의 프롬프트·trace·캡처도 공개하지 마세요.
 
 제출은 검사 통과한 커밋에서 `git archive --format=zip --output=../beyond-hello-mas.zip HEAD`로 만듭니다. 작업 폴더 전체를 압축하지 않습니다. 공개 문서는 개인 로컬 계획에 의존하지 않습니다.
+
+## 세그먼트 파이프라인
+
+`make sample && make classify`로 합성 1,692행을 분류합니다. 결과는 `runtime/sample/classification.json`에 저장되며 임시 규칙, 입력 hash, 지표별 공간단위, 누락 정보, 연령별 단계와 동 요약을 포함합니다. 실제 입력 export와 규칙 상세는 [계약 문서](docs/contracts.md)를 참고하세요. 지표 최종 선택과 타당성 검증은 아직 미완료입니다.

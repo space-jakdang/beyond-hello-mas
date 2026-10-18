@@ -6,11 +6,11 @@ from zoneinfo import ZoneInfo
 from pydantic import (AfterValidator, AwareDatetime, BaseModel, BeforeValidator,
                       ConfigDict, Field, HttpUrl, model_validator)
 
-Code = Annotated[str, Field(pattern=r"^\d{7}$")]
+Code = Annotated[str, Field(pattern=r"^\d{8}$")]
 District = Annotated[str, Field(pattern=r"^\d{5}$")]
 Month = Annotated[str, Field(pattern=r"^2025-(0[7-9]|1[0-2])$")]
 Nonempty = Annotated[str, Field(min_length=1)]
-AgeBand = Literal["under20", "20s", "30s", "40s", "50s", "60plus"]
+AgeBand = Literal["10s", "20s", "30s", "40s", "50s", "60plus"]
 
 
 def seoul_time(value):
@@ -31,6 +31,7 @@ class Contract(BaseModel):
 
 
 class Segment(Contract):
+    schema_version: Literal["2"] = "2"
     ym: Month
     sgg: District
     dong_cd: Code
