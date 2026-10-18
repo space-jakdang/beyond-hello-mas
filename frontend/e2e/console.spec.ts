@@ -1,0 +1,51 @@
+import {test, expect} from '@playwright/test';
+test('operator receives, acknowledges, approves, rejects and inspects monthly plan', async ({page,context})=>{
+  const consolePage=await context.newPage();
+  await consolePage.goto('/console');
+  await consolePage.getByLabel('담당자 이름').fill('E2E 담당자');
+  await page.goto('/observatory');
+  async function run(index:string,status='승인 대기') {
+    await page.getByLabel('시나리오').selectOption(index);
+    await page.getByRole('button',{name:'실행',exact:true}).click();
+    await expect(page.getByTestId('run-status')).toHaveText(status);
+    return await page.getByTestId('run-id').innerText();
+  }
+  const id=await run('0');
+  const alert=consolePage.getByTestId(`alert-${id}-approval_requested`);
+  await expect(alert).toBeVisible();
+  await alert.getByRole('button',{name:'사람 확인'}).click();
+  await expect(alert).toContainText('확인됨');
+  await alert.getByRole('button',{name:'실행 상세'}).click();
+  await consolePage.getByRole('button',{name:'승인',exact:true}).click();
+  await expect(consolePage.getByRole('heading',{name:'실행 상세 · 완료',exact:true})).toBeVisible();
+  await expect(consolePage.getByTestId(`alert-${id}-linkage_completed`)).toBeVisible();
+  const rejected=await run('0');
+  await consolePage.getByTestId(`alert-${rejected}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
+  await consolePage.getByLabel('반려 사유').fill('추가 상담 필요');
+  await consolePage.getByRole('button',{name:'반려',exact:true}).click();
+  await expect(consolePage.getByRole('heading',{name:'실행 상세 · 반려',exact:true})).toBeVisible();
+  expect((await page.request.get(`http://127.0.0.1:8000/runs/${rejected}/linkage`)).status()).toBe(404);
+  const crisis=await run('1','완료');
+  await expect(consolePage.locator('.alert-list article').first()).toHaveAttribute('data-testid',`alert-${crisis}-crisis`);
+  const monthly=await run('2');
+  await consolePage.getByTestId(`alert-${monthly}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
+  await expect(consolePage.getByRole('heading',{name:'동별 상황판 · 47개 동'})).toBeVisible();
+  await consolePage.getByLabel('동 선택').selectOption({index:1});
+  await expect(consolePage.getByRole('table',{name:'연령 상세'}).locator('tbody tr')).toHaveCount(6);
+  await consolePage.getByRole('button',{name:'승인',exact:true}).click();
+  await expect(consolePage.getByRole('heading',{name:'실행 상세 · 완료',exact:true})).toBeVisible();
+  await consolePage.screenshot({path:'../runtime/sample/screenshots/console.png',fullPage:true});
+});
+test('console retries its initial load and restores a pending approval after reload', async ({page,request})=>{
+  const response=await request.post('http://127.0.0.1:8000/scenarios/run',{data:{id:'reload-case',type:'case',sim_time:'2025-07-01T09:00:00+09:00',payload:{text:'합성 상담'}}});
+  const run=await response.json();
+  let failed=false;
+  await page.route('**/alerts?recent=true&limit=200',route=>{if(!failed){failed=true;return route.abort();}return route.continue();});
+  await page.goto('/console');
+  const alert=page.getByTestId(`alert-${run.id}-approval_requested`);
+  await expect(alert).toBeVisible({timeout:10000});
+  await expect(page.getByText('알림 SSE 연결됨 · 최근 200건 · 위기 우선')).toBeVisible();
+  await page.reload();
+  await alert.getByRole('button',{name:'실행 상세'}).click();
+  await expect(page.getByRole('heading',{name:'실행 상세 · 승인 대기'})).toBeVisible();
+});

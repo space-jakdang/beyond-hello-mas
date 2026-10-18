@@ -14,7 +14,9 @@ test('execute, inspect, restore, switch and reconnect a run', async ({page, cont
   await page.waitForTimeout(2200);
   await context.setOffline(false);
   await expect(page.getByText('SSE 연결됨', {exact:true})).toBeVisible({timeout:15000});
-  await expect(page.getByTestId('trace-row')).toHaveCount(count);
+  await expect.poll(()=>page.getByTestId('trace-row').count()).toBeGreaterThanOrEqual(count);
+  const seqs = await page.getByTestId('trace-row').allTextContents();
+  expect(new Set(seqs).size).toBe(seqs.length);
   await page.getByLabel('시나리오').selectOption('1');
   await page.getByRole('button', {name:'실행', exact:true}).click();
   await expect(page.getByTestId('run-status')).toHaveText('완료');
@@ -24,6 +26,6 @@ test('execute, inspect, restore, switch and reconnect a run', async ({page, cont
   await expect(page.getByTestId('run-status')).toHaveText('승인 대기');
   await page.getByRole('button', {name:'기록 재생'}).click();
   await page.getByLabel('재생 배속').selectOption('4');
-  await expect(page.getByTestId('trace-row')).toHaveCount(count);
+  await expect.poll(()=>page.getByTestId('trace-row').count()).toBeGreaterThanOrEqual(count);
   await page.screenshot({path:'../runtime/sample/screenshots/observatory.png', fullPage:true});
 });

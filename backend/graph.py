@@ -98,6 +98,10 @@ class GraphService:
             result['segments'] = [r for r in result['segments'] if r['ym'] == month]
             result['dongs'] = [r for r in result['dongs'] if r['ym'] == month]
             result['metadata']['source'] = source
+            locations = {r.dong_cd: r for r in rows if r.ym == month}
+            for dong in result['dongs']:
+                row = locations[dong['dong_cd']]
+                dong.update(dong_nm=row.dong_nm, x=row.x, y=row.y, crs=row.crs, coordinate_source=row.coordinate_source)
         elif scenario.type in ('case', 'crisis', 'question'):
             result = self.scale.score(state['run_id'], scenario.sim_time, scenario.payload.get('responses'))
             result['stage'] = None

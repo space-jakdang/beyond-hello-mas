@@ -35,6 +35,7 @@ def cursor(after, last_event_id):
 
 async def stream(request, fetch, after, id_key, event_name):
     heartbeat = time.monotonic()
+    yield ': connected\n\n'
     while not await request.is_disconnected():
         rows = await asyncio.to_thread(fetch, after, 100)
         for row in rows:
@@ -80,8 +81,8 @@ def event_router(store):
 
     @router.get('/alerts')
     def alerts(after: Annotated[int, Query(ge=0)] = 0,
-               limit: Annotated[int, Query(ge=1, le=1000)] = 100):
-        return store.alerts(after, limit)
+               limit: Annotated[int, Query(ge=1, le=1000)] = 100, recent: bool = False):
+        return store.alerts(after, limit, recent)
 
     @router.get('/alerts/stream')
     async def alert_stream(request: Request, after: Annotated[int, Query(ge=0)] = 0,
