@@ -52,3 +52,12 @@ def test_local_join_requires_both_code_and_name(monkeypatch):
     assert result['coverage']['matched']==1 and len(result['coverage']['unmatched_codes'])==46
     rows[:]=[r.model_copy(update={'dong_nm':'다른동'}) if r.dong_cd=='11230510' else r for r in rows]
     assert analysis(Settings(data_mode='local',llm_mode='fake'))['coverage']['matched']==0
+
+
+def test_missing_whole_month_remains_on_analysis_timeline(monkeypatch):
+    from backend.tools import neighborhoods
+    rows,source=load_segments(Settings(data_mode='sample',llm_mode='fake'))
+    monkeypatch.setattr(neighborhoods,'load_segments',lambda settings:([r for r in rows if r.ym!='2025-09'],source))
+    result=analysis(Settings(data_mode='sample',llm_mode='fake'))
+    assert '2025-09' in result['months'] and '2025-09' in result['metadata']['missing_months']
+    assert not any(r['ym']=='2025-09' for r in result['segments'])

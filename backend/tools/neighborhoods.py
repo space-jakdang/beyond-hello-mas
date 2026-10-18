@@ -3,7 +3,7 @@ import hashlib
 import json
 from math import isfinite
 from backend.app import config
-from backend.tools.segments import load_segments
+from backend.tools.segments import MONTHS, load_segments
 from backend.tools.staging import classify
 from backend.tools.indicators import default_rules
 
@@ -66,7 +66,7 @@ def analysis(settings):
         matched={f['properties']['dong_cd']:f for f in geo['features'] if f['properties']['dong_cd'] in dongs and f['properties']['dong_nm']==dongs[f['properties']['dong_cd']]['dong_nm']}
         unmatched=sorted(set(dongs)-set(matched))
         geo={**geo,'features':list(matched.values())}
-    return {'data_mode':settings.data_mode,'months':sorted({r.ym for r in rows}),
+    return {'data_mode':settings.data_mode,'months':sorted(set(MONTHS)|{r.ym for r in rows}),
             'neighborhoods':list(dongs.values()),'segments':result['segments'],'dongs':result['dongs'],
             'metadata':{**result['metadata'],'generator_version':source.get('generator_version'),'indicators':[i.model_dump(mode='json') for i in default_rules().indicators]},
             'geometry':geo,'geography':provenance,'coverage':{'matched':len(geo['features']),'total':len(dongs),'unmatched_codes':unmatched}}

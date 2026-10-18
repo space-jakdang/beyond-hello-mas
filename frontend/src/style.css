@@ -22,3 +22,6 @@ table { border-collapse: collapse; width: 100%; } th, td { padding: .5rem; borde
 .map-scroll svg { display:block; min-width:100%; } .map-scroll path { cursor:pointer; } .map-scroll path:focus-visible { outline:none; stroke:#142f36; stroke-width:4; }
 .dong-list { max-height:35rem; overflow:auto; } tr[aria-selected="true"] { background:#e5f0eb; }
 @media(max-width:800px) { .map-layout { grid-template-columns:1fr; } header,main { padding:1rem; } nav { flex-wrap:wrap; gap:.8rem; } }
+
+.table-scroll { overflow-x:auto; } .table-scroll table { min-width: 36rem; } .table-scroll small { display:block; font-weight:normal; color:#526960; }
+.trend-chart { width:100%; max-height:19rem; } .trend-chart text { font-size:12px; fill:#16302c; } .trend-chart circle { cursor:pointer; } .trend-chart circle:focus-visible { outline:none; stroke:#b84446; stroke-width:4; }
