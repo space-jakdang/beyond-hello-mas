@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def compare(first, second):
-    keys=('git_commit','inputs_hash','labels_hash','catalog_hash','prompts')
+    keys=('git_commit','inputs_hash','labels_hash','catalog_hash','rule_hash','prompts')
     if any(first['metadata'].get(k)!=second['metadata'].get(k) for k in keys) or any(first[k]!=second[k] for k in ('data_mode','llm_mode','model')):
         raise ValueError('evaluation provenance differs')
     fields=('scenario_id','status','path','predicted_crisis','causes','route','subscales','recommendation_count','relevant_recommendations')

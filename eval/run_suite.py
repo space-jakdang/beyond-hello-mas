@@ -16,7 +16,7 @@ from backend.app.config import ROOT, Settings
 from backend.app.contracts import Scenario, EvaluationLabel
 from backend.events import EventStore
 from backend.tools.catalog import load_catalog
-from backend.tools.indicators import digest
+from backend.tools.indicators import digest, default_rules
 from backend.tools.segments import load_segments
 from backend.tools.staging import classify
 from eval.metrics import summarize
@@ -42,7 +42,7 @@ def read_ratings(path, labels):
     seen=set()
     for row in rows:
         id=row.get('scenario_id')
-        if id not in labels or not id.startswith('S2-') or id in seen or type(row.get('score')) is not int or not 1<=row['score']<=5 or not row.get('reviewer'):
+        if id not in labels or not id.startswith('S2-') or id in seen or type(row.get('score')) is not int or not 1<=row['score']<=5 or not isinstance(row.get('reviewer'),str) or not row['reviewer'].strip():
             raise ValueError('invalid, duplicate or anonymous human rating')
         seen.add(id)
     return rows
@@ -150,6 +150,7 @@ def run_suite(settings, browser=True, timeout=30, ratings_path=None):
              'evaluated_scenarios':len(results),'metrics':metrics,'results':results,'stage_reproducibility':reproducibility,
              'metadata':{'git_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
                 'code_dirty':bool(subprocess.check_output(['git','diff','HEAD','--'],cwd=ROOT,text=True)),
+                'rule_version':default_rules().version,'rule_hash':digest(default_rules().model_dump(mode='json')),
                 'inputs_hash':digest([s.model_dump(mode='json') for s in scenarios]),'labels_hash':digest(labels),'label_version':'development-1-unreviewed',
                 **catalog_metadata,'prompts':prompts,
                 'price_version':settings.price_version,'browser_receiver':bool(browser and not receiver_error and not setup_error),'receiver_error':receiver_error,'setup_error':setup_error},
