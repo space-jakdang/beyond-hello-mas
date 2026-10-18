@@ -134,10 +134,13 @@ class PolicyAgent:
         result=[];seen=set()
         for item in decision.recommendations:
             detail=details.get(item.policy_id);p=detail['policy'] if detail else None
+            actual=p.get(item.field) if p else None
+            # JSON/model transports may change CRLF to LF; preserve the provider text in the result.
+            normalize=lambda text:text.replace('\r\n','\n').replace('\r','\n')
             if (not p or p['scope'] not in task.scopes or item.policy_id in seen or not item.value
-                or p.get(item.field)!=item.value):raise ValueError('invalid_evidence')
+                or not isinstance(actual,str) or normalize(actual)!=normalize(item.value)):raise ValueError('invalid_evidence')
             seen.add(item.policy_id)
-            result.append({'policy':p,'evidence':{'field':item.field,'value':item.value},'explanation':item.explanation,
+            result.append({'policy':p,'evidence':{'field':item.field,'value':actual},'explanation':item.explanation,
                            'detail_status':detail['status'],'checked_at':detail.get('checked_at'),'cached_at':detail.get('cached_at')})
         return result
 

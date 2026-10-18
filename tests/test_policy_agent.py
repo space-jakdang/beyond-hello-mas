@@ -134,3 +134,33 @@ def test_exact_evidence_and_model_failure_are_safe(graph,monkeypatch):
     assert 'PRIVATE_PROVIDER_MESSAGE' not in json.dumps(graph.store.traces(run.id))
     assert len(compact({'field':'x'*1000})['field'])==800
     assert compact({'conditions':{'JA0101':'Y'}})['conditions']=={'JA0101':'Y'}
+
+
+def test_one_policy_one_recommendation_contract(graph):
+    task=PolicyTask(goal='test',scopes=['chuncheon'])
+    p={'id':'known','scope':'chuncheon','title':'위기가구 지원','support':'공식 지원내용'}
+    obs=[{'action':{'action':'policy_detail'},'result':{'status':'live','policy':p}}]
+    item={'policy_id':'known','field':'title','value':p['title'],'explanation':'test'}
+    decision=PolicyDecision(action='finish',query='',page=1,policy_id=None,reason='test',recommendations=[item])
+    assert len(graph.policy_agent.recommendations(decision,obs,task))==1
+    duplicate=decision.model_copy(update={'recommendations':decision.recommendations*2})
+    with pytest.raises(ValueError,match='evidence'):
+        graph.policy_agent.recommendations(duplicate,obs,task)
+
+
+def test_evidence_accepts_only_line_ending_equivalence(graph):
+    task=PolicyTask(goal='test',scopes=['chuncheon'])
+    raw='공식 지원내용\r\n - 생계비 지원'
+    obs=[{'action':{'action':'policy_detail'},'result':{'status':'live','policy':{'id':'known','scope':'chuncheon','support':raw}}}]
+    decision=PolicyDecision(action='finish',query='',page=1,policy_id=None,reason='test',recommendations=[{
+        'policy_id':'known','field':'support','value':raw.replace('\r\n','\n'),'explanation':'test'}])
+    output=graph.policy_agent.recommendations(decision,obs,task)
+    assert output[0]['evidence']['value']==raw
+    changed=decision.model_copy(deep=True);changed.recommendations[0].value=raw.replace('생계비','의료비')
+    with pytest.raises(ValueError,match='evidence'):
+        graph.policy_agent.recommendations(changed,obs,task)
+
+    for value in [raw+' ', raw.replace(' -','  -')]:
+        changed.recommendations[0].value=value
+        with pytest.raises(ValueError,match='evidence'):
+            graph.policy_agent.recommendations(changed,obs,task)
