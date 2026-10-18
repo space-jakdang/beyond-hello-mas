@@ -17,7 +17,8 @@ def generate(seed=42):
                     source='sk_gangnam_s1' if index=='S1' else 'seoul_telecom' if i<22 else 'kosis'
                     rows.append(SegmentV3(ym=month,sgg=sgg,dong_cd=f'{sgg}{i+1:03}',dong_nm=f'합성동{i+1:02}',
                         sex=sex,age_group=group,source_bands={source:age_bands(source,group)},index_name=index,
-                        risk_direction='low_is_risk' if index=='S1' else 'high_is_risk',value=round(rng.uniform(-1,1),6),
+                        risk_direction='low_is_risk' if index=='S1' else 'high_is_risk',value=round(rng.uniform(.1,.4) if index=='S1' else rng.uniform(-1,1),6),
+                        source_stage=None if group=='youth' else rng.randint(1,5),
                         residents=rng.randint(50,5000),source_period=month,source_file='synthetic-generator-3',
                         x=i%8,y=i//8,crs='synthetic-cartesian',coordinate_source='generated grid; not geographic'))
     return rows

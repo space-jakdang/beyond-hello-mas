@@ -70,6 +70,11 @@ class SegmentV3(Contract):
     value: float | None
     residents: float | None = Field(default=None, ge=0)
     flags: list[Nonempty] = Field(default_factory=list)
+    source_dong_nm: Nonempty | None = None
+    source_stage: int | None = Field(default=None, ge=1, le=5)
+    within_rank: int | None = Field(default=None, ge=1, le=22)
+    preferred: bool = True
+    components: dict[str, float | None] = Field(default_factory=dict)
     source_period: Nonempty
     source_file: Nonempty
     x: float
@@ -83,6 +88,8 @@ class SegmentV3(Contract):
             raise ValueError("dong_cd must belong to sgg")
         if any(not bands for bands in self.source_bands.values()):
             raise ValueError("source bands cannot be empty")
+        if self.index_name in ('S1','v3') and self.age_group!='youth':
+            raise ValueError('youth index requires youth group')
         if (self.index_name == "S1") != (self.risk_direction == "low_is_risk"):
             raise ValueError("index risk direction mismatch")
         return self
