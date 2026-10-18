@@ -57,3 +57,5 @@ curl -X POST http://127.0.0.1:8000/scenarios/run -H 'Content-Type: application/j
 ```
 
 응답의 run ID로 `/runs/{id}/approval`을 조회하고 해당 snapshot_version을 `/runs/{id}/decision`에 전달하면 승인/반려할 수 있습니다. 스키마 예시는 `/docs`에 있습니다. 승인 전에는 연계가 없으며, 척도 응답이 없는 사례는 추가 응답을 위한 후속 확인 계획이며, 명시적 응답은 별도로 설정한 MCP로 채점합니다.
+
+공식 출처를 확인한 서비스/지점 30건은 [실제 카탈로그 안내](data/catalog/README.md)에 있습니다. `RESOURCE_CATALOG=curated`로 선택할 수 있으며, 개별 자격·접수 가능 여부가 확인된 자원만 추천합니다. 기본 `fixture`는 합성 자원입니다.

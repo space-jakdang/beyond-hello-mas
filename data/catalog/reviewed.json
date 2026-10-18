@@ -1,0 +1,1218 @@
+[
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-connection",
+    "field_notes": {
+      "eligibility": "외로움·고립 문제를 겪는 서울 시민; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "수행단체 상담 및 프로그램 연계",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-connection",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "서울연결처방",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "외로움·고립 문제를 겪는 서울 시민",
+      "eligibility_tags": [
+        "confirmed:seoul-connection"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "medium",
+      "delivery": "수행단체 상담 및 프로그램 연계",
+      "access": "application",
+      "isolation_relevance": "사회적 접촉과 관계 회복 활동",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569275",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "사회적 접촉과 관계 회복 활동",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-outreach",
+    "field_notes": {
+      "eligibility": "은둔 또는 서비스 접촉을 거부하는 고립가구; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "지역 복지기관에 지원 요청",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-outreach",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "은둔거부 맞춤형 지원",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "은둔 또는 서비스 접촉을 거부하는 고립가구",
+      "eligibility_tags": [
+        "confirmed:seoul-outreach"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "high",
+      "delivery": "지역 복지기관에 지원 요청",
+      "access": "application",
+      "isolation_relevance": "접촉부터 개별 지원까지 지속 개입",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569275",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "접촉부터 개별 지원까지 지속 개입",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-local-hub",
+    "field_notes": {
+      "eligibility": "생활권 내 사회적으로 단절된 가구; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "주민센터·종합복지관 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-local-hub",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "지역 고립가구 전담기구",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "생활권 내 사회적으로 단절된 가구",
+      "eligibility_tags": [
+        "confirmed:seoul-local-hub"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "medium",
+      "delivery": "주민센터·종합복지관 문의",
+      "access": "application",
+      "isolation_relevance": "상담과 자조모임을 통한 관계 형성",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569275",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "상담과 자조모임을 통한 관계 형성",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-120",
+    "field_notes": {
+      "eligibility": "외로움을 겪는 시민과 주변인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "120 연결 후 5번 상담",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-120",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "외로움안녕120",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "외로움을 겪는 시민과 주변인",
+      "eligibility_tags": [
+        "confirmed:seoul-120"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "emotional",
+        "relationship"
+      ],
+      "intensity": "low",
+      "delivery": "120 연결 후 5번 상담",
+      "access": "application",
+      "isolation_relevance": "대화와 필요한 지원기관 안내",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569295",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "대화와 필요한 지원기관 안내",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-365",
+    "field_notes": {
+      "eligibility": "서울 거주 시민; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "공식 챌린지 홈페이지 참여",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-365",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "365 서울챌린지",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "서울 거주 시민",
+      "eligibility_tags": [
+        "confirmed:seoul-365"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "low",
+      "delivery": "공식 챌린지 홈페이지 참여",
+      "access": "application",
+      "isolation_relevance": "외로움 예방 목적의 일상 참여 활동",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569290",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "외로움 예방 목적의 일상 참여 활동",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-itta",
+    "field_notes": {
+      "eligibility": "상담·회복 공간 이용 희망 시민; 프로그램별 조건 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "왕십리로 135 상담 예약 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-itta",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "서울잇다플레이스",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "상담·회복 공간 이용 희망 시민; 프로그램별 조건 확인",
+      "eligibility_tags": [
+        "confirmed:seoul-itta"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "emotional",
+        "relationship"
+      ],
+      "intensity": "low",
+      "delivery": "왕십리로 135 상담 예약 문의",
+      "access": "application",
+      "isolation_relevance": "상담과 만남을 위한 실제 방문 공간",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/583054",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "상담과 만남을 위한 실제 방문 공간",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-neighbor",
+    "field_notes": {
+      "eligibility": "고독사 중·고위험 가구 중심; 동 선정; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "동주민센터 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-neighbor",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "우리동네돌봄단 안부지원",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "고독사 중·고위험 가구 중심; 동 선정",
+      "eligibility_tags": [
+        "confirmed:seoul-neighbor"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "high",
+      "delivery": "동주민센터 문의",
+      "access": "application",
+      "isolation_relevance": "정기 방문·연락과 복지 수요 연결",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569267",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "정기 방문·연락과 복지 수요 연결",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-smart",
+    "field_notes": {
+      "eligibility": "고독사 저위험 가구 중심; 동 선정; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "동주민센터 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-smart",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "스마트 안부확인서비스",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "고독사 저위험 가구 중심; 동 선정",
+      "eligibility_tags": [
+        "confirmed:seoul-smart"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "low",
+      "delivery": "동주민센터 문의",
+      "access": "application",
+      "isolation_relevance": "자동전화·생활데이터로 안부 점검",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569267",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "자동전화·생활데이터로 안부 점검",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-maeum",
+    "field_notes": {
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "호암로 549 방문 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-maeum-1",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "서울마음편의점 관악점",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인",
+      "eligibility_tags": [
+        "confirmed:seoul-maeum-1"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "emotional"
+      ],
+      "intensity": "low",
+      "delivery": "호암로 549 방문 문의",
+      "access": "application",
+      "isolation_relevance": "대화·교류·관련 지원 안내 공간",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569285",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "대화·교류·관련 지원 안내 공간",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-maeum",
+    "field_notes": {
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "약령시로5길 22 방문 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-maeum-2",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "서울마음편의점 동대문점",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인",
+      "eligibility_tags": [
+        "confirmed:seoul-maeum-2"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "emotional"
+      ],
+      "intensity": "low",
+      "delivery": "약령시로5길 22 방문 문의",
+      "access": "application",
+      "isolation_relevance": "대화·교류·관련 지원 안내 공간",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569285",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "대화·교류·관련 지원 안내 공간",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-maeum",
+    "field_notes": {
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "오현로 208 방문 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-maeum-3",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "서울마음편의점 강북점",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인",
+      "eligibility_tags": [
+        "confirmed:seoul-maeum-3"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "emotional"
+      ],
+      "intensity": "low",
+      "delivery": "오현로 208 방문 문의",
+      "access": "application",
+      "isolation_relevance": "대화·교류·관련 지원 안내 공간",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569285",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "대화·교류·관련 지원 안내 공간",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-maeum",
+    "field_notes": {
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "덕릉로 329 방문 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-maeum-4",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "서울마음편의점 도봉점",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인",
+      "eligibility_tags": [
+        "confirmed:seoul-maeum-4"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "emotional"
+      ],
+      "intensity": "low",
+      "delivery": "덕릉로 329 방문 문의",
+      "access": "application",
+      "isolation_relevance": "대화·교류·관련 지원 안내 공간",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569285",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "대화·교류·관련 지원 안내 공간",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-maeum",
+    "field_notes": {
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "벚꽃로 484 방문 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-maeum-5",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "서울마음편의점 구로점",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인",
+      "eligibility_tags": [
+        "confirmed:seoul-maeum-5"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "emotional"
+      ],
+      "intensity": "low",
+      "delivery": "벚꽃로 484 방문 문의",
+      "access": "application",
+      "isolation_relevance": "대화·교류·관련 지원 안내 공간",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569285",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "대화·교류·관련 지원 안내 공간",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "seoul-maeum",
+    "field_notes": {
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "성안로13길 56 방문 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "seoul-maeum-6",
+      "jurisdiction": [
+        "11"
+      ],
+      "name": "서울마음편의점 강동점",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "외로움을 느끼는 서울 시민; 해당 지점 이용 확인",
+      "eligibility_tags": [
+        "confirmed:seoul-maeum-6"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "emotional"
+      ],
+      "intensity": "low",
+      "delivery": "성안로13길 56 방문 문의",
+      "access": "application",
+      "isolation_relevance": "대화·교류·관련 지원 안내 공간",
+      "source_url": "https://news.seoul.go.kr/welfare/archives/569285",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "대화·교류·관련 지원 안내 공간",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "emergency-safety",
+    "field_notes": {
+      "eligibility": "65세 이상 독거노인 등; 세부 선정 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "공식 안내의 명시 범위",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "주소지 행정복지센터 신청",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "cc-emergency",
+      "jurisdiction": [
+        "32010"
+      ],
+      "name": "춘천 응급안전안심서비스",
+      "age_min": 65,
+      "age_max": 120,
+      "eligibility": "65세 이상 독거노인 등; 세부 선정 확인",
+      "eligibility_tags": [
+        "confirmed:cc-emergency"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "safety"
+      ],
+      "intensity": "high",
+      "delivery": "주소지 행정복지센터 신청",
+      "access": "application",
+      "isolation_relevance": "독거 가구의 안전 공백 감지",
+      "source_url": "https://www.gwd.go.kr/portal/partinfo/welfare/singleperson/localpresent/chuncheon",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "독거 가구의 안전 공백 감지",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "cc-hospital",
+    "field_notes": {
+      "eligibility": "65세 이상 재가노인; 이용 가능 여부 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "공식 안내의 명시 범위",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "수행센터 전화 또는 방문",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "cc-hospital",
+      "jurisdiction": [
+        "32010"
+      ],
+      "name": "춘천 어르신 병원동행",
+      "age_min": 65,
+      "age_max": 120,
+      "eligibility": "65세 이상 재가노인; 이용 가능 여부 확인",
+      "eligibility_tags": [
+        "confirmed:cc-hospital"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "health"
+      ],
+      "intensity": "medium",
+      "delivery": "수행센터 전화 또는 방문",
+      "access": "application",
+      "isolation_relevance": "동행할 보호자가 부족한 상황 지원",
+      "source_url": "https://www.gwd.go.kr/portal/partinfo/welfare/singleperson/localpresent/chuncheon",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "동행할 보호자가 부족한 상황 지원",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "cc-milk",
+    "field_notes": {
+      "eligibility": "고독사 위험 가구; 배달 가능 지역 선정; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "주소지 행정복지센터 신청",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "cc-milk",
+      "jurisdiction": [
+        "32010"
+      ],
+      "name": "춘천 우유배달 안부지원",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "고독사 위험 가구; 배달 가능 지역 선정",
+      "eligibility_tags": [
+        "confirmed:cc-milk"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "medium",
+      "delivery": "주소지 행정복지센터 신청",
+      "access": "application",
+      "isolation_relevance": "배달품 적체로 안부 이상 확인",
+      "source_url": "https://www.gwd.go.kr/portal/partinfo/welfare/singleperson/localpresent/chuncheon",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "배달품 적체로 안부 이상 확인",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "elder-care",
+    "field_notes": {
+      "eligibility": "65세 이상 수급·차상위·기초연금 대상; 돌봄 필요도 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "공식 안내의 명시 범위",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "주소지 행정복지센터 신청",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "cc-care",
+      "jurisdiction": [
+        "32010"
+      ],
+      "name": "춘천 노인맞춤돌봄",
+      "age_min": 65,
+      "age_max": 120,
+      "eligibility": "65세 이상 수급·차상위·기초연금 대상; 돌봄 필요도 확인",
+      "eligibility_tags": [
+        "confirmed:cc-care"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "medium",
+      "delivery": "주소지 행정복지센터 신청",
+      "access": "application",
+      "isolation_relevance": "안부와 사회 참여 지원",
+      "source_url": "https://www.gwd.go.kr/portal/partinfo/welfare/singleperson/localpresent/chuncheon",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "안부와 사회 참여 지원",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "cc-safeapp",
+    "field_notes": {
+      "eligibility": "안드로이드 기기를 사용하는 독거 가구; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "춘천안심서비스 앱 설치 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "cc-safeapp",
+      "jurisdiction": [
+        "32010"
+      ],
+      "name": "춘천안심서비스",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "안드로이드 기기를 사용하는 독거 가구",
+      "eligibility_tags": [
+        "confirmed:cc-safeapp"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "low",
+      "delivery": "춘천안심서비스 앱 설치 문의",
+      "access": "application",
+      "isolation_relevance": "활동 미감지 시 등록 보호자에게 알림",
+      "source_url": "https://www.gwd.go.kr/portal/partinfo/welfare/singleperson/localpresent/chuncheon",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "활동 미감지 시 등록 보호자에게 알림",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "cc-aicall",
+    "field_notes": {
+      "eligibility": "65세 이상 독거노인; 모집 정원 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "공식 안내의 명시 범위",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "주소지 행정복지센터 신청",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "cc-aicall",
+      "jurisdiction": [
+        "32010"
+      ],
+      "name": "춘천 AI케어콜",
+      "age_min": 65,
+      "age_max": 120,
+      "eligibility": "65세 이상 독거노인; 모집 정원 확인",
+      "eligibility_tags": [
+        "confirmed:cc-aicall"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "low",
+      "delivery": "주소지 행정복지센터 신청",
+      "access": "application",
+      "isolation_relevance": "주기적 전화로 안부 확인",
+      "source_url": "https://www.gwd.go.kr/portal/partinfo/welfare/singleperson/localpresent/chuncheon",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "주기적 전화로 안부 확인",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "cc-meal",
+    "field_notes": {
+      "eligibility": "수급 또는 차상위 독거 장애인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "주소지 행정복지센터 신청",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "cc-meal",
+      "jurisdiction": [
+        "32010"
+      ],
+      "name": "춘천 독거 장애인 반찬지원",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "수급 또는 차상위 독거 장애인",
+      "eligibility_tags": [
+        "confirmed:cc-meal"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "food"
+      ],
+      "intensity": "medium",
+      "delivery": "주소지 행정복지센터 신청",
+      "access": "application",
+      "isolation_relevance": "홀로 생활하는 장애인의 식생활 지원",
+      "source_url": "https://www.gwd.go.kr/portal/partinfo/welfare/singleperson/localpresent/chuncheon",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "홀로 생활하는 장애인의 식생활 지원",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "gn-counsel",
+    "field_notes": {
+      "eligibility": "강남 1인가구; 검사 후 고위험군 상담 선정; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "센터 홈페이지 신청",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "gn-counsel",
+      "jurisdiction": [
+        "11230"
+      ],
+      "name": "강남 1인가구 심리검사·상담",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "강남 1인가구; 검사 후 고위험군 상담 선정",
+      "eligibility_tags": [
+        "confirmed:gn-counsel"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "emotional"
+      ],
+      "intensity": "high",
+      "delivery": "센터 홈페이지 신청",
+      "access": "application",
+      "isolation_relevance": "검사에 따른 개인 상담 제공",
+      "source_url": "https://www.gangnam1.org/main/sub.html?Mode=view&boardID=www14&num=2073&page=0",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "검사에 따른 개인 상담 제공",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "gn-community",
+    "field_notes": {
+      "eligibility": "강남 1인가구; 공간 이용 조건 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "논현로86길 29 센터 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "gn-community",
+      "jurisdiction": [
+        "11230"
+      ],
+      "name": "강남 STAY.G 교류 공간",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "강남 1인가구; 공간 이용 조건 확인",
+      "eligibility_tags": [
+        "confirmed:gn-community"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship"
+      ],
+      "intensity": "low",
+      "delivery": "논현로86길 29 센터 문의",
+      "access": "application",
+      "isolation_relevance": "공유 주방 등 혼자 사는 주민의 교류 공간",
+      "source_url": "https://www.gangnam.go.kr/board/broadcast_trend/1972/view.do?mid=ID01_010503",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "공유 주방 등 혼자 사는 주민의 교류 공간",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "gn-segok",
+    "field_notes": {
+      "eligibility": "세곡동 고립·위기 징후 가구; 동 확인 필수; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "세곡동 주민센터 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "gn-segok",
+      "jurisdiction": [
+        "11230"
+      ],
+      "name": "세곡동 복지지킴이 연계",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "세곡동 고립·위기 징후 가구; 동 확인 필수",
+      "eligibility_tags": [
+        "confirmed:gn-segok"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "housing"
+      ],
+      "intensity": "high",
+      "delivery": "세곡동 주민센터 문의",
+      "access": "application",
+      "isolation_relevance": "장기 미출입 등 신호를 발굴해 복지 연결",
+      "source_url": "https://gangnam.go.kr/board/B_000031/1075359/view.do?mid=ID01_0313",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "장기 미출입 등 신호를 발굴해 복지 연결",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "kr-109",
+    "field_notes": {
+      "eligibility": "자살위기 관련 상담 희망자; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "109 전화 상담",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "kr-109",
+      "jurisdiction": [
+        "KR"
+      ],
+      "name": "자살예방상담 109",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "자살위기 관련 상담 희망자",
+      "eligibility_tags": [
+        "confirmed:kr-109"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "emotional",
+        "safety"
+      ],
+      "intensity": "high",
+      "delivery": "109 전화 상담",
+      "access": "application",
+      "isolation_relevance": "위기 시 전문 상담 연결",
+      "source_url": "https://www.129.go.kr/faq/faq06.do?searchConsultingKeyword=F01",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "위기 시 전문 상담 연결",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "kr-129",
+    "field_notes": {
+      "eligibility": "복지 위기상담 및 지원 정보 필요자; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "129 전화 상담",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "kr-129",
+      "jurisdiction": [
+        "KR"
+      ],
+      "name": "보건복지 129 위기상담",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "복지 위기상담 및 지원 정보 필요자",
+      "eligibility_tags": [
+        "confirmed:kr-129"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "emotional",
+        "economic"
+      ],
+      "intensity": "medium",
+      "delivery": "129 전화 상담",
+      "access": "application",
+      "isolation_relevance": "도움 요청 창구와 복지 연결",
+      "source_url": "https://www.mohw.go.kr/menu.es?mid=a10201010000",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "도움 요청 창구와 복지 연결",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "kr-1388",
+    "field_notes": {
+      "eligibility": "청소년 상담 대상 여부 확인; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "청소년1388 온라인 상담",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "kr-1388",
+      "jurisdiction": [
+        "KR"
+      ],
+      "name": "청소년1388 온라인상담",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "청소년 상담 대상 여부 확인",
+      "eligibility_tags": [
+        "confirmed:kr-1388"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "emotional"
+      ],
+      "intensity": "medium",
+      "delivery": "청소년1388 온라인 상담",
+      "access": "application",
+      "isolation_relevance": "우울·위기 등 정서 문제 상담",
+      "source_url": "https://www.bokjiro.go.kr/ssis-tbu/ssis-tbu/twataa/wlfareInfo/moveTWAT52011M.do?wlfareInfoId=WLF00003204",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "우울·위기 등 정서 문제 상담",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "elder-care",
+    "field_notes": {
+      "eligibility": "65세 이상 정서 위험 취약노인; 소득·중복서비스 기준 및 기관 심사; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "공식 안내의 명시 범위",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "읍면동 상담과 수행기관 연계",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "kr-elder-special",
+      "jurisdiction": [
+        "KR"
+      ],
+      "name": "노인맞춤돌봄 특화지원",
+      "age_min": 65,
+      "age_max": 120,
+      "eligibility": "65세 이상 정서 위험 취약노인; 소득·중복서비스 기준 및 기관 심사",
+      "eligibility_tags": [
+        "confirmed:kr-elder-special"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "emotional",
+        "relationship"
+      ],
+      "intensity": "high",
+      "delivery": "읍면동 상담과 수행기관 연계",
+      "access": "application",
+      "isolation_relevance": "정서 위험 노인의 상담·사례관리",
+      "source_url": "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=2&cciNo=1&cnpClsNo=1&csmSeq=1963",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "정서 위험 노인의 상담·사례관리",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "kr-daily",
+    "field_notes": {
+      "eligibility": "돌봄 필요자 및 가족돌봄청년; 연령·지역 제공 여부 심사; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음",
+      "delivery": "읍면동 신청 문의",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "kr-daily",
+      "jurisdiction": [
+        "KR"
+      ],
+      "name": "일상돌봄 서비스",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "돌봄 필요자 및 가족돌봄청년; 연령·지역 제공 여부 심사",
+      "eligibility_tags": [
+        "confirmed:kr-daily"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "relationship",
+        "health"
+      ],
+      "intensity": "medium",
+      "delivery": "읍면동 신청 문의",
+      "access": "application",
+      "isolation_relevance": "고립 등으로 일상 돌봄이 필요한 상황 지원",
+      "source_url": "https://www.easylaw.go.kr/CSP/CnpClsMain.laf?ccfNo=1&cciNo=1&cnpClsNo=2&csmSeq=2856&popMenu=ov",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "고립 등으로 일상 돌봄이 필요한 상황 지원",
+      "catalog_version": "curated-20261018-1"
+    }
+  },
+  {
+    "status": "source_reviewed",
+    "reviewed_by": "Codex official/provider page review 2026-10-18",
+    "human_reviewed": false,
+    "program": "gw-crisis",
+    "field_notes": {
+      "eligibility": "도내 정신건강 상담 필요자; 안내가 2023년 갱신되어 현재 창구 재확인 필수; 개별 대상 선정 및 현재 접수 가능 여부는 제공기관 확인 필요",
+      "age": "숫자 나이 미명시: 0~120은 필터 미적용 범위이며 전 연령 자격을 의미하지 않음; confirmed 태그 필수",
+      "activity": "수집일에 공개된 공식/운영기관 안내를 확인. 현장 잔여정원·폐지 여부는 직접 문의하지 않음; 보건복지부 현재 안내 https://www.mw.go.kr/menu.es?mid=a10706040100 에서 1577-0199 운영을 교차 확인",
+      "delivery": "도 안내 전화 1577-0199; 현재 운영 확인",
+      "mapping": "needs/intensity는 프로젝트 임시 수기 매핑. 공식 위험도·효과 판정 아님"
+    },
+    "resource": {
+      "schema_version": "2",
+      "id": "gw-crisis",
+      "jurisdiction": [
+        "32"
+      ],
+      "name": "강원 정신건강위기 상담",
+      "age_min": 0,
+      "age_max": 120,
+      "eligibility": "도내 정신건강 상담 필요자; 안내가 2023년 갱신되어 현재 창구 재확인 필수",
+      "eligibility_tags": [
+        "confirmed:gw-crisis"
+      ],
+      "active": true,
+      "valid_until": null,
+      "needs": [
+        "emotional"
+      ],
+      "intensity": "high",
+      "delivery": "도 안내 전화 1577-0199; 현재 운영 확인",
+      "access": "application",
+      "isolation_relevance": "정신건강 지지와 지역기관 안내",
+      "source_url": "https://www.gwd.go.kr/portal/partinfo/health/mentalHealth/counsel",
+      "collected_at": "2026-10-18T11:33:12Z",
+      "evidence": "정신건강 지지와 지역기관 안내",
+      "catalog_version": "curated-20261018-1"
+    }
+  }
+]
