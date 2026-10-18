@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import UUID
 from typing import Literal
 
 from pydantic import Field, SecretStr, model_validator
@@ -11,6 +12,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore", allow_inf_nan=False)
     data_mode: Literal["sample", "local"] = "sample"
     llm_mode: Literal["fake", "live"] = "fake"
+    evaluation_id: UUID | None = None
     resource_catalog: Literal["fixture", "curated"] = "fixture"
     openai_api_key: SecretStr | None = None
 
@@ -42,7 +44,8 @@ class Settings(BaseSettings):
 
     @property
     def runtime_dir(self) -> Path:
-        return ROOT / "runtime" / self.data_mode
+        root = ROOT / "runtime" / self.data_mode
+        return root / "evaluations" / str(self.evaluation_id) if self.evaluation_id else root
 
     @property
     def catalog_path(self) -> Path:

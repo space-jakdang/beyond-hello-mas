@@ -82,10 +82,11 @@ def test_secrets_and_examples():
     assert not violations('data/sample/scenario.json', b'{"synthetic": true}')
 
 
-def test_eval_is_incomplete():
-    result = subprocess.run(['uv', 'run', 'python', '-m', 'scripts.evaluate'], capture_output=True, text=True)
+def test_eval_keeps_unavailable_mcp_in_denominator(monkeypatch):
+    monkeypatch.delenv('MCP_PYTHON', raising=False)
+    result = subprocess.run(['uv', 'run', 'python', '-m', 'scripts.evaluate', '--without-browser'], capture_output=True, text=True)
     assert result.returncode == 2
-    assert json.loads(result.stdout)['evaluated_scenarios'] == 0
+    assert json.loads(result.stdout)['evaluated_scenarios'] == 40
 
 
 def test_generated_contracts_current():

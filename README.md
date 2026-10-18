@@ -30,7 +30,7 @@ make eval
 
 `make test`는 Python 테스트와 TypeScript 검사/빌드를 실행합니다. E2E는 별도 백엔드와 Vite 서버를 띄워 세 화면 이동과 sample/fake health 연결을 확인합니다(8000, 5173 포트가 비어 있어야 합니다).
 
-`make eval`은 계약 검사만 실행하고 JSON으로 `status=incomplete`, 평가 시나리오 수 0, 미구현 항목을 반환합니다. 종료 코드 2는 전체 평가 미완료를 뜻하며 `make`도 실패합니다. fake 검증을 모델 성능으로 보고하지 않습니다.
+`make eval`은 고정 40건을 별도 서버·DB와 Chromium 수신자로 실행하고 `eval/reports/날짜/UUID/summary.json`에 저장합니다. 명시적 척도 응답 16건에는 별도 MCP 설정이 필요하며, 없으면 실패를 포함한 40건 보고서와 종료 코드 2를 반환합니다. fake 검증은 모델 성능이 아닙니다. [평가 방법과 한계](docs/evaluation.md)를 확인하세요.
 
 ## 계약과 공개 경계
 

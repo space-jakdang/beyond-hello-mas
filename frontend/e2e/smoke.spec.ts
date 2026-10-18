@@ -7,3 +7,14 @@ test('three pages connect to the sample/fake backend', async ({page}) => {
     await expect(page.getByRole('status')).toHaveText('서버 연결됨 · 데이터 sample · LLM fake');
   }
 });
+
+test('evaluation shows saved JSON counts and metrics',async({page,request})=>{
+  const reports=await (await request.get('/reports')).json();
+  test.skip(!reports.length,'No saved suite; run make eval first');
+  const summary=await(await request.get(`/reports/${reports[0].id}`)).json();
+  await page.goto('/evaluation');
+  await expect(page.getByTestId('suite-id')).toHaveText(summary.id);
+  await expect(page.getByTestId('suite-count')).toHaveText(String(summary.evaluated_scenarios));
+  await expect(page.getByRole('row').filter({has:page.getByRole('rowheader',{name:'path_accuracy',exact:true})})).toContainText(String(summary.metrics.path_accuracy.denominator));
+  await page.screenshot({path:'../runtime/sample/screenshots/evaluation.png',fullPage:true});
+});

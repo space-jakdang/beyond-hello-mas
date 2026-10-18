@@ -1,0 +1,742 @@
+[
+  {
+    "scenario_id": "S1-07",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S1-08",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S1-09",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S1-10",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S1-11",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S1-12",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-1-1",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "school_gap"
+      ],
+      "needs": [
+        "relationship",
+        "employment"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-1-2",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "school_gap"
+      ],
+      "needs": [
+        "relationship",
+        "employment"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-1-3",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "school_gap"
+      ],
+      "needs": [
+        "relationship",
+        "employment"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-1-4",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval"
+      ],
+      "crisis": false,
+      "causes": [
+        "school_gap"
+      ],
+      "needs": [
+        "relationship",
+        "employment"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "rejected"
+  },
+  {
+    "scenario_id": "S2-2-1",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "economic"
+      ],
+      "needs": [
+        "economic"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-2-2",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "economic"
+      ],
+      "needs": [
+        "economic"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-2-3",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "economic"
+      ],
+      "needs": [
+        "economic"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-2-4",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval"
+      ],
+      "crisis": false,
+      "causes": [
+        "economic"
+      ],
+      "needs": [
+        "economic"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "rejected"
+  },
+  {
+    "scenario_id": "S2-3-1",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "activity_deficit"
+      ],
+      "needs": [
+        "relationship"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-3-2",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "activity_deficit"
+      ],
+      "needs": [
+        "relationship"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-3-3",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "activity_deficit"
+      ],
+      "needs": [
+        "relationship"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-3-4",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval"
+      ],
+      "crisis": false,
+      "causes": [
+        "activity_deficit"
+      ],
+      "needs": [
+        "relationship"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "rejected"
+  },
+  {
+    "scenario_id": "S2-4-1",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "loneliness"
+      ],
+      "needs": [
+        "emotional",
+        "relationship"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-4-2",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "loneliness"
+      ],
+      "needs": [
+        "emotional",
+        "relationship"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-4-3",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "causes": [
+        "loneliness"
+      ],
+      "needs": [
+        "emotional",
+        "relationship"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S2-4-4",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval"
+      ],
+      "crisis": false,
+      "causes": [
+        "loneliness"
+      ],
+      "needs": [
+        "emotional",
+        "relationship"
+      ],
+      "subscales": {
+        "loneliness": 3,
+        "support": 4,
+        "network": 4
+      }
+    },
+    "decision": "rejected"
+  },
+  {
+    "scenario_id": "S3-1",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S3-2",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S3-3",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S3-4",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S3-5",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S3-6",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S3-7",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S3-8",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S4-1",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "crisis": false,
+      "route": "classify"
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S4-2",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "crisis": false,
+      "route": "classify"
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S4-3",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "crisis": false,
+      "route": "match"
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S4-4",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "crisis": false,
+      "route": "match"
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S4-5",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "route": "link"
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S4-6",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false,
+      "route": "link"
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S4-7",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "crisis": false,
+      "route": "history"
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S4-8",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "crisis": false,
+      "route": "history"
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S4-9",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "crisis": false,
+      "route": "human"
+    },
+    "decision": "approved"
+  },
+  {
+    "scenario_id": "S4-10",
+    "label_version": "development-1-unreviewed",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "crisis": false,
+      "route": "human"
+    },
+    "decision": "approved"
+  }
+]
