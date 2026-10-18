@@ -136,3 +136,9 @@ def test_key_header_redaction_and_redirect(service,monkeypatch):
     assert 'SECRET' not in json.dumps(service.refresh())
     with pytest.raises(ValueError,match='redirect'):
         NoRedirect().redirect_request(None,None,None,None,None,None)
+
+
+def test_provider_url_rejects_empty_username_with_password():
+    from backend.policy.service import policy
+    row={**rows()[0],'상세조회URL':'https://:secret@example.com/'}
+    assert policy(row,'central')['url'] is None

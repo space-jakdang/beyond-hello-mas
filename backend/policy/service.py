@@ -45,7 +45,7 @@ def policy(row,scope):
     def value(key):return str(row.get(key) or '').strip()
     if not value('서비스ID') or not value('서비스명'):raise ValueError('missing policy identity')
     url=value('상세조회URL');parts=urlsplit(url)
-    if parts.scheme not in ('https','http') or not parts.hostname or parts.username:url=None
+    if parts.scheme not in ('https','http') or not parts.hostname or parts.username is not None:url=None
     return {'id':value('서비스ID'),'title':value('서비스명'),'scope':scope,'agency':value('소관기관명'),
             'summary':value('서비스목적요약') or value('서비스목적'),'support':value('지원내용'),
             'eligibility':value('지원대상'),'criteria':value('선정기준'),'application':value('신청방법'),
