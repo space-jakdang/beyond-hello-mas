@@ -21,3 +21,14 @@ manifest와 zip은 같은 커밋에서 생성해야 합니다. 로컬 작업 폴
 ## 미완료 검증
 
 실제 OpenAI 평가/모델 스냅샷/가격 검증, 독립 사람 정답과 적합성 평가, 간접 위기 표현 검출 목표는 미완료입니다. Claude 교차 리뷰는 OAuth 인증 만료로 실행하지 못했습니다. 이후 PR은 사용자 진행 지시에 따라 자체 Ponytail 검토와 테스트 결과로 통합했으며 교차 리뷰 통과로 기록하지 않습니다. develop → main 제출 PR은 이 한계를 명시하고 별도로 준비합니다.
+
+## 깨끗한 clone 검증 결과
+
+2026-10-18 문서·보고서 커밋 `e08ee64`를 `git clone --no-local`로 새 임시 디렉터리에 복제했습니다. 기존 venv/node_modules/.env/runtime/로컬 계획을 가져오지 않고 잠금 파일로 설치했습니다. 패키지 다운로드 캐시와 OS의 Chromium 설치 캐시는 재사용했으므로 완전히 별도 컴퓨터를 시험한 것은 아닙니다.
+
+- `make install`, `make sample`, Chromium 설치 성공.
+- `make check`: Python 64 passed / private MCP 2 skipped, TypeScript/Vite build 성공, 브라우저 E2E 5 passed, HEAD 공개 검사 통과.
+- `make eval`: 공개 입력 40건을 유지한 partial 보고서, 완료24/실패16, 예상 종료 코드 2. 명시적 척도의 private MCP 미설정 때문에 실패하며 누락을 성공으로 처리하지 않음.
+- 공개 Markdown 로컬 링크 누락 0건. 최종 보고서에 개인 로컬 경로/키 없음. 고정 평가 코드와 제출 코드의 기능 diff 없음.
+
+이 기록 추가는 문서만 변경합니다. 최종 PR CI로 공개 파일 검사와 전체 테스트를 다시 확인합니다.
