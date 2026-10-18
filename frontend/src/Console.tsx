@@ -56,7 +56,7 @@ export function Console() {
     catch(e){setError(`결정 실패 · 최신 상태를 확인하세요. ${String(e)}`);}
     finally {setBusy(false);api<Overview>(`/runs/${runId}/overview`).then(next=>setOverview(old=>old?.run.id===runId?next:old)).catch(e=>setError(String(e)));}
   }
-  const sorted=[...alerts].sort((a,b)=>(['crisis','human_handoff'].includes(b.type)?1:0)-(['crisis','human_handoff'].includes(a.type)?1:0)||b.cursor-a.cursor);
+  const sorted=[...alerts].sort((a,b)=>(b.type==='crisis'?2:b.type==='human_handoff'?1:0)-(a.type==='crisis'?2:a.type==='human_handoff'?1:0)||b.cursor-a.cursor);
   const dongs=overview?.classification?.metadata?.analysis_version==='v3'?[]:overview?.classification?.dongs || [], chosen=dongs.find(d=>d.dong_cd===dong);
   return <section><details><summary>8집단 동별 상황판</summary><GroupDashboard embedded/></details><p>알림 SSE {connection} · 최근 200건 · 위기 우선</p><label>담당자 이름 <input value={operator} onChange={e=>setOperator(e.target.value)}/></label>
     <p>자동 수신 확인은 사람의 확인·승인과 별개입니다. 지연은 서버 단조 시계의 실행 시작 → 수신 확인 도착이며, 브라우저 시계와의 차이로 계산하지 않습니다.</p>
