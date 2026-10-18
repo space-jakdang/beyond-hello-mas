@@ -155,15 +155,40 @@ def test_receipt_duration_is_unknown_after_restart(tmp_path):
     assert second['clock_id'] != first['clock_id']
 
 
-def test_creation_api_and_mode_boundary(server):
+def test_event_creation_is_internal_and_mode_boundary(server):
     store, url = server
     created = run(store)
+    with pytest.raises(ValueError, match='data mode'):
+        store.create_run(created.model_copy(update={'id': 'local', 'data_mode': 'local'}))
     with httpx.Client(base_url=url) as client:
-        assert client.post('/runs', json=created.model_dump(mode='json')).status_code == 409
-        body = {**created.model_dump(mode='json'), 'id': 'local', 'data_mode': 'local'}
-        assert client.post('/runs', json=body).status_code == 422
-        body.update(id='new', data_mode='sample')
-        assert client.post('/runs', json=body).status_code == 201
-        assert client.post('/runs/new/alerts', json={'type': 'approval_requested', 'sim_ts': SIM}).status_code == 422
-        response = client.post('/runs/new/alerts', json={'type': 'crisis', 'sim_ts': SIM})
-        assert response.status_code == 201 and response.json()['status'] == 'created'
+        assert client.post('/runs', json=created.model_dump(mode='json')).status_code == 405
+        assert client.post('/runs/r/alerts', json={'type': 'linkage_completed', 'sim_ts': SIM}).status_code == 404
+
+
+def test_graph_http_approval_and_health_during_work(server, monkeypatch):
+    from backend.graph import GraphService
+    store, url = server
+    entered, release = threading.Event(), threading.Event()
+    original = GraphService.classify_node
+    def slow(self, state):
+        entered.set()
+        assert release.wait(timeout=5)
+        return original(self, state)
+    monkeypatch.setattr(GraphService, 'classify_node', slow)
+    with ThreadPoolExecutor(max_workers=1) as pool, httpx.Client(base_url=url, timeout=5) as client:
+        future = pool.submit(httpx.post, url + '/scenarios/run', json={
+            'id': 'slow', 'type': 'case', 'sim_time': SIM, 'payload': {'text': '상담 요청'}}, timeout=5)
+        try:
+            assert entered.wait(timeout=3)
+            assert client.get('/health', timeout=1).status_code == 200
+        finally:
+            release.set()
+        response = future.result()
+        assert response.status_code == 201
+        run_id = response.json()['id']
+        assert client.get(f'/runs/{run_id}/linkage').status_code == 404
+        approval = client.get(f'/runs/{run_id}/approval').json()['approval']
+        decision = {'snapshot_version': approval['snapshot_version'], 'status': 'approved', 'operator': 'test'}
+        assert client.post(f'/runs/{run_id}/decision', json={**decision, 'snapshot_version': 'wrong'}).status_code == 409
+        assert client.post(f'/runs/{run_id}/decision', json=decision).json()['status'] == 'completed'
+        assert client.get(f'/runs/{run_id}/linkage').status_code == 200

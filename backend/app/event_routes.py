@@ -1,22 +1,12 @@
 import asyncio
 import json
 import time
-import sqlite3
-from uuid import uuid4
-from typing import Literal
 from typing import Annotated
 
 from fastapi import APIRouter, Header, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 
-from backend.app.contracts import Alert, Contract, Nonempty, Run, SimTime, WallTime
-from backend.events import utcnow
-
-
-class AlertInput(Contract):
-    type: Literal['crisis', 'approval_requested', 'linkage_completed']
-    approval_id: Nonempty | None = None
-    sim_ts: SimTime
+from backend.app.contracts import Contract, Nonempty, SimTime, WallTime
 
 
 class ReceiptInput(Contract):
@@ -65,23 +55,6 @@ def event_router(store):
             return store.get_run(run_id)
         except KeyError:
             raise HTTPException(404, 'run not found')
-
-    @router.post('/runs', status_code=201)
-    def register_run(body: Run):
-        try:
-            return store.create_run(body)
-        except sqlite3.IntegrityError:
-            raise HTTPException(409, 'run already exists')
-        except ValueError as exc:
-            raise HTTPException(422, str(exc))
-
-    @router.post('/runs/{run_id}/alerts', status_code=201)
-    def create_alert(run_id: str, body: AlertInput):
-        require_run(run_id)
-        if body.type == 'approval_requested' and body.approval_id is None:
-            raise HTTPException(422, 'approval request requires approval_id')
-        return store.create_alert(Alert(id=str(uuid4()), run_id=run_id, type=body.type,
-                                       approval_id=body.approval_id, status='created', created_at=utcnow()), body.sim_ts)
 
     @router.get('/runs')
     def runs(limit: Annotated[int, Query(ge=1, le=1000)] = 100):
