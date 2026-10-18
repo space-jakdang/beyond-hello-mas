@@ -84,3 +84,7 @@ fake 모드의 초안은 fake로 표시하며 어떤 모드에서도 외부 전�
 관찰 화면의 `POST /scenarios/run`은 실행을 등록한 뒤 HTTP 202와 run ID를 반환한다. 작업은 백그라운드에서 실행되며 `GET /runs/{id}`와 trace SSE로 결과를 확인한다. 등록 후 프로세스가 종료되어도 저장된 workflow를 시작 시 복구한다. 관찰 화면은 URL의 run ID로 선택을 복원하고 seq로 중복을 제거한다. 메모리는 최근 2,000개, 타임라인은 최근 200개로 제한하며 과거 이벤트는 `after` cursor API로 조회한다. 기록 재생 배속은 화면 표시만 바꾸고 wall 지연이나 sim timestamp를 변경하지 않는다.
 
 담당자 콘솔은 탭별 client ID로 자동 수신 확인을 보내고 사람 확인·승인·반려를 별도 동작으로 기록한다. 알림 목록은 최근 200개이며 위기를 먼저 표시한다. 서버에서 관측한 `run_to_receipt_ms`는 실행 시작부터 해당 클라이언트의 수신 확인이 서버에 도착할 때까지로, 오프라인 기간과 왕복 네트워크를 포함한다. 서버 재시작으로 단조 시계 origin이 다르면 null/N/A다. 사람 확인과 승인 시간은 별도 trace로 표시한다. 월간 상황판은 동별 max 단계와 결측 연령 수, 원본 CRS·좌표 출처 및 연령 상세를 표로 제공한다. 승인 요청은 화면이 읽은 snapshot에 묶이며 다른 결정과 충돌하면 409를 표시하고 최신 상태를 다시 읽는다.
+
+## 정책 조사 확장
+
+Scenario.type에 `policy`, Trace.agent에 `policy`를 추가했습니다. payload는 goal(1~1000자), scopes(central/seoul/gangnam/gangwon/chuncheon 중 1~5개), query(최대200자, 기본 빈값), max_steps(1~10, 기본6)입니다. 상세 반환·상태·조회 제한은 [정책 도구 계약](policy-tools.md)을 참고하세요. 기존 시나리오/승인 필드는 유지합니다.

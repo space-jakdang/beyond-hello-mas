@@ -39,3 +39,6 @@ class Route(Output):
 
 
 SCHEMAS = {'analysis': Analysis, 'recommendations': Recommendations, 'draft': Draft, 'route': Route}
+
+from backend.policy.agent import PolicyDecision
+SCHEMAS["policy_decision"] = PolicyDecision

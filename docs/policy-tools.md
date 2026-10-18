@@ -38,3 +38,24 @@ REST 경로는 `GET /policies/coverage`, `POST /policies/refresh`, `GET /policie
 정책의 대상·선정기준·지원내용·기한·신청방법·연락처·출처 URL을 반환한다. `supportConditions`는 공식 코드 원문이며 누락/미확인을 적격으로 해석하지 않는다. `eligibility_verified=false`, `remaining_capacity=null`이다. 정책 발견은 신청 가능, 개인 자격 충족, 예산·정원 잔여 확인이나 배정을 뜻하지 않는다. 실제 신청 전 담당기관 확인이 필요하다.
 
 인증키 없는 자동 검증은 공식 명세 기반 합성 응답, 실패 처리, 실제 stdio MCP 통신을 검사한다. 인증된 실 API의 전체 목록·현행성 검증은 키 설정 후 수행해야 한다.
+
+
+## Supervisor 위임 ReAct 에이전트
+
+관찰 화면의 **Supervisor에게 정책 조사 지시**에서 목표와 관할을 선택한다. 또는 `POST /scenarios/run`에 다음 입력을 전송한다.
+
+```json
+{"id":"policy-research","type":"policy","sim_time":"2026-10-18T12:00:00Z","payload":{"goal":"고립 위험 주민에게 도움이 될 지원 정책 조사","scopes":["central","seoul","gangnam","gangwon","chuncheon"],"query":"","max_steps":6}}
+```
+
+Supervisor가 위기 신호를 먼저 검사한 뒤 policy worker에 목표/관할을 위임한다. Worker는 매 단계 구조화된 다음 행동을 선택하고 실제 stdio MCP 도구를 호출하며 관측을 다음 모델 입력으로 전달한다. `policy_coverage → refresh → search → detail` 순서를 고정하지 않는다. 모델은 실패·오래된 정보·검색 결과에 따라 다음 행동이나 종료를 선택한다. 도구의 설명과 정책 본문을 실행 지시로 취급하지 않는다.
+
+`LLM_MODE=fake`는 갱신→검색→첫 상세→종료를 사용하는 결정적 통신 시연이며 자율 추론·정책 적합성을 평가한 것이 아니다. `LLM_MODE=live`는 기존 OpenAI 모델/키/가격/예산 설정과 비용 예약·호출 캐시를 사용한다([LLM 설정](llm-usage.md)). 정부24 키와 LLM 키는 별개다. 키 없이도 API/MCP 오류와 종료 흐름을 확인할 수 있다.
+
+상한은 `min(payload.max_steps, LLM_MAX_CALLS)`이며 기본 LLM 호출 한도는 4다. 더 많은 상세/페이지가 필요하면 검증된 비용 예산과 함께 한도를 조정한다(최대 10). 목록 전체는 `/policies`의 페이지 API로 조회할 수 있으며 한 번의 에이전트 실행은 전체 목록을 모두 검토했다고 보장하지 않는다. 전체 도구 관측은 SQLite와 trace에 남기고 모델 입력은 항목당 문자열 800자/목록 5건으로 제한한다. 큰 문맥·비용 초과는 임의로 내용을 만들어 진행하지 않고 종료한다.
+
+결과는 관찰 화면, `GET /runs/{id}/overview`의 `policy`, `policy` 역할의 `node_end` trace에 있다. 실행 완료와 조사 결과 상태는 별개다: `completed`는 상세 근거가 있는 후보를 반환, `no_verified_candidates`는 확인한 후보 없음, `step_limit`/`model_unavailable_or_budget`는 조사 미완료다. `invalid_action`/`invalid_evidence`/`repeated_action`은 안전 종료다. 키 누락 등 원인은 `coverage.last_attempt`와 tool trace에서 확인한다.
+
+추천은 지정 관할 안에서 검색한 ID를 상세 조회한 경우만 허용하며 근거 필드 원문 일치를 검사한다. 설명은 모델의 잠정 관련성 판단이다. API에서 직접 조회했어도 개인 자격·접수·정원을 확정하지 않는다. 예산·단가·정원·수요의 검증된 입력이 없으므로 현재 에이전트는 조사와 후보 추천까지만 하며 실제 자원 배분 최적화·신청·예약·연락은 수행하지 않는다. 기존 사례 승인/연계 흐름을 변경하지 않는다.
+
+도구 결과는 단계마다 저장된다. 재시작은 저장된 관측부터 재개하고 성공한 동일 모델 호출은 비용 장부의 캐시를 재사용한다. 외부 조회 후 로컬 저장 전에 종료된 경우 해당 읽기 도구를 다시 호출할 수 있다. 동일 도구/인자 반복은 중단한다(갱신 후 상태 재확인용 coverage는 단계 상한 내 반복 가능). 공개 서버용 인증/쿼터 관리와 예약 실행은 포함하지 않는다.

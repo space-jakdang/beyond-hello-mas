@@ -19,7 +19,7 @@ Responses API의 `responses.parse`와 Pydantic schema를 사용하고 서버 저
 
 분류 설명 schema에는 summary/causes/needs/review_required만 있고 숫자 단계 필드가 없습니다. 추천 설명은 결정적 후보 ID 전체와 실제 field/value 근거를 그대로 참조해야 하며 추가 ID/다른 필드는 거부합니다. 자유 서술의 모든 주장까지 자동으로 검증했다는 뜻은 아니므로 담당자 검토가 필요합니다.
 
-안내 초안은 승인 전에 만들어 snapshot에 포함합니다. 승인 후 문구나 후보를 새로 생성하지 않습니다. 질문 라우팅은 classify/match/link/history/human 중 하나만 허용합니다. history는 현재 모드 DB만 조회하고 match는 명시적 match_request를 요구합니다. link 요청은 일반 승인 경로로 들어가며 라우팅 문구로 승인을 우회할 수 없습니다. 반복 계획 루프는 없습니다.
+안내 초안은 승인 전에 만들어 snapshot에 포함합니다. 승인 후 문구나 후보를 새로 생성하지 않습니다. 질문 라우팅은 classify/match/link/history/human 중 하나만 허용합니다. history는 현재 모드 DB만 조회하고 match는 명시적 match_request를 요구합니다. link 요청은 일반 승인 경로로 들어가며 라우팅 문구로 승인을 우회할 수 없습니다. 이 기존 경로에는 반복 계획 루프가 없습니다. 별도 `policy` 시나리오는 Supervisor 위임 아래 `policy_decision` 구조화 출력을 반복하며 실제 정책 MCP 관측으로 다음 행동을 선택합니다([정책 ReAct](policy-tools.md)).
 
 프롬프트 파일, hash, 모델, 입력/출력, 토큰/지연, 재시도 여부와 오류 유형을 해당 모드 DB trace에 보존합니다. API 키/SDK 예외 원문은 기록하지 않습니다. 같은 run의 성공한 동일 호출은 재개 시 재사용하며, 실패 또는 미확정 호출은 새 run에서 명시적으로 다시 실행해야 합니다. LangSmith tracing은 비활성화합니다.
 

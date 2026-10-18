@@ -2,7 +2,7 @@ from pathlib import Path
 from uuid import UUID
 from typing import Literal
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, SecretStr, model_validator, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -32,6 +32,11 @@ class Settings(BaseSettings):
     mcp_cwd: Path | None = None
     mcp_timeout_seconds: float = Field(default=10, gt=0, le=60)
     mcp_allow_fallback: bool = False
+
+    @field_validator("evaluation_id", mode="before")
+    @classmethod
+    def blank_evaluation_id(cls, value):
+        return None if value == "" else value
 
     @model_validator(mode="after")
     def live_requires_key(self):

@@ -36,7 +36,8 @@ def graph_router(service):
             proposal = service.approval(run_id)
         except KeyError:
             proposal = None
-        return {'run': run, 'classification': classification, 'review': proposal, 'traces': traces}
+        policy = next((t['payload'] for t in traces if t['agent'] == 'policy' and t['kind'] == 'node_end'), None)
+        return {'run': run, 'policy': policy, 'classification': classification, 'review': proposal, 'traces': traces}
 
     @router.get('/runs/{run_id}/approval')
     def approval(run_id: str):

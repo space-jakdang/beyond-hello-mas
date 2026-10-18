@@ -11,6 +11,9 @@ PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
 
 
 def fake(role, payload):
+    if role == 'policy_decision':
+        from backend.policy.agent import fake_decision
+        return fake_decision(payload)
     if role == 'analysis':
         return {'summary': 'fake: 입력 근거를 담당자가 검토해야 합니다.', 'causes': [], 'needs': [], 'review_required': True}
     if role == 'recommendations':
@@ -81,7 +84,7 @@ class Agents:
                 raise ValueError('LLM call or cost budget exceeded')
             db.execute('INSERT INTO llm_calls VALUES (?,?,?,?,?,?)', (run_id, call_key, role, 'pending', reserve, json.dumps(metadata)))
             self.store._trace(db, run_id, sim_ts, 'llm_call', metadata, 'supervisor' if role == 'route' else
-                              {'analysis': 'classify', 'recommendations': 'match', 'draft': 'link'}[role])
+                              {'analysis': 'classify', 'recommendations': 'match', 'draft': 'link', 'policy_decision': 'policy'}[role])
         started = time.monotonic()
         tokens_in = tokens_out = 0
         actual = None
