@@ -5,7 +5,7 @@ import re
 import subprocess
 
 SECRET = re.compile(rb"(?:sk-(?:proj-)?[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)")
-ASSIGNMENT = re.compile(rb"(?im)^\s*(?:OPENAI_API_KEY|ANTHROPIC_API_KEY|GITHUB_TOKEN)[ \t]*=[ \t]*[^\s#]+")
+ASSIGNMENT = re.compile(rb"(?im)^\s*(?:OPENAI_API_KEY|ANTHROPIC_API_KEY|GITHUB_TOKEN|GOV24_SERVICE_KEY)[ \t]*=[ \t]*[^\s#]+")
 
 
 def violations(path: str, content: bytes) -> list[str]:
