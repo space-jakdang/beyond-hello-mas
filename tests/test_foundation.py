@@ -38,7 +38,7 @@ def test_scenario_time_and_answer_separation():
 
 @pytest.fixture
 def segment():
-    return dict(ym='2025-07', sgg='11230', dong_cd='1123051', dong_nm='합성동',
+    return dict(ym='2025-07', sgg='11230', dong_cd='11230511', dong_nm='합성동',
                 age_band='20s', x=1, y=2, crs='synthetic-cartesian', coordinate_source='synthetic',
                 indicators={'ind_activity': None}, indicator_version='draft-1', residents=0, blind_flag=False)
 
