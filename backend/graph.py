@@ -12,9 +12,10 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 from langsmith import tracing_context
 
-from backend.app.contracts import Alert, Approval, Run, Scenario
+from backend.app.contracts import Alert, Approval, Run, Scenario, PersonCase, person_age_group
 from backend.agents.llm import Agents
 from backend.agents.scale import ScaleAdapter
+from backend.agents.person import PersonAdapter
 from backend.policy.agent import PolicyAgent, PolicyTask
 from backend.events import utcnow
 from backend.tools.catalog import load_catalog
@@ -32,6 +33,7 @@ class State(TypedDict, total=False):
     proposal: dict
     decision: dict
     question_route: str
+    local_action: str
 
 
 def crisis_evidence(payload):
@@ -50,6 +52,7 @@ class GraphService:
         self.store, self.settings = store, settings
         self.agents = Agents(store, settings)
         self.scale = ScaleAdapter(store, settings)
+        self.person = PersonAdapter(store, settings)
         self.policy_agent = PolicyAgent(store, settings, self.agents)
         self.locks = {}
         self.lock_guard = RLock()
@@ -95,6 +98,26 @@ class GraphService:
     def classify_node(self, state):
         started = time.monotonic()
         scenario = Scenario.model_validate(state['scenario'])
+        if scenario.type == 'admin' or 'person' in scenario.payload:
+            person = PersonCase.model_validate(scenario.payload['person'])
+            group = person_age_group(person.age)
+            if scenario.type == 'admin':
+                result = self.person.priority(state['run_id'], scenario.sim_time, group, {**person.features, **person.admin_flags})
+                result['screening'] = {'status': 'verified_questions_required', 'external_delivery': False,
+                    'message': '검증된 문항을 준비하여 담당자가 선별 질문을 확인해야 합니다.'}
+                action = 'screening_requested'
+            elif not person.consent or not person.responses_confirmed:
+                result = {'status': 'assessment_pending', 'result': None, 'reason': 'consent_and_person_confirmation_required'}
+                action = 'human_handoff'
+            else:
+                result = self.person.assess(state['run_id'], scenario.sim_time, {'age': person.age, 'age_group': group,
+                    'responses': person.responses, 'admin_flags': person.admin_flags})
+                assessment = result.get('result') or {}
+                action = 'human_handoff' if result['status'] != 'assessed' or assessment.get('human_handoff') or assessment.get('crisis') or (group in ('midlife','prime') and assessment.get('stage') == 3) else ''
+            result['age_group'] = group
+            result['response_category'] = 'human_connection' if action == 'human_handoff' else 'screening' if scenario.type == 'admin' else 'referral'
+            self.node_event(state, 'classify', result, started)
+            return {'classification': result, 'local_action': action}
         if scenario.type == 'monthly':
             month = scenario.payload.get('ym')
             rows, source = load_segments(self.settings)
@@ -139,8 +162,10 @@ class GraphService:
                     'shortfall': recommendation['shortfall'], 'metadata': recommendation['metadata']})
         elif result.get('status') == 'assessed':
             payload = state['scenario']['payload']
-            labels = {r['label'] for r in result['result']['matched']}
-            needs = set(result['analysis']['needs'])
+            labels = {r['label'] for r in result['result'].get('matched', [])}
+            needs = set(result.get('analysis', {}).get('needs', ['relationship']))
+            if 'person' in payload:
+                payload = {**payload, **payload['person']}
             if '외로움 고위험군' in labels:
                 needs.add('emotional')
             if '사회적 고립 고위험군' in labels:
@@ -179,21 +204,24 @@ class GraphService:
                 return {}
             crisis = bool(state.get('crisis'))
             approval = None
-            if not crisis:
+            local_action = state.get('local_action', '')
+            if not crisis and not local_action:
                 row = db.execute('SELECT body FROM approvals WHERE run_id=?', (state['run_id'],)).fetchone()
                 approval = Approval.model_validate_json(row['body']) if row else None
                 if (not approval or approval.status != 'approved' or
                         approval.snapshot_version != state['proposal']['snapshot_version']):
                     raise ValueError('link requires approval of this exact snapshot')
             now = utcnow()
-            linkage = {'run_id': state['run_id'], 'kind': 'crisis' if crisis else state['proposal']['scope'],
+            kind = 'crisis' if crisis else local_action or state['proposal']['scope']
+            local_text = '위기 신호를 담당자가 확인할 로컬 알림' if crisis else ('선별 질문 준비·담당자 확인 요청' if local_action == 'screening_requested' else '개인 판정·응답을 담당자가 확인할 인계 요청')
+            linkage = {'run_id': state['run_id'], 'kind': kind,
                        'fake': self.settings.llm_mode == 'fake', 'external_delivery': False, 'created_at': now.isoformat(),
-                       'draft': {'text': '위기 신호를 담당자가 확인할 로컬 알림', 'resource_ids': []} if crisis else state['proposal']['draft'],
-                       'followup_at': None if crisis else (now + timedelta(days=7)).isoformat(),
+                       'draft': {'text': local_text, 'resource_ids': []} if crisis or local_action else state['proposal']['draft'],
+                       'followup_at': None if crisis or local_action else (now + timedelta(days=7)).isoformat(),
                        'snapshot_version': approval.snapshot_version if approval else None}
             db.execute('INSERT INTO linkages VALUES (?,?)', (state['run_id'], json.dumps(linkage)))
             alert = Alert(id=f"link-{state['run_id']}", run_id=state['run_id'],
-                approval_id=approval.id if approval else None, type='crisis' if crisis else 'linkage_completed',
+                approval_id=approval.id if approval else None, type=kind if crisis or local_action else 'linkage_completed',
                 status='created', created_at=now)
             db.execute('INSERT INTO alerts(id,run_id,body) VALUES (?,?,?)', (alert.id, alert.run_id, alert.model_dump_json()))
             self.once(db, state, 'link', 'node_end', linkage, 'link', latency_ms=(time.monotonic()-started)*1000)
@@ -247,7 +275,7 @@ class GraphService:
                 builder.add_node(name, action)
             builder.add_edge(START, 'supervisor')
             builder.add_conditional_edges('supervisor', lambda s: 'link' if s['crisis'] else 'policy' if s['scenario']['type'] == 'policy' else ('question' if s.get('question_route') in ('history', 'human', 'classify', 'match') else 'classify'))
-            builder.add_edge('classify', 'match')
+            builder.add_conditional_edges('classify', lambda s: 'link' if s.get('local_action') else 'match')
             builder.add_edge('match', 'approval')
             builder.add_conditional_edges('approval', lambda s: 'link' if s['decision']['status'] == 'approved' else 'reject')
             builder.add_edge('link', END)
@@ -304,10 +332,21 @@ class GraphService:
         return self.store.get_run(run_id)
 
     def register(self, scenario):
+        if 'person' in scenario.payload:
+            person = PersonCase.model_validate(scenario.payload['person'])
+            if person.reply_to:
+                with self.store.connection() as db:
+                    row = db.execute('SELECT scenario FROM workflows WHERE run_id=?', (person.reply_to,)).fetchone()
+                parent = Scenario.model_validate_json(row['scenario']) if row else None
+                if scenario.type != 'case' or parent is None or parent.type != 'admin' or self.store.get_run(person.reply_to).status != 'completed':
+                    raise ValueError('reply_to requires completed admin run')
+                original = PersonCase.model_validate(parent.payload['person'])
+                if (person.person_id, person.age, person.sgg) != (original.person_id, original.age, original.sgg):
+                    raise ValueError('reply_to person mismatch')
         run_id = str(uuid4())
         run = Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
             data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
-            rule_version='provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
+            rule_version='person-v02' if 'person' in scenario.payload else 'provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
         with self.lock(run_id):
             self.store.create_run(run)
             with self.store.connection(write=True) as db:

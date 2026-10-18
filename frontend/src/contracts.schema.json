@@ -623,7 +623,8 @@
           "case",
           "crisis",
           "question",
-          "policy"
+          "policy",
+          "admin"
         ],
         "title": "Type",
         "type": "string"
@@ -1180,7 +1181,9 @@
         "enum": [
           "crisis",
           "approval_requested",
-          "linkage_completed"
+          "linkage_completed",
+          "human_handoff",
+          "screening_requested"
         ],
         "title": "Type",
         "type": "string"

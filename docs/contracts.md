@@ -88,3 +88,9 @@ fake 모드의 초안은 fake로 표시하며 어떤 모드에서도 외부 전�
 ## 정책 조사 확장
 
 Scenario.type에 `policy`, Trace.agent에 `policy`를 추가했습니다. payload는 goal(1~1000자), scopes(central/seoul/gangnam/gangwon/chuncheon 중 1~5개), query(최대200자, 기본 빈값), max_steps(1~10, 기본6)입니다. 상세 반환·상태·조회 제한은 [정책 도구 계약](policy-tools.md)을 참고하세요. 기존 시나리오/승인 필드는 유지합니다.
+
+### 개인 판정·행정 접수 v0.2
+
+`admin`과 `case.payload.person`은 `person_id`(로컬 가명), `age`(19~120), `sgg`(기존 통계 코드 11230/32010), `responses`(척도→문항→정수), `consent`, `responses_confirmed`, `admin_flags`, `features`, 선택적 `reply_to`를 받는다. 행정 접수는 우선순위 도구 뒤 선별 질문 준비 알림을 만든다. 아직 검증된 새 문항이 없으므로 문항 발송 완료로 표시하지 않는다. 실제 외부 발송은 하지 않는다.
+
+응답 case의 `reply_to`는 완료된 admin 실행과 같은 가명·나이·지역이어야 한다. 동의 또는 본인 확인 전 응답은 채점하지 않는다. 단계 4~5·위기·판정 불가·미확인 응답은 LLM 호출이나 일반 승인 대기 없이 사람에게 인계한다. 중년·장년 3단계도 4단계와 같은 사람 연결 대응을 사용한다. 일반 추천안은 기존 승인 절차를 유지한다. 과거 flat `responses` case는 v1 LSIS 경로로 유지된다.
