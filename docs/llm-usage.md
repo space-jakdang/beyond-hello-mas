@@ -1,0 +1,44 @@
+# LLM과 척도 연동
+
+## 지금 실행 가능한 범위
+
+기본 sample/fake 경로는 키 없이 실행됩니다. fake 설명·질문 라우팅은 결정적 테스트 대역이며 OpenAI 성능 근거가 아닙니다. 실제 OpenAI smoke는 아직 수행하지 않았고 모델 스냅샷/가격/예산은 미확정입니다. 키는 실제 호출 검증 시점에 `.env`에 넣으면 됩니다.
+
+## OpenAI 설정과 한도
+
+- `LLM_MODE=live`, `OPENAI_API_KEY`, `OPENAI_MODEL`: 사용 가능한 모델의 고정 스냅샷을 직접 선택합니다. 임의 기본 모델이나 자동 대체 모델은 없습니다.
+- `LLM_BUDGET_USD`: 저장소의 모드별 실행 DB에 누적된 예약액 기준 상한. 기본값 0으로 실제 호출을 막습니다.
+- `INPUT_USD_PER_MILLION`, `OUTPUT_USD_PER_MILLION`, `PRICE_VERSION`: 선택 모델의 확인된 표준 가격과 확인일/출처 버전을 지정합니다. 현재 숫자를 추측해 고정하지 않았습니다.
+- 실행당 최대 4회, 출력 최대 1,024토큰, 입력(프롬프트·payload·schema) 최대 24,000바이트, 요청 timeout 30초가 기본입니다. SDK 자동 재시도는 0회입니다.
+- 호출 전 입력 바이트 수+8,192 여유분 및 최대 출력 토큰으로 보수적인 금액을 예약합니다. 실패/중단된 호출의 예약도 유지하고 같은 요청을 재시도하지 않습니다. 예약액은 실제 청구액이 아니며 공급자 비용 제어를 대체하지 않습니다. 실제 usage가 더 크면 장부에 상향 반영합니다.
+- 성공 시 모델 응답의 raw usage와 표준 입력 가격 기준 보수적 비용 추정치를 기록합니다. 캐시 할인 등은 raw usage로 후속 평가에서 구분해야 하며 추정치를 정확한 청구액으로 쓰지 않습니다.
+
+Responses API의 `responses.parse`와 Pydantic schema를 사용하고 서버 저장은 `store=False`로 요청합니다. 모델별 지원 파라미터를 확인하기 전 temperature/seed를 임의 전송하지 않습니다. 설정할 모델의 구조화 출력/토큰 한도와 계정 접근 가능성은 실제 smoke 때 확인해야 합니다. [공식 구조화 출력 문서](https://developers.openai.com/api/docs/guides/structured-outputs), [Responses API](https://developers.openai.com/api/reference/python/resources/responses).
+
+## 역할과 검증
+
+분류 설명 schema에는 summary/causes/needs/review_required만 있고 숫자 단계 필드가 없습니다. 추천 설명은 결정적 후보 ID 전체와 실제 field/value 근거를 그대로 참조해야 하며 추가 ID/다른 필드는 거부합니다. 자유 서술의 모든 주장까지 자동으로 검증했다는 뜻은 아니므로 담당자 검토가 필요합니다.
+
+안내 초안은 승인 전에 만들어 snapshot에 포함합니다. 승인 후 문구나 후보를 새로 생성하지 않습니다. 질문 라우팅은 classify/match/link/history/human 중 하나만 허용합니다. history는 현재 모드 DB만 조회하고 match는 명시적 match_request를 요구합니다. link 요청은 일반 승인 경로로 들어가며 라우팅 문구로 승인을 우회할 수 없습니다. 반복 계획 루프는 없습니다.
+
+프롬프트 파일, hash, 모델, 입력/출력, 토큰/지연, 재시도 여부와 오류 유형을 해당 모드 DB trace에 보존합니다. API 키/SDK 예외 원문은 기록하지 않습니다. 같은 run의 성공한 동일 호출은 재개 시 재사용하며, 실패 또는 미확정 호출은 새 run에서 명시적으로 다시 실행해야 합니다. LangSmith tracing은 비활성화합니다.
+
+## 기존 LSIS-6 MCP
+
+MCP 프로젝트는 별도로 설치합니다. 비공개 소스나 패키지를 이 공개 저장소에 복사하지 않습니다. 설치한 MCP의 Python 경로와 프로젝트 경로를 `.env`의 `MCP_PYTHON`, `MCP_CWD`에 지정합니다. 기본 전송은 해당 Python의 `-m beyond_hello_mcp.server` stdio입니다.
+
+`score(scale_id="lsis-6", responses=...)`에 실제로 입력된 q1~q6 정수 선택값만 전달합니다. 채점이나 역채점을 재구현하지 않습니다. 응답 누락은 pending이고 부분 응답/잘못된 값은 입력 오류입니다. 결과의 loneliness/support/network, 두 위험 결과, 척도 버전/출처/주의문을 보존합니다. 개인 척도를 집단 5단계로 환산하지 않습니다.
+
+`MCP_ALLOW_FALLBACK=true`일 때 전송/timeout 오류만 동일 Python·cwd의 `beyond_hello_mcp.scoring.score`로 폴백합니다. 전후 scoring.py와 척도 파일 hash가 같은지 확인합니다. MCP 입력/프로토콜 오류에는 폴백하지 않습니다. 반환 버전은 LSIS-6 1.0.0 계약을 검사합니다.
+
+개인 추천 강도는 임시 운영 매핑입니다. 명시적 척도 결과의 위험 라벨이 있으면 high, 없으면 low를 사용하고, 확인된 욕구·나이·관할이 있는 경우에만 매칭합니다. 외로움 라벨은 emotional, 사회적 고립 라벨은 relationship 욕구에 연결합니다. 이는 임상 진단/개입 타당성 검증이 아니며 최종 정책 확인이 필요합니다.
+
+## 검증
+
+`make test`는 키 없는 fake/오류 fixture를 검사합니다. 로컬 MCP 설정 후 아래 명령은 실제 stdio 호출, 동일 패키지 폴백 동등성 및 사례 그래프 연결을 검사합니다. CI에 비공개 MCP가 없으면 해당 두 테스트만 명시적으로 skip합니다.
+
+```sh
+uv run pytest tests/test_agents.py::test_actual_mcp_and_same_package_fallback tests/test_graph.py::test_case_with_actual_scale_keeps_two_results_and_candidates
+```
+
+현재 로컬에서 두 실제 MCP 테스트를 통과했습니다. 실제 OpenAI 모델 호출·계정 비용 검증은 미실행입니다. fake 성공이나 MCP 성공을 live 모델 검증으로 합산하지 않습니다.

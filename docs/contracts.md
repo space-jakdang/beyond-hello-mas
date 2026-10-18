@@ -75,8 +75,8 @@ SQLite 연결/트랜잭션 의미는 [Python 공식 문서](https://docs.python.
 
 위기는 payload 안의 모든 문자열을 먼저 규칙으로 검사합니다. 시나리오 type이나 평가 정답은 위기 판정에 사용하지 않습니다. 위기 경로는 supervisor → link이며 분류/매칭/LLM/일반 승인을 우회합니다. 규칙 provisional-1은 일부 명시적 한국어 신호와 제한된 부정문만 다루며 포괄적 위기 탐지 성능을 보장하지 않습니다. 알림은 로컬 담당자용이며 기관에 실제 전달하지 않습니다.
 
-monthly는 해당 월의 연령별 배분안 전체를 하나의 승인 단위로 둡니다. 개인 사례는 현재 척도 어댑터가 없어 assessment_pending으로 유지하고 점수·단계를 만들지 않습니다. 이때 승인 대상은 추가 응답/상담을 위한 후속 확인 계획이며 자원 추천은 비어 있습니다. non-crisis question 및 live 일반 경로는 명시적으로 실패하며 fake 성공으로 바꾸지 않습니다. LLM/척도·질문 어댑터는 후속 구현입니다.
+monthly는 해당 월의 연령별 배분안 전체를 하나의 승인 단위로 둡니다. 개인 사례에 명시적 척도 응답이 없으면 assessment_pending으로 유지하고 점수·단계를 만들지 않습니다. 이때 승인 대상은 추가 응답/상담을 위한 후속 확인 계획이며 자원 추천은 비어 있습니다. 명시적 응답은 MCP로 채점하며 외로움/사회적 고립 결과를 분리합니다. 질문은 제한된 라우팅 enum으로 한 번만 실행하고 link 요청에도 승인 게이트를 적용합니다. live 설정/호출 실패를 fake 성공으로 바꾸지 않습니다.
 
-모든 연계 초안은 fake이고 외부 전달은 없습니다. 일반 후속 확인 일정은 개발용 기본 7일 후입니다. 그래프 checkpoint는 모드별 `runtime`에 저장하고 외부 LangSmith tracing은 호출 컨텍스트에서 비활성화합니다. 재시작 복구는 실행별로 수행하며 실패한 실행도 error trace에 남습니다. 지원 범위는 단일 백엔드 프로세스입니다.
+fake 모드의 초안은 fake로 표시하며 어떤 모드에서도 외부 전달은 없습니다. 일반 후속 확인 일정은 개발용 기본 7일 후입니다. 그래프 checkpoint는 모드별 `runtime`에 저장하고 외부 LangSmith tracing은 호출 컨텍스트에서 비활성화합니다. 재시작 복구는 실행별로 수행하며 실패한 실행도 error trace에 남습니다. 지원 범위는 단일 백엔드 프로세스입니다.
 
 구현은 LangGraph 공식 [interrupt](https://reference.langchain.com/python/langgraph/types/interrupt)와 [SqliteSaver](https://reference.langchain.com/python/langgraph.checkpoint.sqlite/SqliteSaver) 계약 및 고정된 설치 버전을 사용합니다.

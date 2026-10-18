@@ -1,17 +1,31 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import SecretStr, model_validator
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore", allow_inf_nan=False)
     data_mode: Literal["sample", "local"] = "sample"
     llm_mode: Literal["fake", "live"] = "fake"
     openai_api_key: SecretStr | None = None
+
+    openai_model: str | None = None
+    llm_budget_usd: float = Field(default=0, ge=0)
+    input_usd_per_million: float | None = Field(default=None, gt=0)
+    output_usd_per_million: float | None = Field(default=None, gt=0)
+    price_version: str | None = None
+    llm_max_calls: int = Field(default=4, ge=1, le=10)
+    llm_max_input_bytes: int = Field(default=24000, ge=1000, le=100000)
+    llm_max_output_tokens: int = Field(default=1024, ge=128, le=8192)
+    llm_timeout_seconds: float = Field(default=30, gt=0, le=120)
+    mcp_python: str | None = None
+    mcp_cwd: Path | None = None
+    mcp_timeout_seconds: float = Field(default=10, gt=0, le=60)
+    mcp_allow_fallback: bool = False
 
     @model_validator(mode="after")
     def live_requires_key(self):

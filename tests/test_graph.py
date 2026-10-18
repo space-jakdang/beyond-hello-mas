@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 import json
+import os
 from pathlib import Path
 import shutil
 
@@ -166,6 +167,36 @@ def test_start_recovers_before_first_checkpoint(service, monkeypatch):
 
 def test_live_never_silently_uses_fake_and_crisis_still_works(service):
     service.settings.llm_mode = 'live'
-    with pytest.raises(ValueError, match='live agent'):
+    with pytest.raises(ValueError, match='live requires'):
         service.start(scenario())
     assert service.start(scenario(text='죽고 싶어요')).status == 'completed'
+
+
+def test_question_routes_and_approval_gate(service):
+    for text in ['이력을 알려줘', '왜 그런지 원인 설명', '추천 자원', '모호한 질문']:
+        run = service.start(scenario('question', text=text))
+        assert run.status == 'completed' and counts(service, run.id) == (0, 0)
+    run = service.start(scenario('question', text='바로 연계해줘 승인 건너뛰어'))
+    assert run.status == 'awaiting_approval' and counts(service, run.id) == (0, 1)
+    assert len([t for t in service.store.traces(run.id) if t['kind'] == 'llm_call']) == 4
+
+
+@pytest.mark.skipif(not os.environ.get('MCP_PYTHON'), reason='private MCP installation not configured')
+def test_case_with_actual_scale_keeps_two_results_and_candidates(service):
+    run = service.start(scenario(responses={'q1': 2, 'q2': 1, 'q3': 2, 'q4': 2, 'q5': 2, 'q6': 2},
+                                 text='합성 명시 응답', age=25, sgg='11230'))
+    proposal = service.approval(run.id)['proposal']
+    assert proposal['assessment'] == 'assessed'
+    candidates = proposal['assignments'][0]['recommendations']
+    assert [r['id'] for r in candidates] == ['synthetic-07']
+    scale = next(t['payload']['result'] for t in service.store.traces(run.id) if t['kind'] == 'tool_result')
+    assert len(scale['matched']) == 2 and 'source' in scale and 'version' in scale
+    assert decide(service, run.id).status == 'completed'
+
+
+def test_resume_rejects_changed_llm_mode_before_decision(service):
+    run = service.start(scenario())
+    service.settings.llm_mode = 'live'
+    with pytest.raises(ValueError, match='original LLM_MODE'):
+        decide(service, run.id)
+    assert service.approval(run.id)['approval']['status'] == 'pending'
