@@ -88,6 +88,8 @@ class SegmentV3(Contract):
             raise ValueError("dong_cd must belong to sgg")
         if any(not bands for bands in self.source_bands.values()):
             raise ValueError("source bands cannot be empty")
+        if self.index_name in ('S1','v3') and self.age_group!='youth':
+            raise ValueError('youth index requires youth group')
         if (self.index_name == "S1") != (self.risk_direction == "low_is_risk"):
             raise ValueError("index risk direction mismatch")
         return self

@@ -31,10 +31,12 @@ def test_classify_keeps_comparisons_and_missing_separate():
     assert not result['metadata']['individual_diagnosis']
 
 
-def test_v3_sample_and_api_are_repeatable():
+def test_v3_sample_and_api_are_repeatable(monkeypatch):
     from fastapi.testclient import TestClient
     from backend.app.main import create_app
     settings=Settings(_env_file=None,llm_mode='fake')
+    import backend.tools.neighborhoods as neighborhoods
+    monkeypatch.setattr(neighborhoods,'load_segments',lambda *_:pytest.fail('v3 must not load legacy segments'))
     rows,_=load_segments(settings)
     assert classify(rows)==classify(rows)
     with TestClient(create_app(settings)) as client:

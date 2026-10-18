@@ -47,6 +47,7 @@ def export(settings):
         ('prime','장년_dong_index_seoul_v2.csv'),('elderly','elderly_dong_index_seoul_v2.csv'))}
     output=[]
     for (sgg,name),location in sorted(locations.items()):
+        if sgg not in ('11230','32010'):raise ValueError('unsupported source district')
         display_name=name
         if location.dong_cd=='11230511':name='일원2동'  # Existing verified legacy code mapping in export_segments.
         for sex in ('M','F'):
@@ -100,7 +101,7 @@ def export(settings):
                     if rr and rank_stage(rank)!=int(rr['강남내단계']):raise ValueError('Gangnam rank rule mismatch')
                     output.append(row.model_copy(update={'index_name':'G_gangnam_rank','value':float(rr['지수']) if rr else None,
                         'source_stage':rank_stage(rank) if rank else None,'within_rank':rank,'preferred':True,
-                        'source_file':'gangnam_within_rank.csv','components':{},'flags':sorted(set(flags+([] if rr else ['missing','blind'])))}))
+                        'source_file':'gangnam_within_rank.csv','components':{},'flags':sorted(set([f for f in flags if f not in ('missing','blind')]+([] if rr else ['missing','blind'])))}))
     if len({r.dong_cd for r in output})!=47 or sum(r.preferred for r in output)!=376:raise ValueError('expected 47 × 8 primary groups')
     if inventory(root)!=original:raise ValueError('source changed during export')
     write_segments(settings.data_dir/'segments-v3.parquet',output,'local')

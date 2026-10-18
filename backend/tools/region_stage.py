@@ -37,7 +37,7 @@ def classify(rows):
     result=[]
     for row in rows:
         band=level_band(row.index_name,row.value) if row.index_name in ('S1','v3') else None
-        stage=youth_stage(band) if row.age_group=='youth' else row.source_stage
+        stage=youth_stage(band) if row.index_name in ('S1','v3') else row.source_stage
         if row.value is None:stage=None
         result.append({**row.model_dump(mode='json'),'stage':stage,'level_band':band,
                        'interpretation':'먼저 찾아갈 순서','comparable_across_regions':False})

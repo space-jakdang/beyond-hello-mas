@@ -39,19 +39,7 @@ def boundaries():
     return body,metadata
 
 
-def analysis(settings):
-    rows,source=load_segments(settings)
-    result=classify(rows)
-    dongs={}
-    lookup={}
-    for row in rows:
-        info={'dong_cd':row.dong_cd,'dong_nm':row.dong_nm,'sgg':row.sgg}
-        if row.dong_cd in dongs and dongs[row.dong_cd]!=info:raise ValueError('neighborhood identity changed')
-        dongs[row.dong_cd]=info
-        lookup[(row.ym,row.dong_cd,row.age_band)]=row
-    for segment in result['segments']:
-        row=lookup[(segment['ym'],segment['dong_cd'],segment['age_band'])]
-        segment['indicators']=row.indicators
+def geometry(settings,dongs):
     if settings.data_mode=='sample':
         # shortcut: non-geographic cells preserve synthetic identities; use real boundaries only with local input.
         features=[]
@@ -66,6 +54,23 @@ def analysis(settings):
         matched={f['properties']['dong_cd']:f for f in geo['features'] if f['properties']['dong_cd'] in dongs and f['properties']['dong_nm']==dongs[f['properties']['dong_cd']]['dong_nm']}
         unmatched=sorted(set(dongs)-set(matched))
         geo={**geo,'features':list(matched.values())}
+    return geo,provenance,unmatched
+
+
+def analysis(settings):
+    rows,source=load_segments(settings)
+    result=classify(rows)
+    dongs={}
+    lookup={}
+    for row in rows:
+        info={'dong_cd':row.dong_cd,'dong_nm':row.dong_nm,'sgg':row.sgg}
+        if row.dong_cd in dongs and dongs[row.dong_cd]!=info:raise ValueError('neighborhood identity changed')
+        dongs[row.dong_cd]=info
+        lookup[(row.ym,row.dong_cd,row.age_band)]=row
+    for segment in result['segments']:
+        row=lookup[(segment['ym'],segment['dong_cd'],segment['age_band'])]
+        segment['indicators']=row.indicators
+    geo,provenance,unmatched=geometry(settings,dongs)
     return {'data_mode':settings.data_mode,'months':sorted(set(MONTHS)|{r.ym for r in rows}),
             'neighborhoods':list(dongs.values()),'segments':result['segments'],'dongs':result['dongs'],
             'metadata':{**result['metadata'],'generator_version':source.get('generator_version'),'indicators':[i.model_dump(mode='json') for i in default_rules().indicators]},
@@ -77,7 +82,13 @@ def group_analysis(settings):
     from backend.tools.region_stage import classify as classify_groups
     rows,source=load_groups(settings)
     result=classify_groups(rows)
-    # Reuse the verified mode-specific geometry join while the legacy dashboard remains supported.
-    base=analysis(settings)
-    return {**base,**result,'months':sorted({r.ym for r in rows if r.ym}),
+    dongs={}
+    for row in rows:
+        info={'dong_cd':row.dong_cd,'dong_nm':row.dong_nm,'sgg':row.sgg}
+        if row.dong_cd in dongs and dongs[row.dong_cd]!=info:raise ValueError('neighborhood identity changed')
+        dongs[row.dong_cd]=info
+    geo,provenance,unmatched=geometry(settings,dongs)
+    return {**result,'data_mode':settings.data_mode,'months':sorted({r.ym for r in rows if r.ym}),
+            'neighborhoods':list(dongs.values()),'geometry':geo,'geography':provenance,
+            'coverage':{'matched':len(geo['features']),'total':len(dongs),'unmatched_codes':unmatched},
             'period_aggregate':any(r.ym is None for r in rows),'metadata':{**result['metadata'],'source':source}}
