@@ -33,10 +33,10 @@ def load_catalog(path: Path):
         for row in reader:
             if None in row or any(value is None for value in row.values()):
                 raise ValueError('malformed CSV row')
-            for name in ('jurisdiction', 'needs', 'eligibility_tags'):
+            for name in ('jurisdiction', 'needs', 'eligibility_tags', 'provenance'):
                 if name in row:
                     row[name] = json.loads(row[name])
-            if row.get('valid_until') == '':
-                row['valid_until'] = None
+            for name in ('valid_until','source_url','stage_min','stage_max'):
+                if row.get(name) == '':row[name] = None
             resources.append(Resource.model_validate(row))
     return validate_catalog(resources)

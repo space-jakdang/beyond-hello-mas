@@ -166,6 +166,9 @@ class GraphService:
             needs = set(result.get('analysis', {}).get('needs', ['relationship']))
             if 'person' in payload:
                 payload = {**payload, **payload['person']}
+            flags = payload.get('admin_flags', {})
+            if any(flags.get(k,False) for k in ('arrears_utility','arrears_rent','arrears_loan','hi_premium_unpaid')):needs.add('economic')
+            if any(flags.get(k,False) for k in ('arrears_rent','eviction_risk','non_housing')):needs.add('housing')
             if '외로움 고위험군' in labels:
                 needs.add('emotional')
             if '사회적 고립 고위험군' in labels:
@@ -174,7 +177,8 @@ class GraphService:
                 resources = load_catalog(self.settings.catalog_path)
                 request = MatchRequest(sgg=payload['sgg'], age_min=payload['age'], age_max=payload['age'],
                     needs=sorted(needs), intensity='high' if labels else 'low',
-                    eligibility=payload.get('eligibility', {}), as_of=utcnow().date())
+                    eligibility=payload.get('eligibility', {}), stage=result['result'].get('stage'),
+                    arrears=any(payload.get('admin_flags', {}).get(k,False) for k in ('arrears_utility','arrears_rent','arrears_loan','hi_premium_unpaid')), as_of=utcnow().date())
                 assignments.append(match(resources, request))
         candidates = {r['id']: r for assignment in assignments for r in assignment.get('recommendations', [])}
         explanations = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'recommendations',
@@ -346,7 +350,7 @@ class GraphService:
         run_id = str(uuid4())
         run = Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
             data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
-            rule_version='person-v02' if 'person' in scenario.payload else 'provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
+            rule_version='person-v02' if 'person' in scenario.payload else 'provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='seohee-resources-3' if self.settings.resource_catalog == 'v3' else 'curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
         with self.lock(run_id):
             self.store.create_run(run)
             with self.store.connection(write=True) as db:
