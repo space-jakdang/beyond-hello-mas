@@ -13,7 +13,9 @@ from scripts.check_public import violations
 from scripts.sample import sample
 
 
-def test_health_and_mode_separation():
+def test_health_and_mode_separation(tmp_path, monkeypatch):
+    import backend.app.config as config
+    monkeypatch.setattr(config, "ROOT", tmp_path)
     settings = Settings(_env_file=None, data_mode="local", llm_mode="fake")
     assert settings.data_dir.name == settings.runtime_dir.name == "local"
     assert TestClient(create_app(settings)).get('/health').json() == {
