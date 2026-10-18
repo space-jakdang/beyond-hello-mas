@@ -18,7 +18,10 @@ def test_strict_thresholds_consecutive_weeks_and_special_group():
 
 
 def test_fixture_audit_rejects_lookahead_and_false_alarms():
-    rows=synthetic();assert audit(rows)['matched_alerts']==368
+    rows=synthetic()
+    original=[(m['source_alarm'],m['ratio']) for r in rows for m in r['metrics'].values()]
+    assert audit(rows)['matched_alerts']==368
+    assert original==[(m['source_alarm'],m['ratio']) for r in rows for m in r['metrics'].values()]
     group=rows[:23]
     assert all(r['metrics']['T1b']['baseline'] is None for r in group[:8])
     assert group[8]['metrics']['T1b']['baseline']==1
@@ -49,3 +52,19 @@ def test_special_group_strong_signal_still_reports_four_declining_weeks():
             metric.update(value=.94,baseline=1,ratio=.94,signal='strong' if i==11 else 'none')
     audit(group)
     assert group[-1]['metrics']['R1']['consecutive_weeks']==4
+
+
+def test_priority_is_explicit_and_capped():
+    settings=Settings(_env_file=None,llm_mode='fake')
+    normal=group_analysis(settings,week='2025-07-07',card_age='30s')
+    priority=group_analysis(settings,week='2025-07-07',card_age='20s')
+    for before,after in zip(normal['segments'],priority['segments']):
+        applied=after['age_group']=='youth' and after['sex']=='M' and after['ym']=='2025-07'
+        assert after['priority_group_applied']==applied
+        assert after['stage']==min(5,before['stage']+1) if applied else after['stage']==before['stage']
+
+
+def test_ratio_and_baseline_corruption_is_rejected():
+    for key in ('ratio','baseline'):
+        rows=synthetic();rows[8]['metrics']['R1'][key]+=.001
+        with pytest.raises(ValueError,match='ratio|baseline'):audit(rows)

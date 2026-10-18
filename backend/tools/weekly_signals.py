@@ -9,6 +9,7 @@ from statistics import median
 from backend.app import config
 
 INDICATORS=('T1b','R1')
+ROUNDING=.00005  # Each provided value, baseline and ratio was independently rounded to four decimals.
 
 
 def alarm(ratios,weak_threshold=.95):
@@ -44,10 +45,14 @@ def audit(rows):
                 if i<8:
                     if base is not None or metric['ratio'] is not None or metric['signal']!='none':raise ValueError('warmup cannot have a signal')
                 else:
-                    if base is None or abs(base-median(history[-8:]))>.00011:raise ValueError('baseline differs from prior eight observations')
+                    if base is None or abs(base-median(history[-8:]))>2*ROUNDING+1e-12:raise ValueError('baseline differs from prior eight observations')
                 # Displayed ratios are rounded; source value/base preserves the strict threshold in this bundle.
                 ratio=value/base if base else None
-                if ratio is not None and (metric['ratio'] is None or abs(ratio-metric['ratio'])>.0002):raise ValueError('source ratio mismatch')
+                if ratio is not None:
+                    if base<=ROUNDING:raise ValueError('baseline below source precision')
+                    low=max(0,value-ROUNDING)/(base+ROUNDING)-ROUNDING
+                    high=(value+ROUNDING)/(base-ROUNDING)+ROUNDING
+                    if metric['ratio'] is None or not low-1e-12<=metric['ratio']<=high+1e-12:raise ValueError('source ratio mismatch')
                 ratios.append(ratio)
                 if alarm(ratios,weak)!=metric['signal']:raise ValueError('source alarm differs from rule')
                 consecutive=0
@@ -69,7 +74,9 @@ def load(settings):
     else:
         root=settings.data_dir/'seohee';paths=list(root.rglob('card_weekly_signals.csv'))
         if len(paths)!=1:raise ValueError('one weekly source required')
-        path=paths[0];raw=path.read_bytes()
+        path=paths[0]
+        if any(p.is_symlink() for p in (path,*path.parents)):raise ValueError('symlink weekly source')
+        raw=path.read_bytes()
         expected=json.loads((root/'import.json').read_text())['files'][path.relative_to(root).as_posix()]
         if hashlib.sha256(raw).hexdigest()!=expected:raise ValueError('weekly source checksum mismatch')
         def number(value):

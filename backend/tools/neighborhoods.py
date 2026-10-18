@@ -89,10 +89,13 @@ def group_analysis(settings,week=None,card_age="20s"):
     if selected_week not in weekly['weeks'] or card_age not in ('20s','30s'):raise ValueError('unknown weekly selection')
     selected={(r['sgg'],r['sex']):r for r in weekly['rows'] if r['week']==selected_week and r['age_band']==card_age}
     for segment in result['segments']:
+        segment['priority_group_applied']=False
+        segment['exploratory_replay']=False
         if segment['index_name'] not in ('S1','v3') or segment['ym'] not in (None,selected_week[:7]):continue
         signal=selected.get((segment['sgg'],segment['sex']))
         segment['weekly']=signal
         if signal:
+            segment['exploratory_replay']=segment['ym'] is None
             segment['priority_group_applied']=card_age=='20s' and segment['sex']=='M'
             segment['stage']=youth_stage(segment['level_band'],[m['signal'] for m in signal['metrics'].values()],segment['priority_group_applied'])
     for dong in result['dongs']:
