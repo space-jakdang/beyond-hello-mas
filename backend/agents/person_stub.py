@@ -14,9 +14,9 @@ def assess_stage(age_group:str,age:int,responses:dict,admin_flags:dict)->dict[st
     fixture=request.responses.get('synthetic-contract-fixture',{}).get('case',0)
     if not request.responses:
         return {'status':'incomplete','followup_questions':['검증된 문항 응답을 확인해야 합니다.'],'warnings':[WARNING]}
-    stage={201:4,202:5}.get(fixture,2)
+    stage=fixture-100 if 101<=fixture<=105 else {201:4,202:5}.get(fixture,2)
     return {'stage':stage,'track':'care_health' if fixture==203 else 'isolation','rules_applied':['synthetic-fixture'],
-        'drivers':[],'human_handoff':stage>=4,'crisis':fixture==202,'followup_questions':[],
+        'drivers':[],'human_handoff':stage>=4,'crisis':fixture in (105,202),'followup_questions':[],
         'lsis6':None,'rule_version':'stub-v02','sources':['synthetic protocol fixture'],'warnings':[WARNING],
         'safety_notice':'실제 판정이 아닙니다. 사람의 확인이 필요합니다.'}
 
