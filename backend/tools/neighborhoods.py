@@ -77,11 +77,29 @@ def analysis(settings):
             'geometry':geo,'geography':provenance,'coverage':{'matched':len(geo['features']),'total':len(dongs),'unmatched_codes':unmatched}}
 
 
-def group_analysis(settings):
+def group_analysis(settings,week=None,card_age="20s"):
     from backend.tools.segments_v3 import load_segments as load_groups
     from backend.tools.region_stage import classify as classify_groups
     rows,source=load_groups(settings)
     result=classify_groups(rows)
+    from backend.tools.weekly_signals import load as load_weekly
+    from backend.tools.region_stage import youth_stage
+    weekly=load_weekly(settings)
+    selected_week=week or weekly['weeks'][-1]
+    if selected_week not in weekly['weeks'] or card_age not in ('20s','30s'):raise ValueError('unknown weekly selection')
+    selected={(r['sgg'],r['sex']):r for r in weekly['rows'] if r['week']==selected_week and r['age_band']==card_age}
+    for segment in result['segments']:
+        if segment['index_name'] not in ('S1','v3') or segment['ym'] not in (None,selected_week[:7]):continue
+        signal=selected.get((segment['sgg'],segment['sex']))
+        segment['weekly']=signal
+        if signal:
+            segment['priority_group_applied']=card_age=='20s' and segment['sex']=='M'
+            segment['stage']=youth_stage(segment['level_band'],[m['signal'] for m in signal['metrics'].values()],segment['priority_group_applied'])
+    for dong in result['dongs']:
+        dong['stage']=max((s['stage'] for s in result['segments'] if s['ym']==dong['ym'] and s['dong_cd']==dong['dong_cd'] and s['preferred'] and s['stage'] is not None),default=None)
+    result['metadata'].update(card_signals_applied=True,selected_week=selected_week,card_age=card_age,
+                              weekly_scope='district × sex × age; not dong observations')
+    result['weekly']=weekly
     dongs={}
     for row in rows:
         info={'dong_cd':row.dong_cd,'dong_nm':row.dong_nm,'sgg':row.sgg}
