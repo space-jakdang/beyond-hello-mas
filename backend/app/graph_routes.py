@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import ValidationError
 from backend.app.contracts import Contract, Nonempty, Scenario
 
@@ -15,10 +15,12 @@ class DecisionInput(Contract):
 def graph_router(service):
     router = APIRouter()
 
-    @router.post('/scenarios/run', status_code=201)
-    def start(body: Scenario):
+    @router.post('/scenarios/run', status_code=202)
+    def start(body: Scenario, background: BackgroundTasks):
         try:
-            return service.start(body)
+            run = service.register(body)
+            background.add_task(service.execute, run.id)
+            return run
         except (ValueError, FileNotFoundError) as exc:
             raise HTTPException(422, str(exc))
 

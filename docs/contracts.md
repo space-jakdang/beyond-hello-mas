@@ -80,3 +80,5 @@ monthly는 해당 월의 연령별 배분안 전체를 하나의 승인 단위�
 fake 모드의 초안은 fake로 표시하며 어떤 모드에서도 외부 전달은 없습니다. 일반 후속 확인 일정은 개발용 기본 7일 후입니다. 그래프 checkpoint는 모드별 `runtime`에 저장하고 외부 LangSmith tracing은 호출 컨텍스트에서 비활성화합니다. 재시작 복구는 실행별로 수행하며 실패한 실행도 error trace에 남습니다. 지원 범위는 단일 백엔드 프로세스입니다.
 
 구현은 LangGraph 공식 [interrupt](https://reference.langchain.com/python/langgraph/types/interrupt)와 [SqliteSaver](https://reference.langchain.com/python/langgraph.checkpoint.sqlite/SqliteSaver) 계약 및 고정된 설치 버전을 사용합니다.
+
+관찰 화면의 `POST /scenarios/run`은 실행을 등록한 뒤 HTTP 202와 run ID를 반환한다. 작업은 백그라운드에서 실행되며 `GET /runs/{id}`와 trace SSE로 결과를 확인한다. 등록 후 프로세스가 종료되어도 저장된 workflow를 시작 시 복구한다. 관찰 화면은 URL의 run ID로 선택을 복원하고 seq로 중복을 제거한다. 메모리는 최근 2,000개, 타임라인은 최근 200개로 제한하며 과거 이벤트는 `after` cursor API로 조회한다. 기록 재생 배속은 화면 표시만 바꾸고 wall 지연이나 sim timestamp를 변경하지 않는다.

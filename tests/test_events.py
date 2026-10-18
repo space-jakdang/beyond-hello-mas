@@ -181,12 +181,17 @@ def test_graph_http_approval_and_health_during_work(server, monkeypatch):
         try:
             assert entered.wait(timeout=3)
             assert client.get('/health', timeout=1).status_code == 200
+            assert future.result(timeout=1).status_code == 202
         finally:
             release.set()
         response = future.result()
-        assert response.status_code == 201
+        assert response.status_code == 202
         run_id = response.json()['id']
         assert client.get(f'/runs/{run_id}/linkage').status_code == 404
+        for _ in range(100):
+            if client.get(f'/runs/{run_id}').json()['status'] == 'awaiting_approval':
+                break
+            time.sleep(0.05)
         approval = client.get(f'/runs/{run_id}/approval').json()['approval']
         decision = {'snapshot_version': approval['snapshot_version'], 'status': 'approved', 'operator': 'test'}
         assert client.post(f'/runs/{run_id}/decision', json={**decision, 'snapshot_version': 'wrong'}).status_code == 409
