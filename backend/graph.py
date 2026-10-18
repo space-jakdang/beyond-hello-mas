@@ -118,7 +118,19 @@ class GraphService:
             result['response_category'] = 'human_connection' if action == 'human_handoff' else 'screening' if scenario.type == 'admin' else 'referral'
             self.node_event(state, 'classify', result, started)
             return {'classification': result, 'local_action': action}
-        if scenario.type == 'monthly':
+        if scenario.type == 'monthly' and scenario.payload.get('analysis_version') != 'legacy-v1':
+            from backend.tools.neighborhoods import group_analysis
+            month = scenario.payload.get('ym')
+            week = scenario.payload.get('week')
+            if not week and month:
+                from backend.tools.weekly_signals import load as load_weekly
+                week = next((w for w in reversed(load_weekly(self.settings)['weeks']) if w[:7]==month),None)
+            result = group_analysis(self.settings,week,scenario.payload.get('card_age','20s'))
+            if not result['period_aggregate'] and month not in result['months']:raise ValueError('requested month missing from dataset')
+            result['segments'] = [r for r in result['segments'] if r['preferred'] and r['ym'] in (None,month)]
+            result['dongs'] = [r for r in result['dongs'] if r['ym'] in (None,month)]
+            result['metadata']['analysis_version'] = 'v3'
+        elif scenario.type == 'monthly':
             month = scenario.payload.get('ym')
             rows, source = load_segments(self.settings)
             if month not in {r.ym for r in rows}:
@@ -152,12 +164,15 @@ class GraphService:
                 if segment['stage'] is None:
                     assignments.append({**segment, 'recommendations': [], 'reason': 'unassessed'})
                     continue
-                low = int(segment['age_band'][:2])
+                if 'age_group' in segment:
+                    low,high = {'youth':(19,34),'midlife':(35,49),'prime':(50,64),'elderly':(65,120)}[segment['age_group']]
+                else:
+                    low = int(segment['age_band'][:2]);high = 120 if low == 60 else low+9
                 request = MatchRequest(sgg=segment['dong_cd'][:5], age_min=low,
-                    age_max=120 if low == 60 else low+9, needs=['relationship'],
+                    age_max=high, needs=['relationship'], stage=segment['stage'] if 'age_group' in segment else None,
                     intensity=map_intensity(segment['stage']), as_of=utcnow().date())
                 recommendation = match(resources, request)
-                assignments.append({'ym': segment['ym'], 'dong_cd': segment['dong_cd'], 'age_band': segment['age_band'],
+                assignments.append({'ym': segment['ym'], 'dong_cd': segment['dong_cd'], **({k:segment[k] for k in ('sex','age_group','index_name')} if 'age_group' in segment else {'age_band':segment['age_band']}),
                     'stage': segment['stage'], 'recommendations': recommendation['recommendations'],
                     'shortfall': recommendation['shortfall'], 'metadata': recommendation['metadata']})
         elif result.get('status') == 'assessed':
@@ -350,7 +365,7 @@ class GraphService:
         run_id = str(uuid4())
         run = Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
             data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
-            rule_version='person-v02' if 'person' in scenario.payload else 'provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='seohee-resources-3' if self.settings.resource_catalog == 'v3' else 'curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
+            rule_version='person-v02' if 'person' in scenario.payload else 'seohee-region-2' if scenario.type=='monthly' and scenario.payload.get('analysis_version')!='legacy-v1' else 'provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='seohee-resources-3' if self.settings.resource_catalog == 'v3' else 'curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
         with self.lock(run_id):
             self.store.create_run(run)
             with self.store.connection(write=True) as db:

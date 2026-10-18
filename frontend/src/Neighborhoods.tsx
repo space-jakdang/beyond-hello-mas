@@ -2,12 +2,12 @@ import {useEffect,useState} from 'react';
 import {api} from './api';
 import {NeighborhoodDetails} from './NeighborhoodDetails';
 import {Analysis,Dong,Geometry,Segment,ages,ageName,stageOf} from './neighborhoodData';
-const colors=['#b8c3c0','#d7e9ed','#96c9cf','#eac767','#df884d','#b84446'];
+export const colors=['#b8c3c0','#d7e9ed','#96c9cf','#eac767','#df884d','#b84446'];
 
 const regionName=(code:string)=>code==='11230'?'강남구':code==='32010'?'춘천시':code;
 const stageName=(stage:number|null)=>stage===null?'결측':`${stage}단계`;
 
-function MapView({data,dongs,segments,selected,onSelect}:{data:Analysis;dongs:Dong[];segments:Segment[];selected:string;onSelect:(id:string)=>void}){
+export function MapView({data,dongs,segments,selected,onSelect}:{data:Pick<Analysis,'geometry'|'geography'>;dongs:Dong[];segments:Pick<Segment,'dong_cd'|'stage'>[];selected:string;onSelect:(id:string)=>void}){
   const [zoom,setZoom]=useState(1);
   const features=data.geometry.features.filter(f=>dongs.some(d=>d.dong_cd===f.properties.dong_cd));
   const polygons=(g:Geometry)=>g.type==='Polygon'?[g.coordinates]:g.coordinates;
@@ -48,7 +48,7 @@ export function Neighborhoods(){
   function navigate(patch:Record<string,string>){
     const next={region:currentRegion,month:currentMonth,age:currentAge,dong:currentDong,...patch};
     if(patch.region)next.dong=data!.neighborhoods.find(d=>d.sgg===patch.region)?.dong_cd??'';
-    history.pushState(null,'','/neighborhoods?'+new URLSearchParams(next));
+    history.pushState(null,'','/neighborhoods/legacy?'+new URLSearchParams(next));
     setRegion(next.region);setMonth(next.month);setAge(next.age);setSelected(next.dong);
   }
   const chosen=dongs.find(d=>d.dong_cd===currentDong);
