@@ -1,4 +1,4 @@
-.PHONY: install dev sample eval test e2e contracts check
+.PHONY: install dev sample eval eval-v2 test e2e contracts check
 install:
 	uv sync --frozen
 	npm --prefix frontend ci
@@ -7,8 +7,12 @@ dev:
 sample:
 	uv run python -m scripts.sample
 	uv run python -m scripts.generate_segments
+	uv run python -m scripts.generate_groups
+	uv run python -m backend.tools.weekly_signals
 eval:
 	uv run python -m scripts.evaluate
+eval-v2:
+	uv run python -m eval.run_v2
 contracts:
 	uv run python -m scripts.contracts
 test:
