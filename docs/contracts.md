@@ -1,6 +1,6 @@
 # 데이터 계약 v1
 
-정의: `backend/app/contracts.py`. 전달 형식은 JSON이며 생성된 `frontend/src/contracts.schema.json`을 공유합니다. Segment는 `schema_version="2"`, 나머지 객체는 `schema_version="1"`을 가지며 정의되지 않은 최상위 필드를 거부합니다.
+정의: `backend/app/contracts.py`. 전달 형식은 JSON이며 생성된 `frontend/src/contracts.schema.json`을 공유합니다. Segment와 Resource는 `schema_version="2"`, 나머지 객체는 `schema_version="1"`을 가지며 정의되지 않은 최상위 필드를 거부합니다.
 
 - Segment: 2025-07~12 월, 통계청 시군구 5자리/동 8자리 문자열, 동 이름, 연령 구간, 좌표/CRS/출처, 지표/버전, 거주인구, 사각 플래그. `10s/20s/30s/40s/50s/60plus`는 임시 연령 계약입니다. 실제 소스 매핑은 데이터 로더 구현 시 확인합니다. 결측 지표는 null이며 위험 0으로 변환하지 않습니다.
 - Scenario: id, monthly/case/crisis/question, sim_time, payload. 시간대 없는 sim_time은 Asia/Seoul로 해석합니다. JSON 출력은 offset을 포함합니다. payload의 중첩 expected도 금지합니다. 평가 전용 EvaluationLabel은 scenario_id와 label_version으로 연결합니다.
@@ -38,3 +38,15 @@ DATA_MODE=local make classify
 구 일원2동 `11230740 → 11230511` 매핑을 적용하고, 춘천 면은 코드 순서를 추측하지 않고 연계표를 조회합니다. 정확히 중복된 행(12월 time/wkdy 알려진 문제)은 제거하고, 블록/좌표/월이 같은 충돌 행은 거부합니다. 현재 wkdy는 미사용입니다. 카드 법인은 AGE_CCD/SEX_CCD로 제외해야 하나 현재 export에서 카드는 미사용입니다.
 
 좌표는 정의서 UTM-K 및 기존 분석의 EPSG:5179를 따라 원좌표 평균을 보존합니다. 위경도 변환은 하지 않습니다. 거주인구 누락은 null로 남기고 사각 플래그를 켭니다. local 파일이 없으면 실패하며 sample로 대체하지 않습니다. 단계는 지역·시점의 상대적 개발 지표이며 개인 진단이나 실제 고립 탐지 정확도가 아닙니다.
+
+## 카탈로그와 결정적 매칭
+
+Resource v2는 `eligibility_tags`, `active`, 만료일 포함 `valid_until`을 추가합니다. CSV 열 이름은 Resource 필드와 같고 `jurisdiction/needs/eligibility_tags`는 JSON 배열입니다. ID는 유일하고 catalog_version은 전체에 동일해야 합니다. `data/sample/resources.csv`는 합성 개발 fixture이며 example.invalid URL은 실제 서비스가 아닙니다.
+
+지원 관할은 전국 `KR`, 서울 `11`/강남 `11230`, 강원 `32`/춘천 `32010`입니다. 요청 관할의 기초·광역·전국 자원을 허용합니다. 자원 연령 범위는 요청 연령 범위 전체를 포함해야 합니다. 개인은 최솟값=최댓값, 집단은 연령대 전체를 전달합니다. 자격 태그가 명시적으로 true가 아니면 제외합니다. 태그 없는 자원은 eligibility가 `unrestricted`인 경우만 허용하며 자유문장 자격을 충족했다고 추정하지 않습니다.
+
+`backend/tools/matching.py`는 활성/만료·수집일·관할·연령·자격·욕구·개입 강도를 필터합니다. `as_of`는 카탈로그 유효성 확인 날짜이며 시뮬레이션 시간과 별도입니다. 일치 욕구 수 내림차순, 자원 ID 오름차순으로 최대 3개를 반환합니다. 원래 근거 필드, 제외 이유, 미충족 욕구, 부족 수, 입력/카탈로그/정책 hash를 함께 반환합니다. LLM 설명에는 이 확정 후보만 전달합니다.
+
+임시 `provisional-1` 정책은 단계 1~2=low, 3=medium, 4~5=high로 매핑합니다. `map_needs`는 명시적 원인 라벨만 사용하며 미상 원인은 빈 목록입니다. 임상적 위험 환산이 아니며 `MatchPolicy`로 수정할 때 버전과 hash를 기록합니다. 단계가 없으면 낮은 강도로 임의 매핑하지 않습니다.
+
+CLI: `uv run python -m scripts.match request.json --catalog data/sample/resources.csv`. 출력에는 비공개 입력이 반영될 수 있으므로 local 파생 결과는 `runtime/local/`에만 보관합니다. 추천은 실제 외부 전달이 아닙니다.

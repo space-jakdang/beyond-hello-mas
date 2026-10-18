@@ -1,5 +1,5 @@
 """Versioned wire contracts. JSON Schema is exported by scripts/contracts.py."""
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Annotated, Any, Literal
 from zoneinfo import ZoneInfo
 
@@ -81,12 +81,16 @@ class EvaluationLabel(Contract):
 
 
 class Resource(Contract):
+    schema_version: Literal["2"] = "2"
     id: Nonempty
     jurisdiction: list[Nonempty] = Field(min_length=1)
     name: Nonempty
     age_min: int = Field(ge=0, le=120)
     age_max: int = Field(ge=0, le=120)
     eligibility: Nonempty
+    eligibility_tags: list[Nonempty] = Field(default_factory=list)
+    active: bool = True
+    valid_until: date | None = None
     needs: list[Nonempty] = Field(min_length=1)
     intensity: Literal["low", "medium", "high"]
     delivery: Nonempty
