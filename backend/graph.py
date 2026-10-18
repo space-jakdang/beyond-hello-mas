@@ -13,6 +13,8 @@ from langgraph.types import Command, interrupt
 from langsmith import tracing_context
 
 from backend.app.contracts import Alert, Approval, Run, Scenario
+from backend.agents.llm import Agents
+from backend.agents.scale import ScaleAdapter
 from backend.events import utcnow
 from backend.tools.catalog import load_catalog
 from backend.tools.indicators import digest
@@ -28,6 +30,7 @@ class State(TypedDict, total=False):
     classification: dict
     proposal: dict
     decision: dict
+    question_route: str
 
 
 def crisis_evidence(payload):
@@ -44,6 +47,8 @@ def crisis_evidence(payload):
 class GraphService:
     def __init__(self, store, settings):
         self.store, self.settings = store, settings
+        self.agents = Agents(store, settings)
+        self.scale = ScaleAdapter(store, settings)
         self.locks = {}
         self.lock_guard = RLock()
         with store.connection() as db:
@@ -76,12 +81,13 @@ class GraphService:
         started = time.monotonic()
         evidence = crisis_evidence(state['scenario']['payload'])
         self.node_event(state, 'supervisor', {'crisis_rule_version': 'provisional-1', 'evidence': evidence}, started)
-        return {'crisis': evidence}
+        route = None
+        if not evidence and state['scenario']['type'] == 'question':
+            route = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'route', state['scenario']['payload']).route
+        return {'crisis': evidence, 'question_route': route}
 
     def classify_node(self, state):
         started = time.monotonic()
-        if self.settings.llm_mode == 'live':
-            raise ValueError('live agent adapters are not implemented yet')
         scenario = Scenario.model_validate(state['scenario'])
         if scenario.type == 'monthly':
             month = scenario.payload.get('ym')
@@ -92,11 +98,14 @@ class GraphService:
             result['segments'] = [r for r in result['segments'] if r['ym'] == month]
             result['dongs'] = [r for r in result['dongs'] if r['ym'] == month]
             result['metadata']['source'] = source
-        elif scenario.type in ('case', 'crisis'):
-            result = {'status': 'assessment_pending', 'stage': None, 'needs': [],
-                      'reason': 'Explicit scale assessment/agent adapter not implemented yet'}
+        elif scenario.type in ('case', 'crisis', 'question'):
+            result = self.scale.score(state['run_id'], scenario.sim_time, scenario.payload.get('responses'))
+            result['stage'] = None
         else:
             raise ValueError('non-crisis question routing is not implemented yet')
+        summary_input = {'type': scenario.type, 'text': scenario.payload.get('text', ''),
+                         'assessment': result.get('result'), 'aggregate_metadata': result.get('metadata')}
+        result['analysis'] = self.agents.call(state['run_id'], scenario.sim_time, 'analysis', summary_input).model_dump()
         self.node_event(state, 'classify', result, started)
         return {'classification': result}
 
@@ -118,8 +127,28 @@ class GraphService:
                 assignments.append({'ym': segment['ym'], 'dong_cd': segment['dong_cd'], 'age_band': segment['age_band'],
                     'stage': segment['stage'], 'recommendations': recommendation['recommendations'],
                     'shortfall': recommendation['shortfall'], 'metadata': recommendation['metadata']})
-        proposal = {'scope': 'monthly_group_allocation' if state['scenario']['type'] == 'monthly' else 'assessment_followup',
-                    'assignments': assignments, 'assessment': result.get('status'), 'fake': True,
+        elif result.get('status') == 'assessed':
+            payload = state['scenario']['payload']
+            labels = {r['label'] for r in result['result']['matched']}
+            needs = set(result['analysis']['needs'])
+            if '외로움 고위험군' in labels:
+                needs.add('emotional')
+            if '사회적 고립 고위험군' in labels:
+                needs.add('relationship')
+            if needs and payload.get('age') is not None and payload.get('sgg'):
+                resources = load_catalog(self.settings.data_dir / 'resources.csv')
+                request = MatchRequest(sgg=payload['sgg'], age_min=payload['age'], age_max=payload['age'],
+                    needs=sorted(needs), intensity='high' if labels else 'low',
+                    eligibility=payload.get('eligibility', {}), as_of=utcnow().date())
+                assignments.append(match(resources, request))
+        candidates = {r['id']: r for assignment in assignments for r in assignment.get('recommendations', [])}
+        explanations = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'recommendations',
+                                        {'candidates': list(candidates.values())}).model_dump()
+        draft = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'draft',
+                                {'resource_ids': sorted(candidates), 'assessment': result.get('status')}).model_dump()
+        proposal = {'scope': 'monthly_group_allocation' if state['scenario']['type'] == 'monthly' else ('case_referral_plan' if result.get('status') == 'assessed' else 'assessment_followup'),
+                    'assignments': assignments, 'assessment': result.get('status'), 'fake': self.settings.llm_mode == 'fake',
+                    'explanations': explanations, 'draft': draft,
                     'external_delivery': False, 'scenario_hash': digest(state['scenario'])}
         proposal['snapshot_version'] = digest(proposal)
         self.node_event(state, 'match', {'snapshot_version': proposal['snapshot_version'], 'assignment_count': len(assignments)}, started)
@@ -148,8 +177,8 @@ class GraphService:
                     raise ValueError('link requires approval of this exact snapshot')
             now = utcnow()
             linkage = {'run_id': state['run_id'], 'kind': 'crisis' if crisis else state['proposal']['scope'],
-                       'fake': True, 'external_delivery': False, 'created_at': now.isoformat(),
-                       'draft': '합성 담당자 검토용 초안: 위기 신호 확인' if crisis else '합성 담당자 검토용 초안: 승인된 계획의 후속 확인',
+                       'fake': self.settings.llm_mode == 'fake', 'external_delivery': False, 'created_at': now.isoformat(),
+                       'draft': {'text': '위기 신호를 담당자가 확인할 로컬 알림', 'resource_ids': []} if crisis else state['proposal']['draft'],
                        'followup_at': None if crisis else (now + timedelta(days=7)).isoformat(),
                        'snapshot_version': approval.snapshot_version if approval else None}
             db.execute('INSERT INTO linkages VALUES (?,?)', (state['run_id'], json.dumps(linkage)))
@@ -169,20 +198,38 @@ class GraphService:
             self.update_run(db, state['run_id'], status='rejected', ended_at=utcnow(), error=None)
         return {}
 
+    def question_node(self, state):
+        route = state['question_route']
+        payload = state['scenario']['payload']
+        if route == 'history':
+            result = {'runs': self.store.list_runs(20)}
+        elif route == 'classify':
+            result = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'analysis', payload).model_dump()
+        elif route == 'match' and payload.get('match_request'):
+            result = match(load_catalog(self.settings.data_dir / 'resources.csv'), MatchRequest.model_validate(payload['match_request']))
+        else:
+            result = {'review_required': True, 'reason': '담당자 검토 또는 명시적 매칭 조건이 필요합니다.'}
+        with self.store.connection(write=True) as db:
+            self.once(db, state, 'question-result', 'tool_result', {'route': route, 'result': result}, 'supervisor')
+            self.once(db, state, 'run-end', 'run_end', {'status': 'completed'})
+            self.update_run(db, state['run_id'], status='completed', ended_at=utcnow(), error=None)
+        return {}
+
     @contextmanager
     def graph(self):
         with SqliteSaver.from_conn_string(str(self.settings.runtime_dir / 'checkpoints.sqlite3')) as saver:
             builder = StateGraph(State)
             for name, action in [('supervisor', self.supervisor), ('classify', self.classify_node), ('match', self.match_node),
-                                 ('approval', self.approval_node), ('link', self.link_node), ('reject', self.reject_node)]:
+                                 ('approval', self.approval_node), ('link', self.link_node), ('reject', self.reject_node), ('question', self.question_node)]:
                 builder.add_node(name, action)
             builder.add_edge(START, 'supervisor')
-            builder.add_conditional_edges('supervisor', lambda s: 'link' if s['crisis'] else 'classify')
+            builder.add_conditional_edges('supervisor', lambda s: 'link' if s['crisis'] else ('question' if s.get('question_route') in ('history', 'human', 'classify', 'match') else 'classify'))
             builder.add_edge('classify', 'match')
             builder.add_edge('match', 'approval')
             builder.add_conditional_edges('approval', lambda s: 'link' if s['decision']['status'] == 'approved' else 'reject')
             builder.add_edge('link', END)
             builder.add_edge('reject', END)
+            builder.add_edge('question', END)
             yield builder.compile(checkpointer=saver)
 
     def publish_approval(self, state):
@@ -201,6 +248,8 @@ class GraphService:
             self.update_run(db, state['run_id'], status='awaiting_approval')
 
     def drive(self, run_id, initial=None):
+        if self.store.get_run(run_id).llm_mode != self.settings.llm_mode:
+            raise ValueError('restore the original LLM_MODE before resuming this run')
         config = {'configurable': {'thread_id': run_id}}
         with self.lock(run_id), self.graph() as graph, tracing_context(enabled=False):
             snapshot = graph.get_state(config)
@@ -226,7 +275,7 @@ class GraphService:
                 with self.store.connection(write=True) as db:
                     self.update_run(db, run_id, status='failed', error=type(exc).__name__, ended_at=utcnow())
                     scenario = json.loads(db.execute('SELECT scenario FROM workflows WHERE run_id=?', (run_id,)).fetchone()[0])
-                    self.store._trace(db, run_id, scenario['sim_time'], 'error', {'type': type(exc).__name__, 'message': str(exc)})
+                    self.store._trace(db, run_id, scenario['sim_time'], 'error', {'type': type(exc).__name__, 'message': 'run failed; see typed tool/agent error'})
                 raise
         return self.store.get_run(run_id)
 
@@ -234,7 +283,7 @@ class GraphService:
         run_id = str(uuid4())
         run = Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
             data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
-            rule_version='provisional-1', model_version='fake', prompt_version='none', catalog_version='synthetic-1' if self.settings.data_mode == 'sample' else 'local', started_at=utcnow())
+            rule_version='provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='synthetic-1' if self.settings.data_mode == 'sample' else 'local', started_at=utcnow())
         with self.lock(run_id):
             self.store.create_run(run)
             with self.store.connection(write=True) as db:
@@ -249,6 +298,8 @@ class GraphService:
         return {'approval': json.loads(row['body']), 'proposal': json.loads(row['proposal'])}
 
     def decide(self, run_id, snapshot_version, status, operator, reason=None):
+        if self.store.get_run(run_id).llm_mode != self.settings.llm_mode:
+            raise ValueError('restore the original LLM_MODE before deciding this run')
         with self.lock(run_id), self.graph() as graph:
             current = self.approval(run_id)['approval']
             if current['snapshot_version'] != snapshot_version:
