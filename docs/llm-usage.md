@@ -1,12 +1,12 @@
-# LLM과 척도 연동
+# LLM과 MCP 연동
 
 ## 지금 실행 가능한 범위
 
-기본 sample/fake 경로는 키 없이 실행됩니다. fake 설명·질문 라우팅은 결정적 테스트 대역이며 OpenAI 성능 근거가 아닙니다. 실제 OpenAI smoke는 아직 수행하지 않았고 모델 스냅샷/가격/예산은 미확정입니다. 키는 실제 호출 검증 시점에 `.env`에 넣으면 됩니다.
+기본 sample/fake 경로는 키 없이 실행됩니다. fake 설명·질문 라우팅은 결정적 테스트 대역이며 OpenAI 성능 근거가 아닙니다. 2026-10-18에 `gpt-6-luna`로 정책 worker의 실제 OpenAI→MCP 관측→종료 smoke를 확인했습니다. 이는 전체 모델 성능 평가가 아닙니다. 실행 환경별 키·모델·가격·예산은 비공개 `.env`에서 설정하며 저장소에는 기본 모델을 강제하지 않습니다.
 
 ## OpenAI 설정과 한도
 
-- `LLM_MODE=live`, `OPENAI_API_KEY`, `OPENAI_MODEL`: 사용 가능한 모델의 고정 스냅샷을 직접 선택합니다. 임의 기본 모델이나 자동 대체 모델은 없습니다.
+- `LLM_MODE=live`, `OPENAI_API_KEY`, `OPENAI_MODEL`: 사용 가능한 모델 ID를 직접 선택합니다. 날짜 스냅샷을 제공하면 고정하고, 별도 스냅샷이 없으면 반환 모델 ID를 trace에 기록합니다. 임의 기본 모델이나 자동 대체 모델은 없습니다.
 - `LLM_BUDGET_USD`: 저장소의 모드별 실행 DB에 누적된 예약액 기준 상한. 기본값 0으로 실제 호출을 막습니다.
 - `INPUT_USD_PER_MILLION`, `OUTPUT_USD_PER_MILLION`, `PRICE_VERSION`: 선택 모델의 확인된 표준 가격과 확인일/출처 버전을 지정합니다. 현재 숫자를 추측해 고정하지 않았습니다.
 - 실행당 최대 4회, 출력 최대 1,024토큰, 입력(프롬프트·payload·schema) 최대 24,000바이트, 요청 timeout 30초가 기본입니다. SDK 자동 재시도는 0회입니다.
@@ -41,8 +41,14 @@ MCP 프로젝트는 별도로 설치합니다. 비공개 소스나 패키지를 
 uv run pytest tests/test_agents.py::test_actual_mcp_and_same_package_fallback tests/test_graph.py::test_case_with_actual_scale_keeps_two_results_and_candidates
 ```
 
-현재 로컬에서 두 실제 MCP 테스트를 통과했습니다. 실제 OpenAI 모델 호출·계정 비용 검증은 미실행입니다. fake 성공이나 MCP 성공을 live 모델 검증으로 합산하지 않습니다.
+현재 로컬에서 두 실제 MCP 테스트를 통과했습니다. 정책 worker의 실제 OpenAI 소규모 호출은 아래와 같이 검증했지만 전체 평가와 청구서 대조는 미실행입니다. fake 성공이나 MCP 성공을 live 모델 검증으로 합산하지 않습니다.
 
 ## 동결한 실행 근거
 
 공개 반복 평가는 fake-v1이며 OpenAI 요청/토큰/청구 비용은 없습니다. 모델 스냅샷과 실제 단가는 미확정이므로 임의 값을 채우지 않았습니다. 네 역할 프롬프트의 hash와 규칙·카탈로그·입력 hash는 [고정 보고서](evaluation.md#고정-결과-2026-10-18)에 있습니다. 실제 MCP package 0.1.0 / LSIS-6 1.0.0 연동은 수행했으며, 비공개 MCP 소스는 제출물에 포함하지 않습니다. 공개 자료만으로는 명시적 척도 16건을 완료할 수 없고 해당 실패를 표시한 partial 평가를 재현할 수 있습니다.
+
+## 정책 worker live smoke (2026-10-18)
+
+[공식 GPT-6 Luna 모델 안내](https://developers.openai.com/api/docs/models/gpt-6-luna)의 모델 ID, Responses/구조화 출력 지원과 가격을 확인한 뒤, 격리된 sample 실행에서 합성 요청으로 검사했습니다. `policy_coverage` 관측 후 정부24 인증키 미설정을 확인하고 후보 없이 정상 종료했습니다. 실제 모델 호출 2회, 오류 0건, 반환 모델 `gpt-6-luna`, 결과 `no_verified_candidates`입니다. 정책을 지어내지 않는 동작을 검증했으며 실제 정책 적합성이나 전체 시나리오 정확도 검증은 아닙니다.
+
+이 검증의 로컬 초기 누적 예산은 $0.10, 출력 한도 4,096토큰, 호출 timeout 60초입니다. 공식 표준 입력 $0.10/출력 $0.50(백만 토큰당), 캐시 쓰기 $0.125를 고려해 입력 장부 단가를 보수적으로 $0.125로 설정했습니다. 두 호출의 usage 기반 보수적 추정은 $0.000267375, 호출 전 예약 합계는 $0.007040875입니다. 실제 청구액과는 구분합니다. 지역/처리 등급별 할증이나 가격 변경 시 단가를 다시 확인해야 합니다. raw usage와 실행 근거는 비공개 runtime에 보존합니다.
