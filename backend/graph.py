@@ -118,7 +118,7 @@ class GraphService:
         result = state['classification']
         assignments = []
         if state['scenario']['type'] == 'monthly':
-            resources = load_catalog(self.settings.data_dir / 'resources.csv')
+            resources = load_catalog(self.settings.catalog_path)
             for segment in result['segments']:
                 if segment['stage'] is None:
                     assignments.append({**segment, 'recommendations': [], 'reason': 'unassessed'})
@@ -140,7 +140,7 @@ class GraphService:
             if '사회적 고립 고위험군' in labels:
                 needs.add('relationship')
             if needs and payload.get('age') is not None and payload.get('sgg'):
-                resources = load_catalog(self.settings.data_dir / 'resources.csv')
+                resources = load_catalog(self.settings.catalog_path)
                 request = MatchRequest(sgg=payload['sgg'], age_min=payload['age'], age_max=payload['age'],
                     needs=sorted(needs), intensity='high' if labels else 'low',
                     eligibility=payload.get('eligibility', {}), as_of=utcnow().date())
@@ -210,7 +210,7 @@ class GraphService:
         elif route == 'classify':
             result = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'analysis', payload).model_dump()
         elif route == 'match' and payload.get('match_request'):
-            result = match(load_catalog(self.settings.data_dir / 'resources.csv'), MatchRequest.model_validate(payload['match_request']))
+            result = match(load_catalog(self.settings.catalog_path), MatchRequest.model_validate(payload['match_request']))
         else:
             result = {'review_required': True, 'reason': '담당자 검토 또는 명시적 매칭 조건이 필요합니다.'}
         with self.store.connection(write=True) as db:
@@ -287,7 +287,7 @@ class GraphService:
         run_id = str(uuid4())
         run = Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
             data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
-            rule_version='provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='synthetic-1' if self.settings.data_mode == 'sample' else 'local', started_at=utcnow())
+            rule_version='provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
         with self.lock(run_id):
             self.store.create_run(run)
             with self.store.connection(write=True) as db:

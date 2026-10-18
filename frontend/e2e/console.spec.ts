@@ -5,8 +5,10 @@ test('operator receives, acknowledges, approves, rejects and inspects monthly pl
   await consolePage.getByLabel('담당자 이름').fill('E2E 담당자');
   await page.goto('/observatory');
   async function run(index:string,status='승인 대기') {
+    const previous = await page.getByTestId('run-id').count() ? await page.getByTestId('run-id').innerText() : '';
     await page.getByLabel('시나리오').selectOption(index);
     await page.getByRole('button',{name:'실행',exact:true}).click();
+    await expect(page.getByTestId('run-id')).not.toHaveText(previous);
     await expect(page.getByTestId('run-status')).toHaveText(status);
     return await page.getByTestId('run-id').innerText();
   }
@@ -26,7 +28,8 @@ test('operator receives, acknowledges, approves, rejects and inspects monthly pl
   await expect(consolePage.getByRole('heading',{name:'실행 상세 · 반려',exact:true})).toBeVisible();
   expect((await page.request.get(`http://127.0.0.1:8000/runs/${rejected}/linkage`)).status()).toBe(404);
   const crisis=await run('1','완료');
-  await expect(consolePage.locator('.alert-list article').first()).toHaveAttribute('data-testid',`alert-${crisis}-crisis`);
+  await expect(consolePage.getByTestId(`alert-${crisis}-crisis`)).toBeVisible();
+  await expect(consolePage.locator('.alert-list article').first()).toHaveClass(/crisis/);
   const monthly=await run('2');
   await consolePage.getByTestId(`alert-${monthly}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
   await expect(consolePage.getByRole('heading',{name:'동별 상황판 · 47개 동'})).toBeVisible();

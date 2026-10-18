@@ -19,8 +19,8 @@ test('execute, inspect, restore, switch and reconnect a run', async ({page, cont
   expect(new Set(seqs).size).toBe(seqs.length);
   await page.getByLabel('시나리오').selectOption('1');
   await page.getByRole('button', {name:'실행', exact:true}).click();
-  await expect(page.getByTestId('run-status')).toHaveText('완료');
   await expect(page.getByTestId('run-id')).not.toHaveText(id);
+  await expect(page.getByTestId('run-status')).toHaveText('완료');
   await expect(page.getByRole('heading', {name:'이벤트 상세 #1'})).toHaveCount(0);
   await page.getByLabel('실행 이력').selectOption(id);
   await expect(page.getByTestId('run-status')).toHaveText('승인 대기');

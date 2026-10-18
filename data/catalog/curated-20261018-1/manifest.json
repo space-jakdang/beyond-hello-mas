@@ -1,0 +1,56 @@
+{
+  "method": "manual-source-review",
+  "human_reviewed": false,
+  "llm_calls": 0,
+  "llm_cost_usd": 0,
+  "input_hash": "75d18c19444717d66c871c22a694d5b502ee664fe4e24dee53b4af9aae463ecd",
+  "catalog_hash": "31a348545d8cf452753ccd55f9aa8e8440e32fa98267909a33a8d6a6a7c9a0fa",
+  "accepted_count": 30,
+  "program_count": 24,
+  "rejected": [],
+  "jurisdictions": {
+    "11": 14,
+    "11230": 3,
+    "32": 1,
+    "32010": 7,
+    "KR": 5
+  },
+  "needs": {
+    "economic": 1,
+    "emotional": 14,
+    "food": 1,
+    "health": 2,
+    "housing": 1,
+    "relationship": 25,
+    "safety": 2
+  },
+  "target_shortfall": 0,
+  "shared_source_urls": {
+    "https://news.seoul.go.kr/welfare/archives/569275": [
+      "seoul-connection",
+      "seoul-outreach",
+      "seoul-local-hub"
+    ],
+    "https://news.seoul.go.kr/welfare/archives/569267": [
+      "seoul-neighbor",
+      "seoul-smart"
+    ],
+    "https://news.seoul.go.kr/welfare/archives/569285": [
+      "seoul-maeum-1",
+      "seoul-maeum-2",
+      "seoul-maeum-3",
+      "seoul-maeum-4",
+      "seoul-maeum-5",
+      "seoul-maeum-6"
+    ],
+    "https://www.gwd.go.kr/portal/partinfo/welfare/singleperson/localpresent/chuncheon": [
+      "cc-emergency",
+      "cc-hospital",
+      "cc-milk",
+      "cc-care",
+      "cc-safeapp",
+      "cc-aicall",
+      "cc-meal"
+    ]
+  }
+}

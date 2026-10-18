@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore", allow_inf_nan=False)
     data_mode: Literal["sample", "local"] = "sample"
     llm_mode: Literal["fake", "live"] = "fake"
+    resource_catalog: Literal["fixture", "curated"] = "fixture"
     openai_api_key: SecretStr | None = None
 
     openai_model: str | None = None
@@ -42,3 +43,7 @@ class Settings(BaseSettings):
     @property
     def runtime_dir(self) -> Path:
         return ROOT / "runtime" / self.data_mode
+
+    @property
+    def catalog_path(self) -> Path:
+        return ROOT / "data/catalog/curated-20261018-1/resources.csv" if self.resource_catalog == "curated" else self.data_dir / "resources.csv"
