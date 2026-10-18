@@ -6,7 +6,7 @@ import sqlite3
 import time
 from typing import Literal
 from urllib.parse import urlencode,unquote,urlsplit
-from urllib.request import urlopen
+from urllib.request import Request, HTTPRedirectHandler, build_opener
 from pydantic import BaseModel,ConfigDict,Field
 
 Scope=Literal['central','seoul','gangnam','gangwon','chuncheon']
@@ -16,6 +16,11 @@ LIMITATION='정부24 API 등록 정보 범위입니다. 미등록 공고·실제
 
 
 def now():return datetime.now(timezone.utc).isoformat()
+
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self,*args,**kwargs):
+        raise ValueError('provider_redirect_rejected')
 
 
 class Search(BaseModel):
@@ -69,10 +74,11 @@ class PolicyService:
 
     def request(self,endpoint,params):
         if not self.settings.gov24_service_key:raise ValueError('missing_credentials')
-        params={**params,'returnType':'JSON','serviceKey':unquote(self.settings.gov24_service_key.get_secret_value())}
+        params={**params,'returnType':'JSON'}
         # Fixed endpoints only; no provider-supplied URL or exception text is executed/returned.
         if endpoint not in ('serviceList','serviceDetail','supportConditions'):raise ValueError('invalid_endpoint')
-        with urlopen(BASE+endpoint+'?'+urlencode(params),timeout=self.settings.policy_timeout_seconds) as response:
+        request=Request(BASE+endpoint+'?'+urlencode(params),headers={'Authorization':'Infuser '+unquote(self.settings.gov24_service_key.get_secret_value())})
+        with build_opener(NoRedirect()).open(request,timeout=self.settings.policy_timeout_seconds) as response:
             raw=response.read(10_000_001)
         if len(raw)>10_000_000:raise ValueError('response_too_large')
         body=json.loads(raw)
@@ -98,7 +104,7 @@ class PolicyService:
                 if type(body.get('totalCount')) is not int or body['totalCount']<0:raise ValueError('invalid_total')
                 if total is not None and total!=body['totalCount']:raise ValueError('inventory_changed')
                 total=body['totalCount'];rows=body['data']
-                if len(rows)>500 or body.get('currentCount')!=len(rows):raise ValueError('invalid_page')
+                if len(rows)>500 or type(body.get('currentCount')) is not int or body['currentCount']!=len(rows):raise ValueError('invalid_page')
                 for row in rows:
                     id=row.get('서비스ID')
                     if not isinstance(id,str) or not id or id in seen:raise ValueError('missing_or_duplicate_id')
@@ -118,7 +124,7 @@ class PolicyService:
 
     def search(self,search):
         search=Search.model_validate(search);snapshot=self.read('snapshot')
-        rows=[p for p in (snapshot['policies'] if snapshot else []) if p['scope'] in search.scopes and search.query.casefold() in ' '.join([p['title'],p['summary'],p['support'],p['eligibility']]).casefold()]
+        rows=[p for p in (snapshot['policies'] if snapshot else []) if p['scope'] in search.scopes and search.query.casefold() in ' '.join([p['title'],p['summary'],p['support'],p['eligibility'],p['agency'],p['criteria']]).casefold()]
         start=(search.page-1)*search.per_page
         return {'items':rows[start:start+search.per_page],'total':len(rows),'page':search.page,
                 'next_page':search.page+1 if start+search.per_page<len(rows) else None,'coverage':self.coverage()}

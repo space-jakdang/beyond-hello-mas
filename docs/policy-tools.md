@@ -19,7 +19,7 @@
 
 ## 설정과 호출
 
-`.env.example`을 참고해 비공개 `.env`에 `GOV24_SERVICE_KEY`를 설정한다. OpenAI 키와 다른 키이며 정부24 해당 데이터의 활용 신청이 필요하다. 인코딩된 키와 디코딩된 키를 모두 받는다. 키가 없어도 서버는 시작되며 `missing_credentials`를 반환한다. 키를 프론트엔드나 MCP 인자에 넣지 않는다.
+`.env.example`을 참고해 비공개 `.env`에 `GOV24_SERVICE_KEY`를 설정한다. OpenAI 키와 다른 키이며 정부24 해당 데이터의 활용 신청이 필요하다. 인코딩된 키와 디코딩된 키를 모두 받는다. [공식 인증 안내](https://www.data.go.kr/images/biz/swagger-guide/multi_swagger_guide.pdf)에 따라 `Authorization: Infuser …` 헤더로 전송하며 URL에 키를 넣지 않고 리다이렉트를 거부한다. 키가 없어도 서버는 시작되며 `missing_credentials`를 반환한다. 키를 프론트엔드나 MCP 인자에 넣지 않는다.
 
 ```sh
 uv run python -m backend.policy.server
@@ -27,7 +27,7 @@ uv run python -m backend.policy.server
 
 stdio MCP 서버는 `policy_coverage()`, `policy_refresh()`, `policy_search(scopes, query, page, per_page)`, `policy_detail(policy_id)`를 제공한다. MCP 클라이언트는 작업 디렉터리를 저장소 루트로 지정하고 위 명령을 실행한다. 환경변수 `DATA_MODE`, `EVALUATION_ID`로 앱과 동일한 캐시를 선택한다. 외부 MCP 호스트에서도 같은 명령과 환경변수를 사용한다. 서버는 stdout에 일반 로그를 쓰지 않는다.
 
-REST 경로는 `GET /policies/coverage`, `POST /policies/refresh`, `GET /policies?scopes=central&scopes=seoul&query=돌봄&page=1&per_page=20`, `GET /policies/{id}`이다. 앱의 로컬 사용 전제를 따른다. 목록은 캐시 검색이며 갱신은 명시적으로 요청한다. 상세는 요청마다 공식 API를 조회하고 실패하면 캐시/실패 상태를 명시한다.
+REST 경로는 `GET /policies/coverage`, `POST /policies/refresh`, `GET /policies?scopes=central&scopes=seoul&query=돌봄&page=1&per_page=20`, `GET /policies/{id}`이다. 앱의 로컬 사용 전제를 따른다. 검색 대상은 제목·요약·지원내용·대상·기관·선정기준이다. 응답은 요청당 10 MB를 넘으면 거부한다. 목록은 캐시 검색이며 갱신은 명시적으로 요청한다. 상세는 요청마다 공식 API를 조회하고 실패하면 캐시/실패 상태를 명시한다.
 
 ## 반환값 해석
 

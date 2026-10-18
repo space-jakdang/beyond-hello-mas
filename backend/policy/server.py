@@ -1,5 +1,6 @@
 """Run with uv run python -m backend.policy.server (stdio only)."""
-from typing import Any
+from typing import Any, Annotated
+from pydantic import Field
 from mcp.server.mcpserver import MCPServer
 from backend.app.config import Settings
 from backend.policy.service import PolicyService,Search,Scope
@@ -21,7 +22,7 @@ def policy_refresh()->dict[str,Any]:
 
 
 @mcp.tool()
-def policy_search(scopes:list[Scope],query:str='',page:int=1,per_page:int=20)->dict[str,Any]:
+def policy_search(scopes:Annotated[list[Scope],Field(min_length=1,max_length=5)],query:Annotated[str,Field(max_length=200)]='',page:Annotated[int,Field(ge=1,le=10000)]=1,per_page:Annotated[int,Field(ge=1,le=100)]=20)->dict[str,Any]:
     """Search cached policies. Empty query lists all scoped policies; follow next_page for all results."""
     return service.search(Search(scopes=scopes,query=query,page=page,per_page=per_page))
 

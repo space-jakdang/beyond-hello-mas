@@ -118,3 +118,21 @@ def test_page_limit_and_changed_total_preserve_previous(service):
     service.fetch=changed
     assert service.refresh()['last_attempt']['status']=='failed'
     assert service.read('snapshot')==before
+
+
+def test_key_header_redaction_and_redirect(service,monkeypatch):
+    from pydantic import SecretStr
+    from urllib.error import HTTPError
+    from backend.policy.service import NoRedirect
+    import backend.policy.service as module
+    service.settings.gov24_service_key=SecretStr('SECRET%2BVALUE%3D')
+    service.fetch=service.request
+    class Opener:
+        def open(self,request,timeout):
+            assert 'SECRET' not in request.full_url and 'serviceKey' not in request.full_url
+            assert request.get_header('Authorization')=='Infuser SECRET+VALUE='
+            raise HTTPError(request.full_url,401,'SECRET',{},None)
+    monkeypatch.setattr(module,'build_opener',lambda handler:Opener())
+    assert 'SECRET' not in json.dumps(service.refresh())
+    with pytest.raises(ValueError,match='redirect'):
+        NoRedirect().redirect_request(None,None,None,None,None,None)
