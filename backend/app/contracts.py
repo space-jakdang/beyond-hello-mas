@@ -153,9 +153,23 @@ class PersonPriority(BaseModel):
         return self
 
 
+class PersonCase(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    person_id: Nonempty
+    sex: Literal['M', 'F'] | None = None
+    consent: StrictBool = False
+    age: StrictInt = Field(ge=19, le=120)
+    sgg: Literal['11230', '32010']
+    responses: dict[str, dict[str, StrictInt]] = Field(default_factory=dict)
+    responses_confirmed: StrictBool = False
+    admin_flags: dict[AdminFlag, StrictBool] = Field(default_factory=dict)
+    features: dict[str, JsonValue] = Field(default_factory=dict)
+    reply_to: Nonempty | None = None
+
+
 class Scenario(Contract):
     id: Nonempty
-    type: Literal["monthly", "case", "crisis", "question", "policy"]
+    type: Literal["monthly", "case", "crisis", "question", "policy", "admin"]
     sim_time: SimTime
     payload: dict[str, Any]
 
@@ -174,6 +188,10 @@ class Scenario(Contract):
         if self.type == "policy":
             from backend.policy.agent import PolicyTask
             PolicyTask.model_validate(self.payload)
+        if self.type == 'admin' or 'person' in self.payload:
+            if self.type not in ('admin', 'case', 'crisis'):
+                raise ValueError('personal input requires admin or case')
+            PersonCase.model_validate(self.payload.get('person', {}))
         return self
 
 
@@ -267,7 +285,7 @@ class Alert(Contract):
     id: Nonempty
     run_id: Nonempty
     approval_id: Nonempty | None = None
-    type: Literal["crisis", "approval_requested", "linkage_completed"]
+    type: Literal["crisis", "approval_requested", "linkage_completed", "human_handoff", "screening_requested"]
     status: Literal["created", "received", "acknowledged"]
     created_at: WallTime
     received_at: WallTime | None = None
