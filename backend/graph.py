@@ -1,0 +1,276 @@
+"""Fixed graph with durable approval. No external notification or LLM calls."""
+from contextlib import contextmanager
+from datetime import timedelta
+import json
+import time
+from threading import RLock
+from typing import TypedDict
+from uuid import uuid4
+
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command, interrupt
+from langsmith import tracing_context
+
+from backend.app.contracts import Alert, Approval, Run, Scenario
+from backend.events import utcnow
+from backend.tools.catalog import load_catalog
+from backend.tools.indicators import digest
+from backend.tools.matching import MatchRequest, map_intensity, match
+from backend.tools.segments import load_segments
+from backend.tools.staging import classify
+
+
+class State(TypedDict, total=False):
+    run_id: str
+    scenario: dict
+    crisis: list[str]
+    classification: dict
+    proposal: dict
+    decision: dict
+
+
+def crisis_evidence(payload):
+    if isinstance(payload, dict):
+        return sorted({hit for value in payload.values() for hit in crisis_evidence(value)})
+    if isinstance(payload, list):
+        return sorted({hit for value in payload for hit in crisis_evidence(value)})
+    if not isinstance(payload, str):
+        return []
+    text = payload.replace('죽고 싶지 않', '').replace('자살 예방', '')
+    return [phrase for phrase in ('죽고 싶', '목숨을 끊', '자살할', '죽을 거야', '나를 해치고 싶') if phrase in text]
+
+
+class GraphService:
+    def __init__(self, store, settings):
+        self.store, self.settings = store, settings
+        self.locks = {}
+        self.lock_guard = RLock()
+        with store.connection() as db:
+            db.executescript('''
+                CREATE TABLE IF NOT EXISTS workflows (run_id TEXT PRIMARY KEY REFERENCES runs(id), scenario TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS approvals (id TEXT PRIMARY KEY, run_id TEXT NOT NULL UNIQUE REFERENCES runs(id), body TEXT NOT NULL, proposal TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS linkages (run_id TEXT PRIMARY KEY REFERENCES runs(id), body TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS effects (run_id TEXT NOT NULL REFERENCES runs(id), name TEXT NOT NULL, PRIMARY KEY(run_id,name));
+            ''')
+
+    def lock(self, run_id):
+        with self.lock_guard:
+            return self.locks.setdefault(run_id, RLock())
+
+    def update_run(self, db, run_id, **changes):
+        row = db.execute('SELECT body FROM runs WHERE id=?', (run_id,)).fetchone()
+        run = Run.model_validate({**json.loads(row['body']), **changes})
+        db.execute('UPDATE runs SET body=? WHERE id=?', (run.model_dump_json(), run_id))
+
+    def once(self, db, state, name, kind, payload, agent='system', **metrics):
+        inserted = db.execute('INSERT OR IGNORE INTO effects VALUES (?,?)', (state['run_id'], name)).rowcount
+        if inserted:
+            self.store._trace(db, state['run_id'], state['scenario']['sim_time'], kind, payload, agent, **metrics)
+
+    def node_event(self, state, node, payload, started):
+        with self.store.connection(write=True) as db:
+            self.once(db, state, node, 'node_end', payload, node, latency_ms=(time.monotonic()-started)*1000)
+
+    def supervisor(self, state):
+        started = time.monotonic()
+        evidence = crisis_evidence(state['scenario']['payload'])
+        self.node_event(state, 'supervisor', {'crisis_rule_version': 'provisional-1', 'evidence': evidence}, started)
+        return {'crisis': evidence}
+
+    def classify_node(self, state):
+        started = time.monotonic()
+        if self.settings.llm_mode == 'live':
+            raise ValueError('live agent adapters are not implemented yet')
+        scenario = Scenario.model_validate(state['scenario'])
+        if scenario.type == 'monthly':
+            month = scenario.payload.get('ym')
+            rows, source = load_segments(self.settings)
+            if month not in {r.ym for r in rows}:
+                raise ValueError('requested month missing from dataset')
+            result = classify(rows)
+            result['segments'] = [r for r in result['segments'] if r['ym'] == month]
+            result['dongs'] = [r for r in result['dongs'] if r['ym'] == month]
+            result['metadata']['source'] = source
+        elif scenario.type in ('case', 'crisis'):
+            result = {'status': 'assessment_pending', 'stage': None, 'needs': [],
+                      'reason': 'Explicit scale assessment/agent adapter not implemented yet'}
+        else:
+            raise ValueError('non-crisis question routing is not implemented yet')
+        self.node_event(state, 'classify', result, started)
+        return {'classification': result}
+
+    def match_node(self, state):
+        started = time.monotonic()
+        result = state['classification']
+        assignments = []
+        if state['scenario']['type'] == 'monthly':
+            resources = load_catalog(self.settings.data_dir / 'resources.csv')
+            for segment in result['segments']:
+                if segment['stage'] is None:
+                    assignments.append({**segment, 'recommendations': [], 'reason': 'unassessed'})
+                    continue
+                low = int(segment['age_band'][:2])
+                request = MatchRequest(sgg=segment['dong_cd'][:5], age_min=low,
+                    age_max=120 if low == 60 else low+9, needs=['relationship'],
+                    intensity=map_intensity(segment['stage']), as_of=utcnow().date())
+                recommendation = match(resources, request)
+                assignments.append({'ym': segment['ym'], 'dong_cd': segment['dong_cd'], 'age_band': segment['age_band'],
+                    'stage': segment['stage'], 'recommendations': recommendation['recommendations'],
+                    'shortfall': recommendation['shortfall'], 'metadata': recommendation['metadata']})
+        proposal = {'scope': 'monthly_group_allocation' if state['scenario']['type'] == 'monthly' else 'assessment_followup',
+                    'assignments': assignments, 'assessment': result.get('status'), 'fake': True,
+                    'external_delivery': False, 'scenario_hash': digest(state['scenario'])}
+        proposal['snapshot_version'] = digest(proposal)
+        self.node_event(state, 'match', {'snapshot_version': proposal['snapshot_version'], 'assignment_count': len(assignments)}, started)
+        return {'proposal': proposal}
+
+    def approval_node(self, state):
+        started = time.monotonic()
+        decision = interrupt({'snapshot_version': state['proposal']['snapshot_version'], 'proposal': state['proposal']})
+        self.node_event(state, 'approval', decision, started)
+        return {'decision': decision}
+
+    def link_node(self, state):
+        started = time.monotonic()
+        with self.store.connection(write=True) as db:
+            existing = db.execute('SELECT body FROM linkages WHERE run_id=?', (state['run_id'],)).fetchone()
+            if existing:
+                self.update_run(db, state['run_id'], status='completed', ended_at=json.loads(existing['body'])['created_at'], error=None)
+                return {}
+            crisis = bool(state.get('crisis'))
+            approval = None
+            if not crisis:
+                row = db.execute('SELECT body FROM approvals WHERE run_id=?', (state['run_id'],)).fetchone()
+                approval = Approval.model_validate_json(row['body']) if row else None
+                if (not approval or approval.status != 'approved' or
+                        approval.snapshot_version != state['proposal']['snapshot_version']):
+                    raise ValueError('link requires approval of this exact snapshot')
+            now = utcnow()
+            linkage = {'run_id': state['run_id'], 'kind': 'crisis' if crisis else state['proposal']['scope'],
+                       'fake': True, 'external_delivery': False, 'created_at': now.isoformat(),
+                       'draft': '합성 담당자 검토용 초안: 위기 신호 확인' if crisis else '합성 담당자 검토용 초안: 승인된 계획의 후속 확인',
+                       'followup_at': None if crisis else (now + timedelta(days=7)).isoformat(),
+                       'snapshot_version': approval.snapshot_version if approval else None}
+            db.execute('INSERT INTO linkages VALUES (?,?)', (state['run_id'], json.dumps(linkage)))
+            alert = Alert(id=f"link-{state['run_id']}", run_id=state['run_id'],
+                approval_id=approval.id if approval else None, type='crisis' if crisis else 'linkage_completed',
+                status='created', created_at=now)
+            db.execute('INSERT INTO alerts(id,run_id,body) VALUES (?,?,?)', (alert.id, alert.run_id, alert.model_dump_json()))
+            self.once(db, state, 'link', 'node_end', linkage, 'link', latency_ms=(time.monotonic()-started)*1000)
+            self.once(db, state, 'link-alert', 'alert', alert.model_dump(mode='json'))
+            self.once(db, state, 'run-end', 'run_end', {'status': 'completed'})
+            self.update_run(db, state['run_id'], status='completed', ended_at=now, error=None)
+        return {}
+
+    def reject_node(self, state):
+        with self.store.connection(write=True) as db:
+            self.once(db, state, 'run-end', 'run_end', {'status': 'rejected'})
+            self.update_run(db, state['run_id'], status='rejected', ended_at=utcnow(), error=None)
+        return {}
+
+    @contextmanager
+    def graph(self):
+        with SqliteSaver.from_conn_string(str(self.settings.runtime_dir / 'checkpoints.sqlite3')) as saver:
+            builder = StateGraph(State)
+            for name, action in [('supervisor', self.supervisor), ('classify', self.classify_node), ('match', self.match_node),
+                                 ('approval', self.approval_node), ('link', self.link_node), ('reject', self.reject_node)]:
+                builder.add_node(name, action)
+            builder.add_edge(START, 'supervisor')
+            builder.add_conditional_edges('supervisor', lambda s: 'link' if s['crisis'] else 'classify')
+            builder.add_edge('classify', 'match')
+            builder.add_edge('match', 'approval')
+            builder.add_conditional_edges('approval', lambda s: 'link' if s['decision']['status'] == 'approved' else 'reject')
+            builder.add_edge('link', END)
+            builder.add_edge('reject', END)
+            yield builder.compile(checkpointer=saver)
+
+    def publish_approval(self, state):
+        approval = Approval(id=f"approval-{state['run_id']}", run_id=state['run_id'],
+                            snapshot_version=state['proposal']['snapshot_version'], status='pending')
+        with self.store.connection(write=True) as db:
+            if db.execute('SELECT 1 FROM approvals WHERE run_id=?', (state['run_id'],)).fetchone():
+                return
+            db.execute('INSERT INTO approvals VALUES (?,?,?,?)', (approval.id, approval.run_id, approval.model_dump_json(), json.dumps(state['proposal'])))
+            now = utcnow()
+            alert = Alert(id=approval.id, run_id=approval.run_id, approval_id=approval.id,
+                          type='approval_requested', status='created', created_at=now)
+            db.execute('INSERT INTO alerts(id,run_id,body) VALUES (?,?,?)', (alert.id, alert.run_id, alert.model_dump_json()))
+            self.once(db, state, 'interrupt', 'interrupt', approval.model_dump(mode='json'), 'approval')
+            self.once(db, state, 'approval-alert', 'alert', alert.model_dump(mode='json'))
+            self.update_run(db, state['run_id'], status='awaiting_approval')
+
+    def drive(self, run_id, initial=None):
+        config = {'configurable': {'thread_id': run_id}}
+        with self.lock(run_id), self.graph() as graph, tracing_context(enabled=False):
+            snapshot = graph.get_state(config)
+            with self.store.connection() as db:
+                row = db.execute('SELECT body FROM approvals WHERE run_id=?', (run_id,)).fetchone()
+            decision = Approval.model_validate_json(row['body']) if row else None
+            command = initial
+            if not snapshot.values and initial is None:
+                with self.store.connection() as db:
+                    row = db.execute('SELECT scenario FROM workflows WHERE run_id=?', (run_id,)).fetchone()
+                if row is None:
+                    raise KeyError(run_id)
+                command = {'run_id': run_id, 'scenario': json.loads(row['scenario'])}
+            if snapshot.next and decision and decision.status != 'pending' and 'approval' in snapshot.next:
+                command = Command(resume=decision.model_dump(mode='json'))
+            try:
+                if command is not None or snapshot.next:
+                    graph.invoke(command, config)
+                snapshot = graph.get_state(config)
+                if 'approval' in snapshot.next:
+                    self.publish_approval(snapshot.values)
+            except Exception as exc:
+                with self.store.connection(write=True) as db:
+                    self.update_run(db, run_id, status='failed', error=type(exc).__name__, ended_at=utcnow())
+                    scenario = json.loads(db.execute('SELECT scenario FROM workflows WHERE run_id=?', (run_id,)).fetchone()[0])
+                    self.store._trace(db, run_id, scenario['sim_time'], 'error', {'type': type(exc).__name__, 'message': str(exc)})
+                raise
+        return self.store.get_run(run_id)
+
+    def start(self, scenario):
+        run_id = str(uuid4())
+        run = Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
+            data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
+            rule_version='provisional-1', model_version='fake', prompt_version='none', catalog_version='synthetic-1' if self.settings.data_mode == 'sample' else 'local', started_at=utcnow())
+        with self.lock(run_id):
+            self.store.create_run(run)
+            with self.store.connection(write=True) as db:
+                db.execute('INSERT INTO workflows VALUES (?,?)', (run_id, scenario.model_dump_json()))
+            return self.drive(run_id, {'run_id': run_id, 'scenario': scenario.model_dump(mode='json')})
+
+    def approval(self, run_id):
+        with self.store.connection() as db:
+            row = db.execute('SELECT body,proposal FROM approvals WHERE run_id=?', (run_id,)).fetchone()
+        if row is None:
+            raise KeyError(run_id)
+        return {'approval': json.loads(row['body']), 'proposal': json.loads(row['proposal'])}
+
+    def decide(self, run_id, snapshot_version, status, operator, reason=None):
+        with self.lock(run_id), self.graph() as graph:
+            current = self.approval(run_id)['approval']
+            if current['snapshot_version'] != snapshot_version:
+                raise ValueError('snapshot mismatch')
+            if current['status'] != 'pending':
+                if current['status'] != status:
+                    raise ValueError('approval already decided differently')
+                return self.drive(run_id)
+            state = graph.get_state({'configurable': {'thread_id': run_id}})
+            if 'approval' not in state.next or state.values['proposal']['snapshot_version'] != snapshot_version:
+                raise ValueError('resumable approval checkpoint not ready')
+            decision = Approval.model_validate({**current, 'status': status, 'operator': operator, 'reason': reason, 'decided_at': utcnow()})
+            with self.store.connection(write=True) as db:
+                db.execute('UPDATE approvals SET body=? WHERE run_id=?', (decision.model_dump_json(), run_id))
+                self.once(db, state.values, 'decision', 'approval', decision.model_dump(mode='json'), 'approval')
+            return self.drive(run_id)
+
+    def recover(self):
+        with self.store.connection() as db:
+            ids = [r[0] for r in db.execute('SELECT run_id FROM workflows')]
+        for run_id in ids:
+            try:
+                self.drive(run_id)
+            except Exception:
+                pass  # Failure is persisted by drive; other runs must still recover.

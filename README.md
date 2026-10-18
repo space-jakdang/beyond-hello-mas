@@ -1,6 +1,6 @@
 # beyond-hello-mas
 
-고립을 탐지하고 대응하기 위한 멀티에이전트 시스템. 현재는 FastAPI API와 React 화면의 실행 기반입니다. 결정적 세그먼트 분류와 합성 자원 매칭을 지원하며 승인·LLM·전체 평가는 아직 구현되지 않았습니다.
+고립을 탐지하고 대응하기 위한 멀티에이전트 시스템. 현재는 FastAPI API와 React 화면의 실행 기반입니다. 결정적 세그먼트 분류와 합성 자원 매칭을 지원하며 승인·위기 우회·재시작 복구를 지원합니다. 실제 LLM·척도 어댑터와 전체 평가는 아직 구현되지 않았습니다.
 
 ## 로컬 실행
 
@@ -50,3 +50,10 @@ hook 설치는 기존 hook을 덮어쓰지 않습니다. 기본 검사는 staged
 `make sample && make classify`로 합성 1,692행을 분류합니다. 결과는 `runtime/sample/classification.json`에 저장되며 임시 규칙, 입력 hash, 지표별 공간단위, 누락 정보, 연령별 단계와 동 요약을 포함합니다. 실제 입력 export와 규칙 상세는 [계약 문서](docs/contracts.md)를 참고하세요. 지표 최종 선택과 타당성 검증은 아직 미완료입니다.
 
 실행·트레이스·알림은 `runtime/{DATA_MODE}/events.sqlite3`에 저장합니다. 조회/SSE/수신·확인 API는 `/docs`와 [계약 문서](docs/contracts.md)에 설명되어 있습니다. 수신 ack는 승인이나 실제 기관 전달을 뜻하지 않습니다.
+
+
+```sh
+curl -X POST http://127.0.0.1:8000/scenarios/run -H 'Content-Type: application/json' --data-binary @data/sample/scenario.json
+```
+
+응답의 run ID로 `/runs/{id}/approval`을 조회하고 해당 snapshot_version을 `/runs/{id}/decision`에 전달하면 승인/반려할 수 있습니다. 스키마 예시는 `/docs`에 있습니다. 승인 전에는 연계가 없으며, 개인 사례의 현재 승인 대상은 척도 응답을 받기 위한 합성 후속 확인 계획입니다.

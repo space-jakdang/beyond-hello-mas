@@ -55,13 +55,28 @@ CLI: `uv run python -m scripts.match request.json --catalog data/sample/resource
 
 단일 로컬 서버가 `runtime/{sample|local}/events.sqlite3`에 run/trace/alert/클라이언트 수신을 저장합니다. 쓰기는 SQLite `BEGIN IMMEDIATE` 트랜잭션, 외래키 및 유일성 제약을 사용합니다. 알림과 감사 trace는 함께 커밋되거나 함께 롤백됩니다. run의 data_mode가 저장소와 다르면 거부합니다. 다중 서버/사용자 인증을 제공하는 배포 서비스는 아닙니다.
 
-- `POST /runs`: Run 등록, `GET /runs` 및 `/runs/{id}`: 조회.
-- `POST /runs/{id}/alerts`: 알림 생성(type, approval_id, sim_ts), `GET /alerts`: cursor 순 조회.
+- `GET /runs` 및 `/runs/{id}`: 조회. 실행 생성은 `/scenarios/run`에서만 합니다.
+- 알림 생성은 그래프 내부에서만 합니다. `GET /alerts`: cursor 순 조회. 공개 API로 승인/연계 완료 알림을 임의 생성할 수 없습니다.
 - `GET /runs/{id}/traces`: run별 seq 순 조회. 조회는 after/limit으로 페이지를 나눕니다.
 - `GET /runs/{id}/traces/stream`, `GET /alerts/stream`: SSE. `Last-Event-ID` 또는 after 이후 이벤트를 최대 100개씩 DB에서 재조회하며 15초 heartbeat를 전송합니다. 알림 cursor는 모든 run에 걸쳐 증가합니다. 느린 구독자용 무제한 메모리 큐를 만들지 않으며 연결 종료 시 generator가 취소됩니다.
 - `POST /alerts/{id}/receipt`: client_id, browser_received_at, sim_ts. client_id는 브라우저별 안정적인 ID이며 같은 알림/클라이언트의 최초 기록을 보존합니다. 브라우저 시계 원시값과 UTC 서버 수신 시각은 분리합니다.
 - `POST /alerts/{id}/acknowledge`: client_id, operator, sim_ts. 그 클라이언트의 수신 기록이 있어야 합니다. 사람의 확인은 승인 결정과 별개이며 최초 확인과 감사 trace만 기록합니다.
 
-run 등록부터 서버 receipt까지는 같은 프로세스의 단조 시계로 `run_to_receipt_ms`를 계산합니다. 재시작 후 시계 원점이 달라진 실행은 null로 남깁니다. 브라우저 시각을 빼서 시스템 지연을 계산하지 않으며 미수신·재시작 결측을 0으로 보고하지 않습니다. 시뮬레이션 시각은 성능 지연에 쓰지 않습니다. 아직 실제 브라우저 수신 지연 평가나 그래프 실행은 구현되지 않았습니다.
+run 등록부터 서버 receipt까지는 같은 프로세스의 단조 시계로 `run_to_receipt_ms`를 계산합니다. 재시작 후 시계 원점이 달라진 실행은 null로 남깁니다. 브라우저 시각을 빼서 시스템 지연을 계산하지 않으며 미수신·재시작 결측을 0으로 보고하지 않습니다. 시뮬레이션 시각은 성능 지연에 쓰지 않습니다. 실제 브라우저 수신 지연 평가는 후속 단계입니다.
 
 SQLite 연결/트랜잭션 의미는 [Python 공식 문서](https://docs.python.org/3/library/sqlite3.html)를 따릅니다.
+
+
+## 그래프와 승인
+
+`POST /scenarios/run`에 Scenario를 전달합니다. FastAPI의 작업 스레드에서 그래프를 실행하며 health/SSE 이벤트 루프를 막지 않습니다. `GET /runs/{id}/approval`은 승인 대상 전체 proposal과 snapshot hash를 반환합니다. `POST /runs/{id}/decision`은 snapshot_version, approved/rejected, operator, 반려 시 reason을 받습니다. `GET /runs/{id}/linkage`는 승인 후의 로컬 연계 기록입니다.
+
+일반 경로는 supervisor → classify → match → approval → link입니다. 승인 노드의 `interrupt` 체크포인트가 저장된 뒤에만 승인 요청과 알림을 한 트랜잭션으로 공개합니다. 결정은 해당 snapshot에 결박하고, 같은 run의 재개를 직렬화합니다. 결정 저장 후 프로세스가 종료되어도 시작 시 재개합니다. 연계/알림/후속 확인 일정은 run별 한 번만 생성됩니다. 반려는 종료하며 연계하지 않습니다. 체크포인트가 없거나 snapshot이 다르면 승인을 거부합니다.
+
+위기는 payload 안의 모든 문자열을 먼저 규칙으로 검사합니다. 시나리오 type이나 평가 정답은 위기 판정에 사용하지 않습니다. 위기 경로는 supervisor → link이며 분류/매칭/LLM/일반 승인을 우회합니다. 규칙 provisional-1은 일부 명시적 한국어 신호와 제한된 부정문만 다루며 포괄적 위기 탐지 성능을 보장하지 않습니다. 알림은 로컬 담당자용이며 기관에 실제 전달하지 않습니다.
+
+monthly는 해당 월의 연령별 배분안 전체를 하나의 승인 단위로 둡니다. 개인 사례는 현재 척도 어댑터가 없어 assessment_pending으로 유지하고 점수·단계를 만들지 않습니다. 이때 승인 대상은 추가 응답/상담을 위한 후속 확인 계획이며 자원 추천은 비어 있습니다. non-crisis question 및 live 일반 경로는 명시적으로 실패하며 fake 성공으로 바꾸지 않습니다. LLM/척도·질문 어댑터는 후속 구현입니다.
+
+모든 연계 초안은 fake이고 외부 전달은 없습니다. 일반 후속 확인 일정은 개발용 기본 7일 후입니다. 그래프 checkpoint는 모드별 `runtime`에 저장하고 외부 LangSmith tracing은 호출 컨텍스트에서 비활성화합니다. 재시작 복구는 실행별로 수행하며 실패한 실행도 error trace에 남습니다. 지원 범위는 단일 백엔드 프로세스입니다.
+
+구현은 LangGraph 공식 [interrupt](https://reference.langchain.com/python/langgraph/types/interrupt)와 [SqliteSaver](https://reference.langchain.com/python/langgraph.checkpoint.sqlite/SqliteSaver) 계약 및 고정된 설치 버전을 사용합니다.
