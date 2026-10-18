@@ -202,7 +202,7 @@ class EvaluationLabel(Contract):
 
 
 class Resource(Contract):
-    schema_version: Literal["2"] = "2"
+    schema_version: Literal["2", "3"] = "2"
     id: Nonempty
     jurisdiction: list[Nonempty] = Field(min_length=1)
     name: Nonempty
@@ -217,7 +217,12 @@ class Resource(Contract):
     delivery: Nonempty
     access: Literal["application", "outreach", "both"]
     isolation_relevance: Nonempty
-    source_url: HttpUrl
+    source_url: HttpUrl | None = None
+    stage_min: int | None = Field(default=None, ge=1, le=5)
+    stage_max: int | None = Field(default=None, ge=1, le=5)
+    arrears_link: bool = False
+    verification: Literal['source_reviewed', 'provided_confirmed', 'caution'] = 'source_reviewed'
+    provenance: list[dict[str, JsonValue]] = Field(default_factory=list)
     collected_at: WallTime
     evidence: Nonempty
     catalog_version: Nonempty
@@ -226,6 +231,10 @@ class Resource(Contract):
     def age_range(self):
         if self.age_min > self.age_max:
             raise ValueError("age_min exceeds age_max")
+        if (self.stage_min is None) != (self.stage_max is None) or (self.stage_min is not None and self.stage_min > self.stage_max):
+            raise ValueError('invalid stage range')
+        if self.source_url is None and (self.schema_version != '3' or not self.provenance):
+            raise ValueError('resource requires source URL or v3 provenance')
         return self
 
 

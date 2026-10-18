@@ -14,6 +14,8 @@ class MatchRequest(Contract):
     needs: list[Nonempty] = Field(min_length=1)
     intensity: Literal['low', 'medium', 'high']
     eligibility: dict[str, bool | None] = Field(default_factory=dict)
+    stage: int | None = Field(default=None, ge=1, le=5)
+    arrears: bool = False
     as_of: date
 
 
@@ -52,9 +54,11 @@ def filter_catalog(resources, request):
             reasons.append('jurisdiction')
         if resource.age_min > request.age_min or resource.age_max < request.age_max:
             reasons.append('age')
-        if resource.intensity != request.intensity:
+        if request.stage is not None and resource.stage_min is not None:
+            if not resource.stage_min <= request.stage <= resource.stage_max:reasons.append('stage')
+        elif resource.intensity != request.intensity:
             reasons.append('intensity')
-        if not set(request.needs).intersection(resource.needs):
+        if not set(request.needs).intersection(resource.needs) and not (request.arrears and resource.arrears_link):
             reasons.append('needs')
         if not resource.eligibility_tags and resource.eligibility != 'unrestricted':
             reasons.append('unstructured_eligibility')
@@ -69,13 +73,18 @@ def filter_catalog(resources, request):
 
 
 def rank(resources, request):
-    return sorted(resources, key=lambda r: (-len(set(request.needs).intersection(r.needs)), r.id))
+    return sorted(resources, key=lambda r: (-int(request.arrears and r.arrears_link), -len(set(request.needs).intersection(r.needs)), r.id))
 
 
 def match(resources, request, policy=None):
-    policy = policy or MatchPolicy()
+    policy = policy or MatchPolicy(version='seohee-match-3' if request.stage is not None else 'provisional-1')
     candidates, excluded = filter_catalog(resources, request)
-    selected = rank(candidates, request)[:3]
+    ranked = rank(candidates, request)
+    selected = ranked[:3]
+    if request.arrears:
+        arrears = next((r for r in ranked if r.arrears_link),None)
+        ordinary = [r for r in ranked if set(request.needs).intersection(r.needs) and (arrears is None or r.id != arrears.id)]
+        selected = ordinary[:2]+[arrears] if arrears else ordinary[:3]
     return {'recommendations': [r.model_dump(mode='json') for r in selected],
             'excluded': excluded, 'eligible_count': len(candidates), 'shortfall': 3 - len(selected),
             'uncovered_needs': sorted(set(request.needs) - {n for r in selected for n in r.needs}),

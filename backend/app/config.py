@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     policy_timeout_seconds: float = Field(default=10,gt=0,le=30)
     policy_max_pages: int = Field(default=30,ge=1,le=100)
     evaluation_id: UUID | None = None
-    resource_catalog: Literal["fixture", "curated"] = "fixture"
+    resource_catalog: Literal["fixture", "curated", "v3"] = "fixture"
     openai_api_key: SecretStr | None = None
 
     openai_model: str | None = None
@@ -58,4 +58,5 @@ class Settings(BaseSettings):
 
     @property
     def catalog_path(self) -> Path:
+        if self.resource_catalog == "v3":return self.data_dir / "resources-v3.csv"
         return ROOT / "data/catalog/curated-20261018-1/resources.csv" if self.resource_catalog == "curated" else self.data_dir / "resources.csv"

@@ -57,7 +57,7 @@ def export(entries, destination: Path):
     writer.writeheader()
     for resource in resources:
         row = resource.model_dump(mode='json')
-        for field in ('jurisdiction', 'needs', 'eligibility_tags'):
+        for field in ('jurisdiction', 'needs', 'eligibility_tags', 'provenance'):
             row[field] = json.dumps(row[field], ensure_ascii=False)
         writer.writerow(row)
     outputs = {'resources.csv': stream.getvalue(), 'manifest.json': json.dumps(report, ensure_ascii=False, indent=2)+'\n'}

@@ -683,11 +683,17 @@
     "type": "object"
   },
   "Resource": {
+    "$defs": {
+      "JsonValue": {}
+    },
     "additionalProperties": false,
     "properties": {
       "schema_version": {
-        "const": "2",
         "default": "2",
+        "enum": [
+          "2",
+          "3"
+        ],
         "title": "Schema Version",
         "type": "string"
       },
@@ -791,11 +797,72 @@
         "type": "string"
       },
       "source_url": {
-        "format": "uri",
-        "maxLength": 2083,
-        "minLength": 1,
-        "title": "Source Url",
+        "anyOf": [
+          {
+            "format": "uri",
+            "maxLength": 2083,
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Source Url"
+      },
+      "stage_min": {
+        "anyOf": [
+          {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Stage Min"
+      },
+      "stage_max": {
+        "anyOf": [
+          {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Stage Max"
+      },
+      "arrears_link": {
+        "default": false,
+        "title": "Arrears Link",
+        "type": "boolean"
+      },
+      "verification": {
+        "default": "source_reviewed",
+        "enum": [
+          "source_reviewed",
+          "provided_confirmed",
+          "caution"
+        ],
+        "title": "Verification",
         "type": "string"
+      },
+      "provenance": {
+        "items": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "type": "object"
+        },
+        "title": "Provenance",
+        "type": "array"
       },
       "collected_at": {
         "format": "date-time",
@@ -825,7 +892,6 @@
       "delivery",
       "access",
       "isolation_relevance",
-      "source_url",
       "collected_at",
       "evidence",
       "catalog_version"
