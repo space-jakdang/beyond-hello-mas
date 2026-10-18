@@ -40,14 +40,18 @@ def scan(tracked=False):
     prefix='HEAD:' if tracked else ':'
     try:
         permissions=json.loads(git('show',prefix+'rules/source_permissions.json'))['files']
-    except (subprocess.CalledProcessError,KeyError,ValueError):
+        if not isinstance(permissions,list) or not permissions or any(
+            not isinstance(row,dict) or any(not isinstance(row.get(k),str) or not row[k] for k in ('path','sha256','permission'))
+            or not re.fullmatch('[a-f0-9]{64}',row['sha256']) for row in permissions):
+            raise ValueError('malformed permission rows')
+    except (subprocess.CalledProcessError,KeyError,ValueError,TypeError):
         permissions=[]
         problems.append('source permission registry missing or invalid')
     for raw in git(*args).split(b"\0"):
         if not raw:
             continue
         path = raw.decode()
-        content = git("show", ("HEAD:" if tracked else ":") + path)
+        content = git("show", prefix + path)
         problems.extend(f"{path}: {error}" for error in violations(path, content, permissions))
     return problems
 

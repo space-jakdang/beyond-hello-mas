@@ -67,3 +67,26 @@ def test_manifest_common_root_filename_does_not_block_unrelated_readme():
     rule={'path':'README.md','sha256':hashlib.sha256(b'private readme').hexdigest(),'permission':'private'}
     assert not violations('README.md',b'project docs',[rule])
     assert violations('README.md',b'private readme',[rule])
+
+
+def test_local_period_aggregate_and_multiple_sources(tmp_path,monkeypatch):
+    row=generate()[0].model_copy(update={'ym':None,'source_bands':{'sk_gangnam_s1':['20s','30s'],'kosis':['20–34']}})
+    import backend.app.config as config
+    monkeypatch.setattr(config,'ROOT',tmp_path)
+    settings=Settings(_env_file=None,data_mode='local',llm_mode='fake')
+    write_segments(settings.data_dir/'segments-v3.parquet',[row],'local')
+    loaded,meta=load_segments(settings)
+    assert loaded==[row] and not meta['synthetic']
+
+
+def test_guard_rejects_malformed_registry(tmp_path,monkeypatch):
+    from scripts import check_public
+    monkeypatch.setattr(check_public,'git',lambda *args:b'{"files":[{}]}' if args[0]=='show' else b'')
+    assert check_public.scan()==['source permission registry missing or invalid']
+
+
+def test_import_rejects_nested_destination_and_missing_manifest(tmp_path):
+    source=tmp_path/'source';source.mkdir();(source/'file').write_text('synthetic')
+    with pytest.raises(ValueError,match='outside'):import_bundle(source,source/'nested')
+    dest=tmp_path/'dest';import_bundle(source,dest);(dest/'import.json').unlink()
+    with pytest.raises(ValueError,match='manifest'):import_bundle(source,dest)

@@ -45,6 +45,6 @@ def load_segments(settings):
     for row in values:
         # Arrow structs fill absent source keys with null across heterogeneous rows.
         row['source_bands']={k:v for k,v in row['source_bands'].items() if v is not None}
-    rows=validate([SegmentV3.model_validate(r) for r in values],settings.data_mode=='sample')
+    rows=validate([SegmentV3.model_validate(r) for r in values],complete=settings.data_mode=='sample')
     if digest([r.model_dump(mode='json') for r in rows])!=metadata['input_hash']:raise ValueError('v3 checksum mismatch')
     return rows,metadata
