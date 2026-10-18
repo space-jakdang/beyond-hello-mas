@@ -4,8 +4,9 @@ import './style.css';
 import {Observatory} from './Observatory';
 import {Console} from './Console';
 import {Evaluation} from './Evaluation';
+import {Neighborhoods} from './Neighborhoods';
 
-const pages: Record<string, string> = {'/': '관찰', '/observatory': '관찰', '/console': '담당자 콘솔', '/evaluation': '평가'};
+const pages: Record<string, string> = {'/': '관찰', '/observatory': '관찰', '/console': '담당자 콘솔', '/evaluation': '평가', '/neighborhoods': '동네 분석'};
 function App() {
   const [health, setHealth] = useState('서버 연결 중');
   useEffect(() => {
@@ -16,9 +17,9 @@ function App() {
     }).catch(() => setHealth('서버 연결 실패'));
   }, []);
   return <><header><strong>Beyond Hello MAS</strong><nav aria-label="주 메뉴">
-    <a href="/observatory">관찰</a><a href="/console">담당자 콘솔</a><a href="/evaluation">평가</a>
+    <a href="/neighborhoods">동네 분석</a><a href="/observatory">관찰</a><a href="/console">담당자 콘솔</a><a href="/evaluation">평가</a>
   </nav></header><main><h1>{pages[location.pathname] ?? '페이지를 찾을 수 없습니다'}</h1>
-    <p role="status">{health}</p>{["/", "/observatory"].includes(location.pathname) && <Observatory/>}{location.pathname === "/console" && <Console/>}{location.pathname === "/evaluation" && <Evaluation/>}
+    <p role="status">{health}</p>{["/", "/observatory"].includes(location.pathname) && <Observatory/>}{location.pathname === "/neighborhoods" && <Neighborhoods/>}{location.pathname === "/console" && <Console/>}{location.pathname === "/evaluation" && <Evaluation/>}
   </main></>;
 }
 createRoot(document.getElementById('root')!).render(<App/>);
