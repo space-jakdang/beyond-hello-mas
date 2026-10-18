@@ -70,6 +70,11 @@ class SegmentV3(Contract):
     value: float | None
     residents: float | None = Field(default=None, ge=0)
     flags: list[Nonempty] = Field(default_factory=list)
+    source_dong_nm: Nonempty | None = None
+    source_stage: int | None = Field(default=None, ge=1, le=5)
+    within_rank: int | None = Field(default=None, ge=1, le=22)
+    preferred: bool = True
+    components: dict[str, float | None] = Field(default_factory=dict)
     source_period: Nonempty
     source_file: Nonempty
     x: float

@@ -70,3 +70,14 @@ def analysis(settings):
             'neighborhoods':list(dongs.values()),'segments':result['segments'],'dongs':result['dongs'],
             'metadata':{**result['metadata'],'generator_version':source.get('generator_version'),'indicators':[i.model_dump(mode='json') for i in default_rules().indicators]},
             'geometry':geo,'geography':provenance,'coverage':{'matched':len(geo['features']),'total':len(dongs),'unmatched_codes':unmatched}}
+
+
+def group_analysis(settings):
+    from backend.tools.segments_v3 import load_segments as load_groups
+    from backend.tools.region_stage import classify as classify_groups
+    rows,source=load_groups(settings)
+    result=classify_groups(rows)
+    # Reuse the verified mode-specific geometry join while the legacy dashboard remains supported.
+    base=analysis(settings)
+    return {**base,**result,'months':sorted({r.ym for r in rows if r.ym}),
+            'period_aggregate':any(r.ym is None for r in rows),'metadata':{**result['metadata'],'source':source}}

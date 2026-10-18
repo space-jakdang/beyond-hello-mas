@@ -232,6 +232,66 @@
         "title": "Flags",
         "type": "array"
       },
+      "source_dong_nm": {
+        "anyOf": [
+          {
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Source Dong Nm"
+      },
+      "source_stage": {
+        "anyOf": [
+          {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Source Stage"
+      },
+      "within_rank": {
+        "anyOf": [
+          {
+            "maximum": 22,
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Within Rank"
+      },
+      "preferred": {
+        "default": true,
+        "title": "Preferred",
+        "type": "boolean"
+      },
+      "components": {
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": "Components",
+        "type": "object"
+      },
       "source_period": {
         "minLength": 1,
         "title": "Source Period",

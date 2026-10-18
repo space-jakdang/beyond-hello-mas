@@ -30,7 +30,8 @@ def write_segments(path,rows,data_mode):
     rows=validate(rows,complete=data_mode=='sample')
     values=[r.model_dump(mode='json') for r in rows]
     metadata={'schema_version':'3','data_mode':data_mode,'input_hash':digest(values),'synthetic':data_mode=='sample'}
-    table=pa.Table.from_pylist(values)
+    storage=[{**r,'components':json.dumps(r.get('components',{}),sort_keys=True)} for r in values]
+    table=pa.Table.from_pylist(storage)
     table=table.replace_schema_metadata({b'beyond_hello':json.dumps(metadata).encode()})
     path.parent.mkdir(parents=True,exist_ok=True)
     tmp=path.with_suffix('.tmp');pq.write_table(table,tmp);tmp.replace(path)
@@ -43,8 +44,9 @@ def load_segments(settings):
     if metadata['schema_version']!='3' or metadata['data_mode']!=settings.data_mode:raise ValueError('v3 mode/version mismatch')
     values=table.to_pylist()
     for row in values:
+        if isinstance(row.get('components'),str):row['components']=json.loads(row['components'])
         # Arrow structs fill absent source keys with null across heterogeneous rows.
         row['source_bands']={k:v for k,v in row['source_bands'].items() if v is not None}
     rows=validate([SegmentV3.model_validate(r) for r in values],complete=settings.data_mode=='sample')
-    if digest([r.model_dump(mode='json') for r in rows])!=metadata['input_hash']:raise ValueError('v3 checksum mismatch')
+    if digest(values)!=metadata['input_hash']:raise ValueError('v3 checksum mismatch')
     return rows,metadata
