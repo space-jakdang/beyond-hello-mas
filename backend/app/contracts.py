@@ -55,7 +55,7 @@ class Segment(Contract):
 
 class Scenario(Contract):
     id: Nonempty
-    type: Literal["monthly", "case", "crisis", "question"]
+    type: Literal["monthly", "case", "crisis", "question", "policy"]
     sim_time: SimTime
     payload: dict[str, Any]
 
@@ -71,6 +71,9 @@ class Scenario(Contract):
                 for item in value:
                     check(item)
         check(self.payload)
+        if self.type == "policy":
+            from backend.policy.agent import PolicyTask
+            PolicyTask.model_validate(self.payload)
         return self
 
 
@@ -131,7 +134,7 @@ class Trace(Contract):
     seq: int = Field(ge=1)
     wall_ts: WallTime
     sim_ts: SimTime
-    agent: Literal["supervisor", "classify", "match", "approval", "link", "curator", "system"]
+    agent: Literal["supervisor", "classify", "match", "approval", "link", "curator", "policy", "system"]
     kind: Literal["node_start", "node_end", "tool_call", "tool_result", "llm_call", "llm_result", "route", "interrupt", "alert", "error", "approval", "received", "acknowledged", "run_end"]
     payload: dict[str, Any]
     tokens_in: int = Field(default=0, ge=0)

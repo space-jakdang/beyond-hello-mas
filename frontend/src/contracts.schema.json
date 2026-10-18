@@ -131,7 +131,8 @@
           "monthly",
           "case",
           "crisis",
-          "question"
+          "question",
+          "policy"
         ],
         "title": "Type",
         "type": "string"
@@ -507,6 +508,7 @@
           "approval",
           "link",
           "curator",
+          "policy",
           "system"
         ],
         "title": "Agent",

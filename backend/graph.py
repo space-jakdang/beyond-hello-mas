@@ -1,4 +1,4 @@
-"""Fixed graph with durable approval. No external notification or LLM calls."""
+"""Durable approval graph with Supervisor-delegated policy research. No external notifications."""
 from contextlib import contextmanager
 from datetime import timedelta
 import json
@@ -15,6 +15,7 @@ from langsmith import tracing_context
 from backend.app.contracts import Alert, Approval, Run, Scenario
 from backend.agents.llm import Agents
 from backend.agents.scale import ScaleAdapter
+from backend.policy.agent import PolicyAgent, PolicyTask
 from backend.events import utcnow
 from backend.tools.catalog import load_catalog
 from backend.tools.indicators import digest
@@ -49,6 +50,7 @@ class GraphService:
         self.store, self.settings = store, settings
         self.agents = Agents(store, settings)
         self.scale = ScaleAdapter(store, settings)
+        self.policy_agent = PolicyAgent(store, settings, self.agents)
         self.locks = {}
         self.lock_guard = RLock()
         with store.connection() as db:
@@ -84,6 +86,10 @@ class GraphService:
         route = None
         if not evidence and state['scenario']['type'] == 'question':
             route = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'route', state['scenario']['payload']).route
+        if not evidence and state['scenario']['type'] == 'policy':
+            task = PolicyTask.model_validate(state['scenario']['payload'])
+            with self.store.connection(write=True) as db:
+                self.once(db, state, 'policy-delegation', 'route', {'worker': 'policy', 'task': task.model_dump()}, 'supervisor')
         return {'crisis': evidence, 'question_route': route}
 
     def classify_node(self, state):
@@ -219,21 +225,35 @@ class GraphService:
             self.update_run(db, state['run_id'], status='completed', ended_at=utcnow(), error=None)
         return {}
 
+    def policy_node(self, state):
+        started = time.monotonic()
+        # A completed worker result survives a crash before LangGraph checkpoints this node.
+        with self.store.connection() as db:
+            done = db.execute('SELECT 1 FROM effects WHERE run_id=? AND name=?', (state['run_id'], 'policy')).fetchone()
+        if done:return {}
+        result = self.policy_agent.run(state['run_id'], state['scenario']['sim_time'], state['scenario']['payload'])
+        with self.store.connection(write=True) as db:
+            self.once(db, state, 'policy', 'node_end', result, 'policy', latency_ms=(time.monotonic()-started)*1000)
+            self.once(db, state, 'run-end', 'run_end', {'status': 'completed'})
+            self.update_run(db, state['run_id'], status='completed', ended_at=utcnow(), error=None)
+        return {}
+
     @contextmanager
     def graph(self):
         with SqliteSaver.from_conn_string(str(self.settings.runtime_dir / 'checkpoints.sqlite3')) as saver:
             builder = StateGraph(State)
             for name, action in [('supervisor', self.supervisor), ('classify', self.classify_node), ('match', self.match_node),
-                                 ('approval', self.approval_node), ('link', self.link_node), ('reject', self.reject_node), ('question', self.question_node)]:
+                                 ('approval', self.approval_node), ('link', self.link_node), ('reject', self.reject_node), ('question', self.question_node), ('policy', self.policy_node)]:
                 builder.add_node(name, action)
             builder.add_edge(START, 'supervisor')
-            builder.add_conditional_edges('supervisor', lambda s: 'link' if s['crisis'] else ('question' if s.get('question_route') in ('history', 'human', 'classify', 'match') else 'classify'))
+            builder.add_conditional_edges('supervisor', lambda s: 'link' if s['crisis'] else 'policy' if s['scenario']['type'] == 'policy' else ('question' if s.get('question_route') in ('history', 'human', 'classify', 'match') else 'classify'))
             builder.add_edge('classify', 'match')
             builder.add_edge('match', 'approval')
             builder.add_conditional_edges('approval', lambda s: 'link' if s['decision']['status'] == 'approved' else 'reject')
             builder.add_edge('link', END)
             builder.add_edge('reject', END)
             builder.add_edge('question', END)
+            builder.add_edge('policy', END)
             yield builder.compile(checkpointer=saver)
 
     def publish_approval(self, state):
