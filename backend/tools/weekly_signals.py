@@ -52,7 +52,7 @@ def audit(rows):
                 if alarm(ratios,weak)!=metric['signal']:raise ValueError('source alarm differs from rule')
                 consecutive=0
                 for previous in reversed(ratios):
-                    if previous is None or previous>=weak:break
+                    if previous is None or previous>=.95:break
                     consecutive+=1
                 metric['consecutive_weeks']=consecutive
                 metric['baseline_available']=base is not None

@@ -40,3 +40,12 @@ def test_week_selection_is_district_signal_and_never_applied_to_other_months():
     assert youth and all(r['stage']==5 for r in youth)
     assert all('weekly' not in r for r in strong['segments'] if r['ym']!='2025-09')
     assert all('weekly' not in r for r in strong['segments'] if r['age_group']!='youth')
+
+
+def test_special_group_strong_signal_still_reports_four_declining_weeks():
+    group=[r for r in synthetic() if (r['sgg'],r['sex'],r['age_band'])==('32010','F','20s')][:12]
+    for i in range(8,12):
+        for metric in group[i]['metrics'].values():
+            metric.update(value=.94,baseline=1,ratio=.94,signal='strong' if i==11 else 'none')
+    audit(group)
+    assert group[-1]['metrics']['R1']['consecutive_weeks']==4
