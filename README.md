@@ -69,3 +69,5 @@ curl -X POST http://127.0.0.1:8000/scenarios/run -H 'Content-Type: application/j
 [담당자 콘솔 캡처](docs/screenshots/console.png)와 [평가 캡처](docs/screenshots/evaluation.png)는 공개 sample/fake 데이터만 사용했습니다. 독립 라벨 검수·사람 평가·실제 모델 검증 전이며, 간접 위기 표현 2건을 놓치는 알려진 제한이 있습니다. 위기 대응이나 임상 판단의 검증된 시스템으로 사용하지 않습니다.
 
 [제출 재현 기록](docs/release.md)에 고정 코드·보고서·공개 archive 검증을 기록합니다.
+
+정책 실시간 조회 및 MCP 연결: [설정·출처·커버리지](docs/policy-tools.md).
