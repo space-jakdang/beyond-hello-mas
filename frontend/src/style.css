@@ -3,3 +3,12 @@ body { margin: 0; } header, main { padding: 2rem; max-width: 70rem; margin: auto
 header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
 nav { display: flex; gap: 1.5rem; } a { color: #126454; } main { line-height: 1.7; }
 a:focus-visible { outline: 3px solid #126454; outline-offset: 4px; }
+button, select, input, textarea { font: inherit; padding: .5rem .8rem; border: 1px solid #8ca79f; border-radius: .4rem; background: white; color: inherit; }
+button { cursor: pointer; } button:disabled { opacity: .5; cursor: default; }
+button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid #13715b; outline-offset: 2px; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin: 1rem 0; }
+.card { background: white; border: 1px solid #d4e3dc; padding: 1rem; border-radius: .7rem; margin: 1rem 0; overflow-wrap: anywhere; }
+.graph { height: 240px; border: 1px solid #b6cdc3; border-radius: .7rem; }
+.timeline { max-height: 24rem; overflow: auto; padding-left: 2.5rem; } .timeline button { text-align: left; margin: .2rem; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 32rem; overflow: auto; font-size: .85rem; }
+table { border-collapse: collapse; width: 100%; } th, td { padding: .5rem; border-bottom: 1px solid #d4e3dc; text-align: left; }

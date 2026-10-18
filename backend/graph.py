@@ -279,7 +279,7 @@ class GraphService:
                 raise
         return self.store.get_run(run_id)
 
-    def start(self, scenario):
+    def register(self, scenario):
         run_id = str(uuid4())
         run = Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
             data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
@@ -288,7 +288,16 @@ class GraphService:
             self.store.create_run(run)
             with self.store.connection(write=True) as db:
                 db.execute('INSERT INTO workflows VALUES (?,?)', (run_id, scenario.model_dump_json()))
-            return self.drive(run_id, {'run_id': run_id, 'scenario': scenario.model_dump(mode='json')})
+            return run
+
+    def start(self, scenario):
+        return self.drive(self.register(scenario).id)
+
+    def execute(self, run_id):
+        try:
+            self.drive(run_id)
+        except Exception:
+            pass  # drive persists failure; background work must not raise after the HTTP response.
 
     def approval(self, run_id):
         with self.store.connection() as db:
