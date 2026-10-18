@@ -1,6 +1,8 @@
 # beyond-hello-mas
 
-고립을 탐지하고 대응하기 위한 멀티에이전트 시스템. 현재는 FastAPI API와 React 화면의 실행 기반입니다. 결정적 세그먼트 분류와 합성 자원 매칭을 지원하며 승인·위기 우회·재시작 복구를 지원합니다. OpenAI 구조화 출력과 기존 척도 MCP 어댑터가 있으며 실제 OpenAI 검증과 전체 평가는 아직 미완료입니다.
+고립을 탐지하고 대응하기 위한 멀티에이전트 시스템의 로컬 시연 구현입니다. 월간 세그먼트 분류, 개인 척도 MCP, 자원 추천, 승인·반려·복구, 관찰/담당자/평가 화면을 제공합니다. 공개 합성 데이터와 fake 모델로 실행하며 실제 OpenAI와 사람 적합성 검증은 아직 미완료입니다.
+
+[구조](docs/architecture.md) · [고정 평가와 한계](docs/evaluation.md) · [LLM/MCP 설정](docs/llm-usage.md) · [데이터 계약](docs/contracts.md)
 
 ## 로컬 실행
 
@@ -28,7 +30,7 @@ make e2e
 make eval
 ```
 
-`make test`는 Python 테스트와 TypeScript 검사/빌드를 실행합니다. E2E는 별도 백엔드와 Vite 서버를 띄워 세 화면 이동과 sample/fake health 연결을 확인합니다(8000, 5173 포트가 비어 있어야 합니다).
+`make test`는 Python 테스트와 TypeScript 검사/빌드를 실행합니다. E2E는 별도 백엔드와 Vite 서버를 띄워 실행·재연결·승인·반려·월간 조회·평가 JSON 일치를 확인합니다(8000, 5173 포트가 비어 있어야 합니다).
 
 `make eval`은 고정 40건을 별도 서버·DB와 Chromium 수신자로 실행하고 `eval/reports/날짜/UUID/summary.json`에 저장합니다. 명시적 척도 응답 16건에는 별도 MCP 설정이 필요하며, 없으면 실패를 포함한 40건 보고서와 종료 코드 2를 반환합니다. fake 검증은 모델 성능이 아닙니다. [평가 방법과 한계](docs/evaluation.md)를 확인하세요.
 
@@ -59,3 +61,11 @@ curl -X POST http://127.0.0.1:8000/scenarios/run -H 'Content-Type: application/j
 응답의 run ID로 `/runs/{id}/approval`을 조회하고 해당 snapshot_version을 `/runs/{id}/decision`에 전달하면 승인/반려할 수 있습니다. 스키마 예시는 `/docs`에 있습니다. 승인 전에는 연계가 없으며, 척도 응답이 없는 사례는 추가 응답을 위한 후속 확인 계획이며, 명시적 응답은 별도로 설정한 MCP로 채점합니다.
 
 공식 출처를 확인한 서비스/지점 30건은 [실제 카탈로그 안내](data/catalog/README.md)에 있습니다. `RESOURCE_CATALOG=curated`로 선택할 수 있으며, 개별 자격·접수 가능 여부가 확인된 자원만 추천합니다. 기본 `fixture`는 합성 자원입니다.
+
+## 공개 시연과 제출
+
+![관찰 화면](docs/screenshots/observatory.png)
+
+[담당자 콘솔 캡처](docs/screenshots/console.png)와 [평가 캡처](docs/screenshots/evaluation.png)는 공개 sample/fake 데이터만 사용했습니다. 독립 라벨 검수·사람 평가·실제 모델 검증 전이며, 간접 위기 표현 2건을 놓치는 알려진 제한이 있습니다. 위기 대응이나 임상 판단의 검증된 시스템으로 사용하지 않습니다.
+
+[제출 재현 기록](docs/release.md)에 고정 코드·보고서·공개 archive 검증을 기록합니다.
