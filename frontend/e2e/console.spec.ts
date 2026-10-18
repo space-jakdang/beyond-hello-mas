@@ -29,6 +29,9 @@ test('operator receives, acknowledges, approves, rejects and inspects monthly pl
   expect((await page.request.get(`http://127.0.0.1:8000/runs/${rejected}/linkage`)).status()).toBe(404);
   const crisis=await run('1','완료');
   await expect(consolePage.getByTestId(`alert-${crisis}-crisis`)).toBeVisible();
+  const handoffResponse=await consolePage.request.post('/scenarios/run',{data:{id:'ordering-handoff',type:'case',sim_time:'2025-09-08T09:00:00+09:00',payload:{person:{person_id:'synthetic-order',age:24,sgg:'11230',consent:true,responses_confirmed:true,responses:{'synthetic-contract-fixture':{case:201}}}}}});
+  const handoff=await handoffResponse.json();
+  await expect(consolePage.getByTestId(`alert-${handoff.id}-human_handoff`)).toBeVisible();
   await expect(consolePage.locator('.alert-list article').first()).toHaveClass(/crisis/);
   const monthly=await run('2');
   await consolePage.getByTestId(`alert-${monthly}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();

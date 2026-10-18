@@ -1,10 +1,11 @@
 import {useEffect, useState} from 'react';
+import {GroupDashboard} from './GroupDashboard';
 import {api, Run, Trace, statusText} from './api';
 type Alert = {id:string; run_id:string; type:string; cursor:number; status:string; created_at:string; sim_ts:string; received_at:string|null; acknowledged_at:string|null};
 type Receipt = {run_to_receipt_ms:number|null; browser_received_at:string; server_received_at:string};
 type Age = {age_band:string; stage:number|null; blind_flag:boolean; change_flag:boolean};
 type Dong = {dong_cd:string; dong_nm:string; stage:number|null; missing_age_count:number; x:number; y:number; crs:string; coordinate_source:string; ages:Age[]};
-type Overview = {run:Run; review:null|{approval:{snapshot_version:string;status:string;operator:string|null;reason:string|null}; proposal:Record<string,unknown>}; classification:null|{analysis?:unknown; status?:string; result?:unknown; dongs?:Dong[]}; traces:Trace[]};
+type Overview = {run:Run; review:null|{approval:{snapshot_version:string;status:string;operator:string|null;reason:string|null}; proposal:Record<string,unknown>}; classification:null|{metadata?:{analysis_version?:string};analysis?:unknown; status?:string; result?:unknown; dongs?:Dong[]}; traces:Trace[]};
 const labels:Record<string,string> = {human_handoff:'담당자 인계',screening_requested:'선별 질문 준비',crisis:'위기', approval_requested:'승인 요청', linkage_completed:'연계 완료',created:'미수신',received:'미확인',acknowledged:'확인됨'};
 export function Console() {
   const [client] = useState(()=>{let id=sessionStorage.getItem('client-id'); if(!id){id=crypto.randomUUID(); sessionStorage.setItem('client-id',id);}return id;});
@@ -55,9 +56,9 @@ export function Console() {
     catch(e){setError(`결정 실패 · 최신 상태를 확인하세요. ${String(e)}`);}
     finally {setBusy(false);api<Overview>(`/runs/${runId}/overview`).then(next=>setOverview(old=>old?.run.id===runId?next:old)).catch(e=>setError(String(e)));}
   }
-  const sorted=[...alerts].sort((a,b)=>(['crisis','human_handoff'].includes(b.type)?1:0)-(['crisis','human_handoff'].includes(a.type)?1:0)||b.cursor-a.cursor);
-  const dongs=overview?.classification?.dongs || [], chosen=dongs.find(d=>d.dong_cd===dong);
-  return <section><p>알림 SSE {connection} · 최근 200건 · 위기 우선</p><label>담당자 이름 <input value={operator} onChange={e=>setOperator(e.target.value)}/></label>
+  const sorted=[...alerts].sort((a,b)=>(b.type==='crisis'?2:b.type==='human_handoff'?1:0)-(a.type==='crisis'?2:a.type==='human_handoff'?1:0)||b.cursor-a.cursor);
+  const dongs=overview?.classification?.metadata?.analysis_version==='v3'?[]:overview?.classification?.dongs || [], chosen=dongs.find(d=>d.dong_cd===dong);
+  return <section><details><summary>8집단 동별 상황판</summary><GroupDashboard embedded/></details><p>알림 SSE {connection} · 최근 200건 · 위기 우선</p><label>담당자 이름 <input value={operator} onChange={e=>setOperator(e.target.value)}/></label>
     <p>자동 수신 확인은 사람의 확인·승인과 별개입니다. 지연은 서버 단조 시계의 실행 시작 → 수신 확인 도착이며, 브라우저 시계와의 차이로 계산하지 않습니다.</p>
     {error && <p role="alert">{error}</p>}
     {!alerts.length && <p>알림이 없습니다. 관찰 페이지에서 시나리오를 실행하세요.</p>}

@@ -25,6 +25,8 @@ from eval.observe import observe
 
 def inputs():
     scenarios=[Scenario.model_validate(s) for s in json.loads((ROOT/'scenarios/inputs.json').read_text())]
+    for scenario in scenarios:
+        if scenario.type=='monthly':scenario.payload['analysis_version']='legacy-v1'
     raw=json.loads((ROOT/'scenarios/labels.json').read_text())
     labels={}
     for label in raw:

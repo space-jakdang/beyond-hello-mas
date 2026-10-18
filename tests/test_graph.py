@@ -143,7 +143,7 @@ def test_decision_durable_before_resume_and_missing_checkpoint(service, monkeypa
 
 
 def test_monthly_snapshot_covers_whole_allocation(service):
-    run = service.start(scenario('monthly', ym='2025-07'))
+    run = service.start(scenario('monthly', ym='2025-07', analysis_version='legacy-v1'))
     proposal = service.approval(run.id)['proposal']
     assert proposal['scope'] == 'monthly_group_allocation'
     assert len(proposal['assignments']) == 282
