@@ -1,0 +1,730 @@
+[
+  {
+    "scenario_id": "S1-7",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S1-8",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S1-9",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S1-10",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S1-11",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S1-12",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S2-youth-1",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 1
+    }
+  },
+  {
+    "scenario_id": "S2-youth-2",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 2
+    }
+  },
+  {
+    "scenario_id": "S2-youth-3",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 3
+    }
+  },
+  {
+    "scenario_id": "S2-youth-4",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "protocol_stage": 4
+    }
+  },
+  {
+    "scenario_id": "S2-youth-5",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "protocol_stage": 5
+    }
+  },
+  {
+    "scenario_id": "S2-youth-care",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 2
+    }
+  },
+  {
+    "scenario_id": "S5-youth-0",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S5-youth-1",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S5-youth-2",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S2-midlife-1",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 1
+    }
+  },
+  {
+    "scenario_id": "S2-midlife-2",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 2
+    }
+  },
+  {
+    "scenario_id": "S2-midlife-3",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "protocol_stage": 3
+    }
+  },
+  {
+    "scenario_id": "S2-midlife-4",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "protocol_stage": 4
+    }
+  },
+  {
+    "scenario_id": "S2-midlife-5",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "protocol_stage": 5
+    }
+  },
+  {
+    "scenario_id": "S2-midlife-care",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 2
+    }
+  },
+  {
+    "scenario_id": "S5-midlife-0",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S5-midlife-1",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S5-midlife-2",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S2-prime-1",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 1
+    }
+  },
+  {
+    "scenario_id": "S2-prime-2",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 2
+    }
+  },
+  {
+    "scenario_id": "S2-prime-3",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "protocol_stage": 3
+    }
+  },
+  {
+    "scenario_id": "S2-prime-4",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "protocol_stage": 4
+    }
+  },
+  {
+    "scenario_id": "S2-prime-5",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "protocol_stage": 5
+    }
+  },
+  {
+    "scenario_id": "S2-prime-care",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 2
+    }
+  },
+  {
+    "scenario_id": "S5-prime-0",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S5-prime-1",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S5-prime-2",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S2-elderly-1",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 1
+    }
+  },
+  {
+    "scenario_id": "S2-elderly-2",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 2
+    }
+  },
+  {
+    "scenario_id": "S2-elderly-3",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 3
+    }
+  },
+  {
+    "scenario_id": "S2-elderly-4",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "protocol_stage": 4
+    }
+  },
+  {
+    "scenario_id": "S2-elderly-5",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "protocol_stage": 5
+    }
+  },
+  {
+    "scenario_id": "S2-elderly-care",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "protocol_stage": 2
+    }
+  },
+  {
+    "scenario_id": "S5-elderly-0",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S5-elderly-1",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S5-elderly-2",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ]
+    }
+  },
+  {
+    "scenario_id": "S3-0",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    }
+  },
+  {
+    "scenario_id": "S3-1",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    }
+  },
+  {
+    "scenario_id": "S3-2",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    }
+  },
+  {
+    "scenario_id": "S3-3",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    }
+  },
+  {
+    "scenario_id": "S3-4",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    }
+  },
+  {
+    "scenario_id": "S3-5",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "crisis": true
+    }
+  },
+  {
+    "scenario_id": "S3-6",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false
+    }
+  },
+  {
+    "scenario_id": "S3-7",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "crisis": false
+    }
+  },
+  {
+    "scenario_id": "S4-0",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "route": "history"
+    }
+  },
+  {
+    "scenario_id": "S4-1",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "route": "history"
+    }
+  },
+  {
+    "scenario_id": "S4-2",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "route": "classify"
+    }
+  },
+  {
+    "scenario_id": "S4-3",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "route": "classify"
+    }
+  },
+  {
+    "scenario_id": "S4-4",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "route": "match"
+    }
+  },
+  {
+    "scenario_id": "S4-5",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "route": "match"
+    }
+  },
+  {
+    "scenario_id": "S4-6",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "route": "human"
+    }
+  },
+  {
+    "scenario_id": "S4-7",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor"
+      ],
+      "route": "human"
+    }
+  },
+  {
+    "scenario_id": "S4-8",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "route": "link"
+    }
+  },
+  {
+    "scenario_id": "S4-9",
+    "label_version": "synthetic-protocol-2",
+    "expected": {
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "route": "link"
+    }
+  }
+]

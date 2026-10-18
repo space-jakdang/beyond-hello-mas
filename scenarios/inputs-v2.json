@@ -1,0 +1,890 @@
+[
+  {
+    "id": "S1-7",
+    "type": "monthly",
+    "sim_time": "2025-07-31T23:59:00+09:00",
+    "payload": {
+      "ym": "2025-07"
+    }
+  },
+  {
+    "id": "S1-8",
+    "type": "monthly",
+    "sim_time": "2025-08-31T23:59:00+09:00",
+    "payload": {
+      "ym": "2025-08"
+    }
+  },
+  {
+    "id": "S1-9",
+    "type": "monthly",
+    "sim_time": "2025-09-30T23:59:00+09:00",
+    "payload": {
+      "ym": "2025-09"
+    }
+  },
+  {
+    "id": "S1-10",
+    "type": "monthly",
+    "sim_time": "2025-10-31T23:59:00+09:00",
+    "payload": {
+      "ym": "2025-10"
+    }
+  },
+  {
+    "id": "S1-11",
+    "type": "monthly",
+    "sim_time": "2025-11-30T23:59:00+09:00",
+    "payload": {
+      "ym": "2025-11"
+    }
+  },
+  {
+    "id": "S1-12",
+    "type": "monthly",
+    "sim_time": "2025-12-31T23:59:00+09:00",
+    "payload": {
+      "ym": "2025-12"
+    }
+  },
+  {
+    "id": "S2-youth-1",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-youth",
+        "age": 24,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 101
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-youth-2",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-youth",
+        "age": 24,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 102
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-youth-3",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-youth",
+        "age": 24,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 103
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-youth-4",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-youth",
+        "age": 24,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 104
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-youth-5",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-youth",
+        "age": 24,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 105
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-youth-care",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-youth",
+        "age": 24,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 203
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-youth-0",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-youth",
+        "age": 24,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "became_alone": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-youth-1",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-youth",
+        "age": 24,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "arrears_rent": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-youth-2",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-youth",
+        "age": 24,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "bereaved_recent": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-midlife-1",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-midlife",
+        "age": 42,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 101
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-midlife-2",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-midlife",
+        "age": 42,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 102
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-midlife-3",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-midlife",
+        "age": 42,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 103
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-midlife-4",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-midlife",
+        "age": 42,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 104
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-midlife-5",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-midlife",
+        "age": 42,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 105
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-midlife-care",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-midlife",
+        "age": 42,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 203
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-midlife-0",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-midlife",
+        "age": 42,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "became_alone": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-midlife-1",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-midlife",
+        "age": 42,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "arrears_rent": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-midlife-2",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-midlife",
+        "age": 42,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "bereaved_recent": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-prime-1",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-prime",
+        "age": 56,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 101
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-prime-2",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-prime",
+        "age": 56,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 102
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-prime-3",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-prime",
+        "age": 56,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 103
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-prime-4",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-prime",
+        "age": 56,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 104
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-prime-5",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-prime",
+        "age": 56,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 105
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-prime-care",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-prime",
+        "age": 56,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 203
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-prime-0",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-prime",
+        "age": 56,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "became_alone": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-prime-1",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-prime",
+        "age": 56,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "arrears_rent": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-prime-2",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-prime",
+        "age": 56,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "bereaved_recent": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-elderly-1",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-elderly",
+        "age": 72,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 101
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-elderly-2",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-elderly",
+        "age": 72,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 102
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-elderly-3",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-elderly",
+        "age": 72,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 103
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-elderly-4",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-elderly",
+        "age": 72,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 104
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-elderly-5",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-elderly",
+        "age": 72,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 105
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S2-elderly-care",
+    "type": "case",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-elderly",
+        "age": 72,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "responses": {
+          "synthetic-contract-fixture": {
+            "case": 203
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-elderly-0",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-elderly",
+        "age": 72,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "became_alone": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-elderly-1",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-elderly",
+        "age": 72,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "arrears_rent": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S5-elderly-2",
+    "type": "admin",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "person": {
+        "person_id": "synthetic-elderly",
+        "age": 72,
+        "sex": "M",
+        "sgg": "11230",
+        "consent": true,
+        "responses_confirmed": true,
+        "admin_flags": {
+          "bereaved_recent": true
+        }
+      }
+    }
+  },
+  {
+    "id": "S3-0",
+    "type": "crisis",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "합성 문장: 죽고 싶어요."
+    }
+  },
+  {
+    "id": "S3-1",
+    "type": "crisis",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "합성 문장: 목숨을 끊으려고 합니다."
+    }
+  },
+  {
+    "id": "S3-2",
+    "type": "crisis",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "합성 문장: 오늘 자살할 생각입니다."
+    }
+  },
+  {
+    "id": "S3-3",
+    "type": "crisis",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "합성 문장: 나를 해치고 싶어요."
+    }
+  },
+  {
+    "id": "S3-4",
+    "type": "crisis",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "합성 문장: 모든 것을 끝내고 사라지고 싶습니다."
+    }
+  },
+  {
+    "id": "S3-5",
+    "type": "crisis",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "합성 문장: 내일은 더 이상 이 세상에 없을 것 같습니다."
+    }
+  },
+  {
+    "id": "S3-6",
+    "type": "crisis",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "합성 문장: 죽고 싶지 않아요. 도움을 받고 싶어요."
+    }
+  },
+  {
+    "id": "S3-7",
+    "type": "crisis",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "합성 문장: 자살 예방 교육에 참여하고 싶습니다."
+    }
+  },
+  {
+    "id": "S4-0",
+    "type": "question",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "이력"
+    }
+  },
+  {
+    "id": "S4-1",
+    "type": "question",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "기록"
+    }
+  },
+  {
+    "id": "S4-2",
+    "type": "question",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "원인"
+    }
+  },
+  {
+    "id": "S4-3",
+    "type": "question",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "왜"
+    }
+  },
+  {
+    "id": "S4-4",
+    "type": "question",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "추천"
+    }
+  },
+  {
+    "id": "S4-5",
+    "type": "question",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "자원"
+    }
+  },
+  {
+    "id": "S4-6",
+    "type": "question",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "담당자 문의"
+    }
+  },
+  {
+    "id": "S4-7",
+    "type": "question",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "상담 문의"
+    }
+  },
+  {
+    "id": "S4-8",
+    "type": "question",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "연계"
+    }
+  },
+  {
+    "id": "S4-9",
+    "type": "question",
+    "sim_time": "2025-09-08T09:00:00+09:00",
+    "payload": {
+      "text": "전달"
+    }
+  }
+]

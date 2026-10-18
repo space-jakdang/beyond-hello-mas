@@ -44,7 +44,9 @@ def crisis_evidence(payload):
     if not isinstance(payload, str):
         return []
     text = payload.replace('죽고 싶지 않', '').replace('자살 예방', '')
-    return [phrase for phrase in ('죽고 싶', '목숨을 끊', '자살할', '죽을 거야', '나를 해치고 싶') if phrase in text]
+    for negative in ('끝내고 사라지고 싶지 않','끝내고 사라지고 싶지는 않','더 이상 이 세상에 없을 것 같지 않','더 이상 이 세상에 없을 것 같지는 않'):
+        text=text.replace(negative,'')
+    return [phrase for phrase in ('죽고 싶', '목숨을 끊', '자살할', '죽을 거야', '나를 해치고 싶', '끝내고 사라지고 싶', '더 이상 이 세상에 없을 것 같') if phrase in text]
 
 
 class GraphService:
@@ -85,7 +87,7 @@ class GraphService:
     def supervisor(self, state):
         started = time.monotonic()
         evidence = crisis_evidence(state['scenario']['payload'])
-        self.node_event(state, 'supervisor', {'crisis_rule_version': 'provisional-1', 'evidence': evidence}, started)
+        self.node_event(state, 'supervisor', {'crisis_rule_version': 'crisis-expression-2', 'evidence': evidence}, started)
         route = None
         if not evidence and state['scenario']['type'] == 'question':
             route = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'route', state['scenario']['payload']).route
