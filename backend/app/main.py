@@ -8,6 +8,7 @@ from backend.graph import GraphService
 from backend.app.graph_routes import graph_router
 from backend.app.event_routes import event_router
 from backend.app.report_routes import report_router
+from backend.app.analysis_routes import analysis_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -27,6 +28,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.store = store
     app.include_router(event_router(store))
     app.include_router(report_router(settings))
+    app.include_router(analysis_router(settings))
 
     @app.get("/health")
     def health():
