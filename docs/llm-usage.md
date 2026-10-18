@@ -42,3 +42,7 @@ uv run pytest tests/test_agents.py::test_actual_mcp_and_same_package_fallback te
 ```
 
 현재 로컬에서 두 실제 MCP 테스트를 통과했습니다. 실제 OpenAI 모델 호출·계정 비용 검증은 미실행입니다. fake 성공이나 MCP 성공을 live 모델 검증으로 합산하지 않습니다.
+
+## 동결한 실행 근거
+
+공개 반복 평가는 fake-v1이며 OpenAI 요청/토큰/청구 비용은 없습니다. 모델 스냅샷과 실제 단가는 미확정이므로 임의 값을 채우지 않았습니다. 네 역할 프롬프트의 hash와 규칙·카탈로그·입력 hash는 [고정 보고서](evaluation.md#고정-결과-2026-10-18)에 있습니다. 실제 MCP package 0.1.0 / LSIS-6 1.0.0 연동은 수행했으며, 비공개 MCP 소스는 제출물에 포함하지 않습니다. 공개 자료만으로는 명시적 척도 16건을 완료할 수 없고 해당 실패를 표시한 partial 평가를 재현할 수 있습니다.
