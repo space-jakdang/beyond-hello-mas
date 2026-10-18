@@ -13,3 +13,12 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 32rem; overflow: auto; font-size: .85rem; }
 table { border-collapse: collapse; width: 100%; } th, td { padding: .5rem; border-bottom: 1px solid #d4e3dc; text-align: left; }
 .alert-list { max-height: 30rem; overflow: auto; margin-top: 1rem; } .crisis { border-left: 6px solid #bc4938; } textarea { display: block; width: min(90%, 40rem); }
+
+.mode-banner { padding: .8rem 1rem; border-left: 4px solid #126454; background: #e5f0eb; }
+.map-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr); gap: 1rem; }
+.map-layout .card { min-width: 0; }
+.map-legend { display:flex; flex-wrap:wrap; gap:1rem; } .map-legend i { display:inline-block; width:1rem; height:1rem; border:1px solid #526960; margin-right:.3rem; }
+.map-scroll { overflow:auto; max-height:36rem; background:#f1f5f6; border-radius:.5rem; }
+.map-scroll svg { display:block; min-width:100%; } .map-scroll path { cursor:pointer; } .map-scroll path:focus-visible { outline:none; stroke:#142f36; stroke-width:4; }
+.dong-list { max-height:35rem; overflow:auto; } tr[aria-selected="true"] { background:#e5f0eb; }
+@media(max-width:800px) { .map-layout { grid-template-columns:1fr; } header,main { padding:1rem; } nav { flex-wrap:wrap; gap:.8rem; } }

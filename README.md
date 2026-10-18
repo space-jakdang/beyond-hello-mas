@@ -2,7 +2,7 @@
 
 고립을 탐지하고 대응하기 위한 멀티에이전트 시스템의 로컬 시연 구현입니다. 월간 세그먼트 분류, 개인 척도 MCP, 자원 추천, 승인·반려·복구, 관찰/담당자/평가 화면을 제공합니다. 공개 합성 데이터와 fake 모델로 실행하며 실제 OpenAI와 사람 적합성 검증은 아직 미완료입니다.
 
-[구조](docs/architecture.md) · [고정 평가와 한계](docs/evaluation.md) · [LLM/MCP 설정](docs/llm-usage.md) · [데이터 계약](docs/contracts.md)
+[동네 분석 지도](docs/neighborhoods.md) · [구조](docs/architecture.md) · [고정 평가와 한계](docs/evaluation.md) · [LLM/MCP 설정](docs/llm-usage.md) · [데이터 계약](docs/contracts.md)
 
 ## 로컬 실행
 
@@ -15,7 +15,7 @@ make sample
 make dev
 ```
 
-<http://127.0.0.1:5173>에서 관찰(`/observatory`), 담당자 콘솔(`/console`), 평가(`/evaluation`) 화면을 엽니다. API health는 <http://127.0.0.1:8000/health>, OpenAPI는 `/docs`입니다. 종료는 Ctrl-C입니다. 개발 서버는 로컬 인터페이스에서 사용합니다.
+<http://127.0.0.1:5173>에서 동네 분석(`/neighborhoods`), 관찰(`/observatory`), 담당자 콘솔(`/console`), 평가(`/evaluation`) 화면을 엽니다. API health는 <http://127.0.0.1:8000/health>, OpenAPI는 `/docs`입니다. 종료는 Ctrl-C입니다. 개발 서버는 로컬 인터페이스에서 사용합니다.
 
 기본값은 `DATA_MODE=sample`, `LLM_MODE=fake`이며 키 없이 실행됩니다. sample은 합성 입력이며 실제 고립 판정 결과가 아닙니다. `DATA_MODE=local` 입력은 `data/local/`, 실행 산출물은 `runtime/local/`에 둡니다. sample 실행 산출물도 `runtime/sample/`에 보관합니다. `.env`는 저장소 루트에서 읽습니다.
 
