@@ -218,3 +218,22 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local implementation plans; excluded from PRs and submission artifacts
+/.local-plans/
+
+# Private inputs and derived outputs
+.env.*
+!.env.example
+/data/local/
+/runtime/
+/eval/local/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+node_modules/
+frontend/test-results/
+frontend/playwright-report/
