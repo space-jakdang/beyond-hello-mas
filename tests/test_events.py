@@ -138,6 +138,7 @@ def test_stream_heartbeat_and_disconnect(monkeypatch):
     monkeypatch.setattr(event_routes, 'time', SimpleNamespace(monotonic=lambda: next(ticks, 16)))
     async def check():
         events = event_routes.stream(Request(), lambda a, n: [], 0, 'seq', 'trace')
+        assert await anext(events) == ': connected\n\n'
         assert await anext(events) == ': heartbeat\n\n'
         await events.aclose()
     asyncio.run(check())

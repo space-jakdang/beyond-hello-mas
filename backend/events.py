@@ -100,10 +100,14 @@ class EventStore:
             self._trace(db, alert.run_id, sim_ts, 'alert', alert.model_dump(mode='json'))
         return alert
 
-    def alerts(self, after=0, limit=100):
+    def alerts(self, after=0, limit=100, recent=False):
         with self.connection() as db:
-            return [{'cursor': r['cursor'], **json.loads(r['body'])} for r in db.execute(
-                'SELECT cursor,body FROM alerts WHERE cursor>? ORDER BY cursor LIMIT ?', (after, limit))]
+            order = 'DESC' if recent else 'ASC'
+            return [{'cursor': r['cursor'], **json.loads(r['body']),
+                     'sim_ts': json.loads(r['trace'])['sim_ts'] if r['trace'] else json.loads(r['body'])['created_at']}
+                    for r in db.execute(f'''SELECT a.cursor,a.body,t.body AS trace FROM alerts a
+                        LEFT JOIN traces t ON t.run_id=a.run_id AND t.seq=1
+                        WHERE a.cursor>? ORDER BY a.cursor {order} LIMIT ?''', (after, limit))]
 
     def receipt(self, alert_id, client_id, browser_received_at, sim_ts):
         with self.connection(write=True) as db:

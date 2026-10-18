@@ -12,3 +12,4 @@ button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-
 .timeline { max-height: 24rem; overflow: auto; padding-left: 2.5rem; } .timeline button { text-align: left; margin: .2rem; }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 32rem; overflow: auto; font-size: .85rem; }
 table { border-collapse: collapse; width: 100%; } th, td { padding: .5rem; border-bottom: 1px solid #d4e3dc; text-align: left; }
+.alert-list { max-height: 30rem; overflow: auto; margin-top: 1rem; } .crisis { border-left: 6px solid #bc4938; } textarea { display: block; width: min(90%, 40rem); }

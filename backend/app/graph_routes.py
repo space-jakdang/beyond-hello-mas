@@ -24,6 +24,20 @@ def graph_router(service):
         except (ValueError, FileNotFoundError) as exc:
             raise HTTPException(422, str(exc))
 
+    @router.get('/runs/{run_id}/overview')
+    def overview(run_id: str):
+        try:
+            run = service.store.get_run(run_id)
+        except KeyError:
+            raise HTTPException(404, 'run not found')
+        traces = service.store.traces(run_id, limit=1000)
+        classification = next((t['payload'] for t in traces if t['agent'] == 'classify' and t['kind'] == 'node_end'), None)
+        try:
+            proposal = service.approval(run_id)
+        except KeyError:
+            proposal = None
+        return {'run': run, 'classification': classification, 'review': proposal, 'traces': traces}
+
     @router.get('/runs/{run_id}/approval')
     def approval(run_id: str):
         try:
