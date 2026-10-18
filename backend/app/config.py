@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     llm_max_input_bytes: int = Field(default=24000, ge=1000, le=100000)
     llm_max_output_tokens: int = Field(default=1024, ge=128, le=8192)
     llm_timeout_seconds: float = Field(default=30, gt=0, le=120)
+    person_mcp_mode: Literal["stub", "live"] = "stub"
     mcp_python: str | None = None
     mcp_cwd: Path | None = None
     mcp_timeout_seconds: float = Field(default=10, gt=0, le=60)

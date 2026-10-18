@@ -342,6 +342,267 @@
     "title": "SegmentV3",
     "type": "object"
   },
+  "PersonInput": {
+    "additionalProperties": false,
+    "properties": {
+      "age": {
+        "maximum": 120,
+        "minimum": 19,
+        "title": "Age",
+        "type": "integer"
+      },
+      "age_group": {
+        "enum": [
+          "youth",
+          "midlife",
+          "prime",
+          "elderly"
+        ],
+        "title": "Age Group",
+        "type": "string"
+      },
+      "responses": {
+        "additionalProperties": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "type": "object"
+        },
+        "title": "Responses",
+        "type": "object"
+      },
+      "admin_flags": {
+        "additionalProperties": {
+          "type": "boolean"
+        },
+        "propertyNames": {
+          "enum": [
+            "arrears_utility",
+            "arrears_rent",
+            "arrears_loan",
+            "eviction_risk",
+            "non_housing",
+            "quit_recent",
+            "unemployed_now",
+            "became_alone",
+            "bereaved_recent",
+            "divorced_recent",
+            "unemployed_long",
+            "hi_premium_unpaid",
+            "meal_skip",
+            "hospital_skip"
+          ]
+        },
+        "title": "Admin Flags",
+        "type": "object"
+      }
+    },
+    "required": [
+      "age",
+      "age_group"
+    ],
+    "title": "PersonInput",
+    "type": "object"
+  },
+  "PersonAssessment": {
+    "$defs": {
+      "JsonValue": {}
+    },
+    "properties": {
+      "stage": {
+        "maximum": 5,
+        "minimum": 1,
+        "title": "Stage",
+        "type": "integer"
+      },
+      "track": {
+        "enum": [
+          "isolation",
+          "care_health"
+        ],
+        "title": "Track",
+        "type": "string"
+      },
+      "rules_applied": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Rules Applied",
+        "type": "array"
+      },
+      "drivers": {
+        "items": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Drivers",
+        "type": "array"
+      },
+      "human_handoff": {
+        "title": "Human Handoff",
+        "type": "boolean"
+      },
+      "crisis": {
+        "title": "Crisis",
+        "type": "boolean"
+      },
+      "followup_questions": {
+        "items": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "title": "Followup Questions",
+        "type": "array"
+      },
+      "lsis6": {
+        "anyOf": [
+          {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Lsis6"
+      },
+      "rule_version": {
+        "minLength": 1,
+        "title": "Rule Version",
+        "type": "string"
+      },
+      "sources": {
+        "items": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "minItems": 1,
+        "title": "Sources",
+        "type": "array"
+      },
+      "warnings": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Warnings",
+        "type": "array"
+      },
+      "safety_notice": {
+        "title": "Safety Notice",
+        "type": "string"
+      }
+    },
+    "required": [
+      "stage",
+      "track",
+      "rules_applied",
+      "drivers",
+      "human_handoff",
+      "crisis",
+      "followup_questions",
+      "rule_version",
+      "sources",
+      "warnings",
+      "safety_notice"
+    ],
+    "title": "PersonAssessment",
+    "type": "object"
+  },
+  "PersonPriority": {
+    "$defs": {
+      "JsonValue": {},
+      "PriorityContribution": {
+        "properties": {
+          "item": {
+            "minLength": 1,
+            "title": "Item",
+            "type": "string"
+          },
+          "points": {
+            "title": "Points",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "item",
+          "points"
+        ],
+        "title": "PriorityContribution",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "score": {
+        "title": "Score",
+        "type": "integer"
+      },
+      "grade": {
+        "anyOf": [
+          {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Grade"
+      },
+      "band": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Band"
+      },
+      "contributions": {
+        "items": {
+          "$ref": "#/$defs/PriorityContribution"
+        },
+        "title": "Contributions",
+        "type": "array"
+      },
+      "scorecard_version": {
+        "minLength": 1,
+        "title": "Scorecard Version",
+        "type": "string"
+      },
+      "status": {
+        "title": "Status",
+        "type": "string"
+      },
+      "sources": {
+        "items": {
+          "$ref": "#/$defs/JsonValue"
+        },
+        "minItems": 1,
+        "title": "Sources",
+        "type": "array"
+      },
+      "warnings": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Warnings",
+        "type": "array"
+      }
+    },
+    "required": [
+      "score",
+      "grade",
+      "band",
+      "contributions",
+      "scorecard_version",
+      "status",
+      "sources",
+      "warnings"
+    ],
+    "title": "PersonPriority",
+    "type": "object"
+  },
   "Scenario": {
     "additionalProperties": false,
     "properties": {

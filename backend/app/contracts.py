@@ -4,7 +4,7 @@ from typing import Annotated, Any, Literal
 from zoneinfo import ZoneInfo
 
 from pydantic import (AfterValidator, AwareDatetime, BaseModel, BeforeValidator,
-                      ConfigDict, Field, HttpUrl, model_validator)
+                      ConfigDict, Field, HttpUrl, JsonValue, StrictBool, StrictInt, model_validator)
 
 Code = Annotated[str, Field(pattern=r"^\d{8}$")]
 District = Annotated[str, Field(pattern=r"^\d{5}$")]
@@ -92,6 +92,64 @@ class SegmentV3(Contract):
             raise ValueError('youth index requires youth group')
         if (self.index_name == "S1") != (self.risk_direction == "low_is_risk"):
             raise ValueError("index risk direction mismatch")
+        return self
+
+
+AdminFlag=Literal['arrears_utility','arrears_rent','arrears_loan','eviction_risk','non_housing','quit_recent',
+    'unemployed_now','became_alone','bereaved_recent','divorced_recent','unemployed_long','hi_premium_unpaid','meal_skip','hospital_skip']
+
+
+def person_age_group(age):
+    if type(age) is not int or not 19<=age<=120:raise ValueError('adult age 19..120 required')
+    return 'youth' if age<35 else 'midlife' if age<50 else 'prime' if age<65 else 'elderly'
+
+
+class PersonInput(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    age:StrictInt=Field(ge=19,le=120)
+    age_group:AgeGroup
+    responses:dict[str,dict[str,StrictInt]]=Field(default_factory=dict)
+    admin_flags:dict[AdminFlag,StrictBool]=Field(default_factory=dict)
+
+    @model_validator(mode='after')
+    def matching_age(self):
+        if self.age_group!=person_age_group(self.age):raise ValueError('age/group mismatch')
+        return self
+
+
+class PersonAssessment(BaseModel):
+    stage:StrictInt=Field(ge=1,le=5)
+    track:Literal['isolation','care_health']
+    rules_applied:list[str]
+    drivers:list[JsonValue]
+    human_handoff:StrictBool
+    crisis:StrictBool
+    followup_questions:list[JsonValue]
+    lsis6:dict | None=None
+    rule_version:str=Field(min_length=1)
+    sources:list[JsonValue]=Field(min_length=1)
+    warnings:list[str]
+    safety_notice:str
+
+
+class PriorityContribution(BaseModel):
+    item:str=Field(min_length=1)
+    points:StrictInt
+
+
+class PersonPriority(BaseModel):
+    score:StrictInt
+    grade:StrictInt | None=Field(ge=1,le=5)
+    band:str | None
+    contributions:list[PriorityContribution]
+    scorecard_version:str=Field(min_length=1)
+    status:str
+    sources:list[JsonValue]=Field(min_length=1)
+    warnings:list[str]
+
+    @model_validator(mode='after')
+    def contributions_match(self):
+        if sum(c.points for c in self.contributions)!=self.score:raise ValueError('priority contributions do not sum to score')
         return self
 
 
