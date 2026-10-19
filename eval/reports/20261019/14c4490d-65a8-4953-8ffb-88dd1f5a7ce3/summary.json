@@ -1,0 +1,365 @@
+{
+  "schema_version": "4",
+  "id": "14c4490d-65a8-4953-8ffb-88dd1f5a7ce3",
+  "created_at": "2026-10-19T14:36:39.204502+00:00",
+  "data_mode": "sample",
+  "llm_mode": "fake",
+  "status": "executed_collaboration_protocol",
+  "evaluated_scenarios": 6,
+  "metrics": {
+    "single": {
+      "cases": 6,
+      "contract_passed": 6,
+      "failures": 0,
+      "model_calls": 6,
+      "revisions": 0,
+      "known_cost_usd": 0,
+      "mean_latency_ms": 2.4190346642474956,
+      "content_quality": null
+    },
+    "collaboration": {
+      "cases": 6,
+      "contract_passed": 6,
+      "failures": 0,
+      "model_calls": 12,
+      "revisions": 0,
+      "known_cost_usd": 0,
+      "mean_latency_ms": 6.04835383031362,
+      "content_quality": null
+    }
+  },
+  "collaboration": {
+    "paired_results": [
+      {
+        "month": "2025-07",
+        "method": "single",
+        "status": "submitted",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230001/F/elderly",
+            "11230001/F/midlife",
+            "11230001/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 1,
+        "latency_ms": 2.5805829936871305,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "e355dd22387e8838c4407604bda35421ded2409d08f572807b698998eb72c871"
+      },
+      {
+        "month": "2025-07",
+        "method": "collaboration",
+        "status": "reviewed",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230001/F/elderly",
+            "11230001/F/midlife",
+            "11230001/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 2,
+        "latency_ms": 5.9661249979399145,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "e355dd22387e8838c4407604bda35421ded2409d08f572807b698998eb72c871"
+      },
+      {
+        "month": "2025-08",
+        "method": "single",
+        "status": "submitted",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230007/F/elderly",
+            "11230011/F/midlife",
+            "11230003/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 1,
+        "latency_ms": 2.4712080048630014,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "66cc7ff99c4ae13f86bef99ecdf0a35fde7b22787f40fa86a2ff65a56fb707a9"
+      },
+      {
+        "month": "2025-08",
+        "method": "collaboration",
+        "status": "reviewed",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230007/F/elderly",
+            "11230011/F/midlife",
+            "11230003/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 2,
+        "latency_ms": 6.2977079942356795,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "66cc7ff99c4ae13f86bef99ecdf0a35fde7b22787f40fa86a2ff65a56fb707a9"
+      },
+      {
+        "month": "2025-09",
+        "method": "single",
+        "status": "submitted",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230004/F/elderly",
+            "11230004/F/midlife",
+            "11230004/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 1,
+        "latency_ms": 2.484874989022501,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "2d010e88d1a69a22ef2f4919b0a7e233850a48810d9f0b2940895f23b55b5ce1"
+      },
+      {
+        "month": "2025-09",
+        "method": "collaboration",
+        "status": "reviewed",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230004/F/elderly",
+            "11230004/F/midlife",
+            "11230004/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 2,
+        "latency_ms": 5.922708005527966,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "2d010e88d1a69a22ef2f4919b0a7e233850a48810d9f0b2940895f23b55b5ce1"
+      },
+      {
+        "month": "2025-10",
+        "method": "single",
+        "status": "submitted",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230001/F/elderly",
+            "11230005/F/midlife",
+            "11230008/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 1,
+        "latency_ms": 2.1996669966029003,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "f7875409f7284334f34723ef5dafea7529ecb396bf5154ce2ed3bd823dd3f39c"
+      },
+      {
+        "month": "2025-10",
+        "method": "collaboration",
+        "status": "reviewed",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230001/F/elderly",
+            "11230005/F/midlife",
+            "11230008/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 2,
+        "latency_ms": 6.0352500004228204,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "f7875409f7284334f34723ef5dafea7529ecb396bf5154ce2ed3bd823dd3f39c"
+      },
+      {
+        "month": "2025-11",
+        "method": "single",
+        "status": "submitted",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230002/F/elderly",
+            "11230009/F/midlife",
+            "11230001/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 1,
+        "latency_ms": 2.199333001044579,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "2ed4c1b1c8fa683205c366a40e974cd8bcfad4831e9b82da506df08cb642d40d"
+      },
+      {
+        "month": "2025-11",
+        "method": "collaboration",
+        "status": "reviewed",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230002/F/elderly",
+            "11230009/F/midlife",
+            "11230001/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 2,
+        "latency_ms": 5.971790989860892,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "2ed4c1b1c8fa683205c366a40e974cd8bcfad4831e9b82da506df08cb642d40d"
+      },
+      {
+        "month": "2025-12",
+        "method": "single",
+        "status": "submitted",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230003/F/elderly",
+            "11230001/F/midlife",
+            "11230010/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 1,
+        "latency_ms": 2.5785420002648607,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "e07152f82c4a16a6706b9e0350cf383038b1ce0d8faccd328cfd4e9d1c09b33f"
+      },
+      {
+        "month": "2025-12",
+        "method": "collaboration",
+        "status": "reviewed",
+        "violations": [],
+        "plan": {
+          "summary": "fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.",
+          "focus_ids": [
+            "11230003/F/elderly",
+            "11230001/F/midlife",
+            "11230010/F/prime"
+          ],
+          "limitations": [
+            "not_individual",
+            "incomparable_regions",
+            "synthetic"
+          ]
+        },
+        "revisions": 0,
+        "calls": 2,
+        "latency_ms": 6.09654099389445,
+        "cost_usd": 0,
+        "error": null,
+        "input_hash": "e07152f82c4a16a6706b9e0350cf383038b1ce0d8faccd328cfd4e9d1c09b33f"
+      }
+    ]
+  },
+  "results": [],
+  "uncompleted": [],
+  "stage_reproducibility": {
+    "repetitions": 1,
+    "identical": null
+  },
+  "metadata": {
+    "suite": "regional-collaboration-protocol-1",
+    "input_hashes": {
+      "2025-07": "e355dd22387e8838c4407604bda35421ded2409d08f572807b698998eb72c871",
+      "2025-08": "66cc7ff99c4ae13f86bef99ecdf0a35fde7b22787f40fa86a2ff65a56fb707a9",
+      "2025-09": "2d010e88d1a69a22ef2f4919b0a7e233850a48810d9f0b2940895f23b55b5ce1",
+      "2025-10": "f7875409f7284334f34723ef5dafea7529ecb396bf5154ce2ed3bd823dd3f39c",
+      "2025-11": "2ed4c1b1c8fa683205c366a40e974cd8bcfad4831e9b82da506df08cb642d40d",
+      "2025-12": "e07152f82c4a16a6706b9e0350cf383038b1ce0d8faccd328cfd4e9d1c09b33f"
+    },
+    "model": "fake-v1",
+    "call_limit_per_method": 4,
+    "git_commit": "d8a60e1ac2534135731ae2e816079834eb0fdd92",
+    "code_hash": "87a078691819678d8a32c7a4be171638b64cfa376caefbfcf39a283d571a39a7",
+    "code_dirty": false,
+    "result_hash": "07253dc3ffeec3232d13f14b1b8bf1cf181394d5874cb185f3c452092d7b1123",
+    "scenario_count_basis": "six paired months, two methods each"
+  },
+  "limitations": [
+    "동일 월별 근거와 동일 역할 모델·호출 상한으로 단일 제안과 협업을 비교합니다.",
+    "fake 통신 계약 평가이며 실제 LLM 내용 품질·협업 효과는 N/A입니다. 통과율을 지능의 증거로 쓰지 않습니다.",
+    "개인 판단·실제 예산 배분은 하지 않습니다. 지연은 프로세스 내부 측정이며 네트워크/브라우저 수신 시간이 아닙니다.",
+    "기본 fake는 오류 없는 fixture입니다. 수정 루프의 오류 주입은 단위 테스트로 따로 검증합니다."
+  ]
+}
