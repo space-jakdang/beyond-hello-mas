@@ -25,7 +25,7 @@ def prepare(observations, snapshots, max_calls=6, timeout_seconds=120):
     return {'observations': deepcopy(observations), 'snapshots': deepcopy(snapshots), 'retrieved': [],
             'proposals': [], 'reviews': [], 'requests': [], 'feedback': [], 'calls': 0,
             'max_calls': min(max_calls,6), 'deadline': time.time()+timeout_seconds,
-            'status': 'running', 'plan': None, 'next': 'regional_analyst' if observations['facts'] else 'regional_finalize',
+            'status': 'running', 'plan': None, 'failure_kind': None, 'next': 'regional_analyst' if observations['facts'] else 'regional_finalize',
             'reason': None if observations['facts'] else 'no_observations'}
 
 
@@ -37,15 +37,15 @@ def from_classification(classification, mode, max_calls):
     return prepare(observations,snapshots,max_calls)
 
 
-def halt(state, reason):
-    state.update(status='needs_human', plan=None, reason=reason, next='regional_finalize')
+def halt(state, reason, failure_kind=None):
+    state.update(status='needs_human', plan=None, reason=reason, failure_kind=failure_kind, next='regional_finalize')
     return state
 
 
 def advance(current, action, agents, run_id, sim_ts, emit):
     state=deepcopy(current)
     if state['next']=='regional_finalize':return state
-    if time.time()>=state['deadline']:return halt(state,'deadline')
+    if time.time()>=state['deadline']:return halt(state,'deadline','deadline')
     try:
         if action=='lookup':
             request=state['requests'][-1]
@@ -55,14 +55,14 @@ def advance(current, action, agents, run_id, sim_ts, emit):
             if any(r['status']=='unavailable' for r in results):return halt(state,'evidence_unavailable')
             state['next']='regional_analyst'
             return state
-        if state['calls']>=state['max_calls']:return halt(state,'call_limit')
+        if state['calls']>=state['max_calls']:return halt(state,'call_limit','call_limit')
         state['calls']+=1
         shared={'observations':state['observations'],'retrieved':state['retrieved'],
                 'remaining_calls':state['max_calls']-state['calls'],'step':state['calls']}
         if action=='analyze':
             decision=agents.call(run_id,sim_ts,'regional_planner',{**shared,
                 'previous_plan':state['proposals'][-1] if state['proposals'] else None,'feedback':state['feedback']}).model_dump()
-            if time.time()>=state['deadline']:return halt(state,'deadline')
+            if time.time()>=state['deadline']:return halt(state,'deadline','deadline')
             if decision['action']=='human':return halt(state,decision['reason'])
             if decision['action']=='lookup':
                 state['requests'].append({'sender':'regional_analyst','targets':decision['targets'],'reason':decision['reason']})
@@ -77,7 +77,7 @@ def advance(current, action, agents, run_id, sim_ts, emit):
             if state['observations'].get('verification_required') and not state['retrieved']:
                 checks.append('Source verification requested; lookup required before acceptance.')
             review=agents.call(run_id,sim_ts,'regional_audit',{**shared,'plan':plan,'validation_issues':checks}).model_dump()
-            if time.time()>=state['deadline']:return halt(state,'deadline')
+            if time.time()>=state['deadline']:return halt(state,'deadline','deadline')
             state['feedback']=list(dict.fromkeys(checks+review['concerns']))
             accepted=review['action']=='accept' and not state['feedback']
             state['reviews'].append({**review,'validation_issues':checks,
@@ -96,7 +96,7 @@ def advance(current, action, agents, run_id, sim_ts, emit):
         else:raise ValueError('unknown regional action')
         return state
     except Exception as exc:
-        return halt(state,type(exc).__name__)
+        return halt(state,type(exc).__name__,'exception')
 
 
 def finish(state):
@@ -104,7 +104,7 @@ def finish(state):
             'rounds':[{'round':i+1,'plan':plan} for i,plan in enumerate(state['proposals'])],
             'reviews':state['reviews'],'requests':state['requests'],'retrieved':state['retrieved'],
             'calls':state['calls'],'remaining_calls':max(0,state['max_calls']-state['calls']),
-            'reason':state['reason'],'human_review_required':True}
+            'reason':state['reason'],'failure_kind':state['failure_kind'],'human_review_required':True}
 
 
 def collaborate(agents, run_id, sim_ts, observations, snapshots, emit, max_calls=6, timeout_seconds=120):

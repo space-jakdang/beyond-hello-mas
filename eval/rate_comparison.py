@@ -1,6 +1,7 @@
 """Blind review packets and case-paired aggregation; missing ratings stay missing."""
 import argparse
 import json
+import hashlib
 from pathlib import Path
 import random
 from statistics import mean
@@ -55,6 +56,7 @@ class Ratings(BaseModel):
 
 
 def validate_report(report):
+    if report.get('rating_code_hash')!=hashlib.sha256(Path(__file__).read_bytes()).hexdigest():raise ValueError('rating code changed; use the recorded code commit')
     contract,cases=load_cases(report['split'])
     if report['contract_hash']!=digest(contract) or report['contract']!=contract or report['input_hash']!=contract['files'][report['split']+'_inputs.json'] or report['label_hash']!=contract['files'][report['split']+'_labels.json']:
         raise ValueError('report contract mismatch')
@@ -75,7 +77,7 @@ def packet(report):
     order=list(enumerate(report['results']));random.Random(20261020).shuffle(order)
     for index,row in order:
         blind_id=str(uuid4());key[blind_id]=index
-        items.append({'blind_id':blind_id,'case_id':row['case_id'],'repetition':row['repetition'],
+        items.append({'blind_id':blind_id,'case_id':row['case_id'],
             'observations':cases[row['case_id']]['observations'],'allowed_evidence':cases[row['case_id']]['snapshots'],
             'output':{k:row['output'].get(k) for k in ('status','plan','reason')}})
     return {'report_hash':digest(report),'items':items,'limitations':['Method labels removed; wording may reveal method identity.']}, {'report_hash':digest(report),'mapping':key}
@@ -101,20 +103,22 @@ def aggregate(report,key,data):
     adjudications={a.blind_id:a for a in data.adjudications}
     if len(adjudications)!=len(data.adjudications):raise ValueError('duplicate adjudication')
     if any(a.blind_id not in key['mapping'] or a.reviewer not in reviewers for a in data.adjudications):raise ValueError('unknown adjudication ID')
-    outcomes={};missing=[];disagreements=[];not_independent=[]
+    outcomes={};missing=[];disagreements=[];not_independent=set()
     for blind_id,index in key['mapping'].items():
         ratings=scores.get(blind_id,[])
         if len(ratings)<2:missing.append(blind_id);continue
-        if sum(not reviewers[r.reviewer].development_participant for r in ratings)<2:not_independent.append(blind_id)
+        if sum(not reviewers[r.reviewer].development_participant for r in ratings)<2:not_independent.add(blind_id)
         different=len({(r.executable,tuple(sorted(r.major_errors)),r.appropriate_hold,r.excessive_hold) for r in ratings})>1
         if different:disagreements.append(blind_id)
         adjudication=adjudications.get(blind_id)
+        if adjudication and adjudication.reviewer in {r.reviewer for r in ratings}:raise ValueError('adjudicator must differ from original raters')
         if adjudication and not different:raise ValueError('adjudication requires disagreement')
-        if adjudication and reviewers[adjudication.reviewer].development_participant:not_independent.append(blind_id)
+        if adjudication and reviewers[adjudication.reviewer].development_participant:not_independent.add(blind_id)
         if different and adjudication is None:continue
         chosen=adjudication or ratings[0]
         row=report['results'][index]
-        machine_failure=row['output']['status'] in ('failed','not_executed') or row['output'].get('reason') in ('call_limit','deadline','ValueError','IndexError')
+        machine_failure=row['output']['status'] in ('failed','not_executed') or (row['output']['status']=='needs_human'
+            and ('failure_kind' not in row['output'] or row['output']['failure_kind'] is not None))
         outcomes[index]={'success':chosen.executable and not chosen.major_errors and not machine_failure and not chosen.excessive_hold
                          and (row['output']['status']!='needs_human' or chosen.appropriate_hold is True),
                          'major':bool(chosen.major_errors)}
@@ -148,7 +152,7 @@ def aggregate(report,key,data):
         decision='candidate' if limits and metrics['collaboration']['major_error_runs']==0 and all(
             metrics['collaboration']['successful_case_equivalents']-metrics[b]['successful_case_equivalents']>=gain for b in ('deterministic','single')) else 'keep_existing_default'
     return {'report_hash':digest(report),'ratings_hash':digest(data.model_dump()),'missing':missing,'disagreements':disagreements,
-        'unresolved_disagreements':[i for i in disagreements if i not in adjudications], 'not_independent':not_independent,
+        'unresolved_disagreements':[i for i in disagreements if i not in adjudications], 'not_independent':sorted(not_independent),
         'metrics':metrics if complete else None,'paired':paired if complete else None,'adoption_decision':decision,
         'within_limits':limits,'raw_ratings':data.model_dump(),
         'limitations':['Small balanced synthetic challenge set; intervals do not estimate field prevalence.',

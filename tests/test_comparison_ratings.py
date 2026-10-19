@@ -59,3 +59,32 @@ def test_live_preflight_uses_existing_budget_and_makes_no_model_call(tmp_path,mo
     assert report['budget_preflight']['required_reservation_usd']==pytest.approx(2.88)
     assert sum(r['output']['reason']=='budget_preflight' for r in report['results'] if r['method']!='deterministic')==144
     with store.connection() as db:assert db.execute('SELECT SUM(reserve_usd) FROM llm_calls').fetchone()[0]==.03
+
+
+def test_paired_gate_uses_cases_and_does_not_count_machine_failure_as_hold():
+    report=run('test',study=True)
+    # In-memory fixture for the rating gate; no live API call or live artifact is produced.
+    report.update(mode='live',status='awaiting_human_ratings',code_dirty=False)
+    _,key=packet(report)
+    reviewers=[{'id':id,'expertise':'fixture','development_participant':False} for id in ('a','b','c')]
+    rows=[]
+    for blind_id,index in key['mapping'].items():
+        for reviewer in ('a','b'):
+            rows.append({'blind_id':blind_id,'reviewer':reviewer,'executable':report['results'][index]['method']=='collaboration',
+                'major_errors':[],'reason':'fixture','supported_claims':0,'reviewed_claims':0,'omitted_constraints':False,
+                'appropriate_hold':True,'excessive_hold':False,'edits':None,'task_seconds':None})
+    output=aggregate(report,key,{'reviewers':reviewers,'ratings':rows})
+    assert output['adoption_decision']=='candidate'
+    assert output['metrics']['collaboration']['successful_case_equivalents']==24
+    assert output['paired']['single']['wins']==24
+    assert output['paired']['single']['case_bootstrap_95_interval']==[1,1]
+    index=next(i for i,r in enumerate(report['results']) if r['method']=='collaboration')
+    report['results'][index]['output']={'status':'needs_human','reason':'KeyError','failure_kind':'exception','plan':None}
+    from backend.tools.indicators import digest
+    key['report_hash']=digest(report)
+    output=aggregate(report,key,{'reviewers':reviewers,'ratings':rows})
+    assert output['metrics']['collaboration']['successful_case_equivalents']==pytest.approx(24-1/3)
+    rows[0]['executable']=not rows[0]['executable']
+    adjudication={'blind_id':rows[0]['blind_id'],'reviewer':'a','executable':True,'major_errors':[],
+                  'reason':'fixture','appropriate_hold':True,'excessive_hold':False}
+    with pytest.raises(ValueError,match='differ'):aggregate(report,key,{'reviewers':reviewers,'ratings':rows,'adjudications':[adjudication]})

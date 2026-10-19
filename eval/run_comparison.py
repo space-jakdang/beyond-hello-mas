@@ -34,6 +34,8 @@ def run(split='dev', study=False, live=False):
     repetitions=contract['planned_live_repetitions'] if study else 1
     settings=Settings(data_mode='local',llm_mode='live',evaluation_id=None) if live else Settings(
         _env_file=None,data_mode='sample',llm_mode='fake',evaluation_id=id)
+    if live and not all((settings.openai_model,settings.price_version,settings.input_usd_per_million,settings.output_usd_per_million)):
+        raise ValueError('live comparison requires configured model and verified prices')
     settings.llm_max_calls=contract['max_calls_per_method'];settings.llm_run_budget_usd=contract['max_cost_usd_per_run']
     # Live uses the existing local ledger. A fresh evaluation DB would reset cumulative spending.
     store=EventStore(settings.runtime_dir/'events.sqlite3',settings.data_mode);agents=Agents(store,settings)
@@ -42,7 +44,7 @@ def run(split='dev', study=False, live=False):
     with store.connection() as db:reserved=db.execute('SELECT COALESCE(SUM(reserve_usd),0) FROM llm_calls').fetchone()[0]
     required=len(cases)*repetitions*sum(m!='deterministic' for m in methods)*contract['max_cost_usd_per_run']
     available=max(0,settings.llm_budget_usd-reserved)
-    blocked=live and available+1e-12<required
+    blocked=live and available<required
     results=[]
     for repetition in range(1,repetitions+1):
         for case in cases:
@@ -65,6 +67,7 @@ def run(split='dev', study=False, live=False):
         'model':settings.openai_model if live else 'fake-v1',
         'pricing':{'version':settings.price_version,'input_per_million':settings.input_usd_per_million,'output_per_million':settings.output_usd_per_million} if live else None,
         'budget_preflight':{'blocked':blocked,'required_reservation_usd':required,'available_usd':available} if live else None,
+        'rating_code_hash':hashlib.sha256((ROOT/'eval/rate_comparison.py').read_bytes()).hexdigest(),
         'quality':None,'adoption_decision':'not_evaluated','results':results,
         'limitations':contract['limitations']+['Fake runs verify contracts only; human content ratings required.',
             'Latency includes method persistence overhead; A has no model writes.',
@@ -78,6 +81,11 @@ def run(split='dev', study=False, live=False):
             method=result['method'];case=inputs[result['case_id']]
             if blocked and method!='deterministic':
                 result['output']['reason']='budget_preflight';save();continue
+            if live and method!='deterministic':
+                with store.connection() as db:current_reserved=db.execute('SELECT COALESCE(SUM(reserve_usd),0) FROM llm_calls').fetchone()[0]
+                result['budget_available_before_run']=max(0,settings.llm_budget_usd-current_reserved)
+                if result['budget_available_before_run']<contract['max_cost_usd_per_run']:
+                    result['output']['reason']='budget_during_study';save();continue
             run_id=str(uuid4());now=datetime.now(timezone.utc);result['run_id']=run_id
             store.create_run(Run(id=run_id,thread_id=run_id,scenario_id=case['id'],status='running',data_mode=settings.data_mode,llm_mode=settings.llm_mode,
                 input_version=contract['version'],rule_version='regional-1',model_version=report['model'],prompt_version=contract['version'],
@@ -105,7 +113,7 @@ def run(split='dev', study=False, live=False):
             result['returned_models']=sorted({t['payload'].get('returned_model',report['model']) for t in traces if t['kind']=='llm_result'})
             save()
             if interruption is not None:raise interruption
-        report['status']='budget_blocked' if blocked else 'awaiting_human_ratings' if live else 'protocol_only'
+        report['status']='budget_blocked' if blocked or any(r['output'].get('reason')=='budget_during_study' for r in results) else 'awaiting_human_ratings' if live else 'protocol_only'
     finally:
         if report['status']=='running':report['status']='interrupted'
         save()
