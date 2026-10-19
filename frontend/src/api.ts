@@ -14,6 +14,7 @@ export const scenarios = [
   {id:'admin-synthetic',type:'admin',sim_time:'2025-07-01T09:00:00+09:00',payload:{person:{person_id:'synthetic-01',age:45,sgg:'11230',admin_flags:{became_alone:true}}}},
   {id:'case-handoff-synthetic',type:'case',sim_time:'2025-07-01T09:00:00+09:00',payload:{person:{person_id:'synthetic-02',age:24,sgg:'11230',consent:true,responses_confirmed:true,responses:{'synthetic-contract-fixture':{case:201}}}}},
   {id: 'question-history', type: 'question', sim_time: '2025-12-01T09:00:00+09:00', payload: {text: '이력을 보여 주세요.'}},
+  {id:'monthly-resource-research',type:'monthly',sim_time:'2025-09-30T12:00:00+09:00',payload:{ym:'2025-09',collaboration:true,research_gaps:true}},
   {id:'monthly-evidence-loop',type:'monthly',sim_time:'2025-09-30T12:00:00+09:00',payload:{ym:'2025-09',collaboration:true,verify_sources:true}},
   {id:'monthly-collaboration',type:'monthly',sim_time:'2025-09-30T12:00:00+09:00',payload:{ym:'2025-09',collaboration:true}},
 ];

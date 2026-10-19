@@ -247,6 +247,34 @@ class GraphService:
         self.node_event(state, 'match', {'snapshot_version': proposal['snapshot_version'], 'assignment_count': len(assignments)}, started)
         return {'proposal': proposal}
 
+    def regional_policy_node(self, state):
+        started=time.monotonic()
+        proposal=dict(state['proposal'])
+        gaps=[a for a in proposal['assignments'] if a.get('shortfall',0)>0]
+        scopes={'central'}
+        jurisdiction={'11230':('seoul','gangnam'),'32010':('gangwon','chuncheon')}
+        unsupported=any(a['dong_cd'][:5] not in jurisdiction for a in gaps)
+        for assignment in gaps:
+            scopes.update(jurisdiction.get(assignment['dong_cd'][:5],()))
+        remaining=max(0,min(6,self.settings.llm_max_calls)-state['classification']['collaboration']['calls'])
+        task={'goal':'지역 집단 자원 부족을 보완할 정책 후보를 조사하세요. 개인 자격·정원·배정은 확정하지 마세요.',
+              'scopes':sorted(scopes),'query':'','max_steps':max(1,remaining)}
+        emit=self.regional_emit(state)
+        emit('policy-delegate','supervisor','policy',{'goal':task['goal'],'task':task,'gap_count':len(gaps),'remaining_calls':remaining})
+        cached=next((t['payload']['result'] for t in self.store.traces(state['run_id'],limit=1000)
+                     if t['kind']=='agent_message' and t['payload'].get('result_kind')=='regional_policy_candidates'),None)
+        result=cached
+        if result is None:
+            result=self.policy_agent.run(state['run_id'],state['scenario']['sim_time'],task) if remaining and not unsupported else {
+                'status':'unsupported_scope' if unsupported else 'call_limit','recommendations':[],'human_review_required':True,'allocation_performed':False}
+            emit('policy-result','policy','supervisor',{'result_kind':'regional_policy_candidates','result':result})
+        self.node_event(state,'policy',result,started)
+        proposal['policy_research']={'status':result['status'],'candidates':result.get('recommendations',[]),
+            'gap_count':len(gaps),'task':task,'eligibility_verified':False,'remaining_capacity':None,
+            'allocation_performed':False,'human_review_required':True}
+        proposal.pop('snapshot_version',None);proposal['snapshot_version']=digest(proposal)
+        return {'proposal':proposal}
+
     def approval_node(self, state):
         started = time.monotonic()
         decision = interrupt({'snapshot_version': state['proposal']['snapshot_version'], 'proposal': state['proposal']})
@@ -342,7 +370,9 @@ class GraphService:
             builder.add_edge(START, 'supervisor')
             builder.add_conditional_edges('supervisor', lambda s: 'link' if s['crisis'] else 'policy' if s['scenario']['type'] == 'policy' else ('question' if s.get('question_route') in ('history', 'human', 'classify', 'match') else 'classify'))
             builder.add_conditional_edges('classify', lambda s: 'link' if s.get('local_action') else 'regional_prepare' if s['scenario']['payload'].get('collaboration') is True and s['classification'].get('metadata',{}).get('analysis_version')=='v3' else 'match')
-            builder.add_edge('match', 'approval')
+            builder.add_node('regional_policy',self.regional_policy_node)
+            builder.add_conditional_edges('match',lambda s:'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and s['proposal'].get('collaboration') and any(a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else 'approval')
+            builder.add_edge('regional_policy','approval')
             builder.add_conditional_edges('approval', lambda s: 'link' if s['decision']['status'] == 'approved' else 'reject')
             builder.add_edge('link', END)
             builder.add_edge('reject', END)

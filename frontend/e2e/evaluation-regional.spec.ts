@@ -34,3 +34,19 @@ test('source review requests lookup, revises plan and retains approval after rel
  await page.reload();
  await expect(page.getByTestId('agent-messages').getByRole('listitem')).toHaveCount(7);
 });
+
+test('resource gap research stays a candidate outside approved assignments',async({page,request})=>{
+ await page.goto('/observatory');
+ await page.getByRole('combobox',{name:'시나리오',exact:true}).selectOption({label:'monthly-resource-research'});
+ await page.getByRole('button',{name:'실행',exact:true}).click();
+ await expect(page.getByTestId('run-status')).toHaveText('승인 대기');
+ const id=await page.getByTestId('run-id').innerText();
+ const review=await(await request.get(`/runs/${id}/approval`)).json();
+ expect(review.proposal.policy_research.eligibility_verified).toBe(false);
+ expect(review.proposal.policy_research.remaining_capacity).toBeNull();
+ expect(review.proposal.policy_research.allocation_performed).toBe(false);
+ expect((await request.get(`/runs/${id}/linkage`)).status()).toBe(404);
+ await page.goto('/console');
+ await page.getByTestId(`alert-${id}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
+ await expect(page.getByText('정책 조사 결과는 후보입니다.',{exact:false})).toBeVisible();
+});
