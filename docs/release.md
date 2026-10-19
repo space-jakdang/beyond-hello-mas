@@ -56,4 +56,4 @@ manifest와 zip은 같은 커밋에서 생성해야 합니다. 로컬 작업 폴
 - 외부 MCP의 실제 도구 목록은 `list_scales`, `get_scale`, `score`다. 새 `assess_stage`·`priority_score`는 아직 없으므로 실제 개인 판정 완료로 표시하지 않는다.
 - [8집단 화면](screenshots/groups-v2.png)과 [v2 평가 화면](screenshots/evaluation-v2.png)은 sample/fake로 캡처했다. 실제 집계·개인 정보·키를 포함하지 않는다.
 
-v2 구현 PR(01–08)은 Claude Code Opus 교차 리뷰와 Ponytail 검토를 거쳤다. 마지막 제출 문서 PR(09)은 Claude 사용 한도로 교차 리뷰가 미완료이며 draft 상태로 남긴다. v1 당시의 인증 실패 기록은 위에 별도로 보존한다.
+v2 구현 PR(01–08)은 Claude Code Opus 교차 리뷰와 Ponytail 검토를 거쳤다. 마지막 제출 문서 PR(09)도 사용 한도 해제 후 Claude Code Opus 교차 리뷰를 완료했고, 로컬 MCP 설정의 E2E 유입을 추가로 차단했다. v1 당시의 인증 실패 기록은 위에 별도로 보존한다.
