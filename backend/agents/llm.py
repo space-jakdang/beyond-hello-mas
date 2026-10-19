@@ -14,6 +14,9 @@ def fake(role, payload):
     if role == 'policy_decision':
         from backend.policy.agent import fake_decision
         return fake_decision(payload)
+    if role == 'regional_worker':
+        return {'action':'finish','targets':[],'reason':'fake protocol fixture',
+                'plan':fake('regional_analyst',payload)}
     if role == 'regional_analyst':
         return {'summary':'fake: 관측 대표 집단의 검토안이며 실제 모델 판단이 아닙니다.',
                 'focus_ids':[r['id'] for r in payload['observations']['facts'][:3]],
@@ -90,7 +93,7 @@ class Agents:
                 raise ValueError('LLM call or cost budget exceeded')
             db.execute('INSERT INTO llm_calls VALUES (?,?,?,?,?,?)', (run_id, call_key, role, 'pending', reserve, json.dumps(metadata)))
             self.store._trace(db, run_id, sim_ts, 'llm_call', metadata, 'supervisor' if role == 'route' else
-                              {'analysis': 'classify', 'recommendations': 'match', 'draft': 'link', 'policy_decision': 'policy', 'regional_analyst':'regional_analyst', 'regional_reviewer':'regional_reviewer'}[role])
+                              {'analysis': 'classify', 'recommendations': 'match', 'draft': 'link', 'policy_decision': 'policy', 'regional_analyst':'regional_analyst', 'regional_reviewer':'regional_reviewer', 'regional_worker':'regional_analyst'}[role])
         started = time.monotonic()
         tokens_in = tokens_out = 0
         actual = None

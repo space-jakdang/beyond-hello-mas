@@ -45,3 +45,6 @@ SCHEMAS["policy_decision"] = PolicyDecision
 
 from backend.agents.regional import RegionalPlan,RegionalReview
 SCHEMAS.update(regional_analyst=RegionalPlan,regional_reviewer=RegionalReview)
+
+from backend.agents.regional_worker import RegionalDecision
+SCHEMAS["regional_worker"] = RegionalDecision
