@@ -55,11 +55,11 @@ export function Observatory() {
     <p>지역 협업 시나리오에서 분석안 → 근거 검토 → 필요 시 재작성을 확인할 수 있습니다. fake는 통신 시연이며 모델 판단이 아닙니다.</p>
     <div className="toolbar"><label>시나리오 <select value={scenario} onChange={e=>setScenario(Number(e.target.value))}>{scenarios.map((s,i)=><option key={s.id} value={i}>{s.id}</option>)}</select></label><button disabled={busy} onClick={()=>start()}>실행</button>
     <label>실행 이력 <select aria-label="실행 이력" value={id} onChange={e=>setId(e.target.value)}><option value="">선택</option>{runs.map(r=><option key={r.id} value={r.id}>{r.scenario_id} · {r.id.slice(0,8)}</option>)}</select></label></div>
-    <fieldset><legend>Supervisor에게 정책 조사 지시</legend>
+    <fieldset id="policy-task"><legend>Supervisor에게 정책 조사 지시</legend>
       <label>조사 목표 <input value={goal} maxLength={1000} onChange={e=>setGoal(e.target.value)}/></label>
       {Object.entries(scopeNames).map(([scope,name])=><label key={scope}><input type="checkbox" checked={policyScopes.includes(scope)} onChange={e=>setPolicyScopes(old=>e.target.checked?[...old,scope]:old.filter(s=>s!==scope))}/>{name}</label>)}
       <button disabled={busy || !goal.trim() || !policyScopes.length} onClick={()=>start(true)}>정책 조사 위임</button>
-      <p>공식 API 등록 정책을 조사합니다. 자격·잔여 정원은 별도 확인이 필요하며 실제 배정은 하지 않습니다. fake 모드는 통신 흐름 시연입니다.</p>
+      <p>공식 API 등록 정책을 조사합니다. 자격·잔여 정원은 별도 확인이 필요하며 실제 배정은 하지 않습니다. fake는 모델의 행동 시연입니다. 정부24 API 자료는 서버 키 설정에 따라 실제 조회하며, 연결·수집 상태는 정책 탐색에서 확인하세요.</p>
     </fieldset>
     {error && <p role="alert">{error}</p>}
     {!id && <p>시나리오를 실행하거나 이전 실행을 선택하세요.</p>}

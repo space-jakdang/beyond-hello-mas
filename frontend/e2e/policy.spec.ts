@@ -1,7 +1,7 @@
 import {test, expect} from '@playwright/test';
 
 test('Supervisor delegates policy research and exposes tool observations and missing data',async ({page,request})=>{
-  await page.goto('/');
+  await page.goto('/observatory');
   await page.getByLabel('조사 목표').fill('합성 테스트: 고립 지원 정책 조사');
   await page.getByRole('button',{name:'정책 조사 위임',exact:true}).click();
   await expect(page.getByTestId('policy-result')).toBeVisible({timeout:15000});

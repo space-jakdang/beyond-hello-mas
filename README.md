@@ -15,7 +15,7 @@ make sample
 make dev
 ```
 
-<http://127.0.0.1:5173>에서 동네 분석(`/neighborhoods`), 관찰(`/observatory`), 담당자 콘솔(`/console`), 평가(`/evaluation`) 화면을 엽니다. API health는 <http://127.0.0.1:8000/health>, OpenAPI는 `/docs`입니다. 종료는 Ctrl-C입니다. 개발 서버는 로컬 인터페이스에서 사용합니다.
+<http://127.0.0.1:5173>의 인덱스(`/`)에서 프로젝트 설명과 화면별 이용 순서를 확인합니다. 상단 브랜드나 인덱스 메뉴를 누르면 안내로 돌아갑니다. 동네 분석(`/neighborhoods`), 관찰(`/observatory`), 담당자 콘솔(`/console`), 평가(`/evaluation`), 정책 탐색(`/policy`) 화면을 이용할 수 있습니다. 정책 탐색에서는 서버 인증키 상태, 관할별 수집 건수, 검색·최신 상세 조회와 공식 출처를 확인하고 관찰 화면의 에이전트 조사로 이동합니다. LLM fake/live와 정부24 실제 자료 연결은 별개입니다. API health는 <http://127.0.0.1:8000/health>, OpenAPI는 `/docs`입니다. 종료는 Ctrl-C입니다. 개발 서버는 로컬 인터페이스에서 사용합니다.
 
 기본값은 `DATA_MODE=sample`, `LLM_MODE=fake`이며 키 없이 실행됩니다. sample은 합성 입력이며 실제 고립 판정 결과가 아닙니다. `DATA_MODE=local` 입력은 `data/local/`, 실행 산출물은 `runtime/local/`에 둡니다. sample 실행 산출물도 `runtime/sample/`에 보관합니다. `.env`는 저장소 루트에서 읽습니다.
 
