@@ -25,3 +25,6 @@ check: test e2e
 
 classify:
 	uv run python -m scripts.classify
+
+eval-temporal:
+	uv run python -m eval.run_temporal
