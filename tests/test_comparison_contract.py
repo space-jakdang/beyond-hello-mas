@@ -20,5 +20,5 @@ def test_fake_baselines_keep_pairing_and_do_not_claim_quality():
     assert report['case_count']==8 and len(report['results'])==16
     for a,b in zip(report['results'][::2],report['results'][1::2]):
         assert a['input_hash']==b['input_hash'] and a['case_id']==b['case_id']
-        assert a['calls']==0 and b['calls']==2
+        assert a['calls']==0 and b['calls']==3
         assert b['content_rating'] is None

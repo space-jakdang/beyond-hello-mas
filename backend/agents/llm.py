@@ -15,6 +15,9 @@ def fake(role, payload):
         from backend.policy.agent import fake_decision
         return fake_decision(payload)
     if role == 'regional_worker':
+        if not payload['retrieved']:
+            return {'action':'lookup','targets':[payload['observations']['facts'][0]['id']],
+                    'reason':'fake source verification','plan':None}
         return {'action':'finish','targets':[],'reason':'fake protocol fixture',
                 'plan':fake('regional_analyst',payload)}
     if role == 'regional_analyst':
@@ -88,8 +91,10 @@ class Agents:
                     return validate_output(role, json.loads(existing['body'])['output'], payload)
                 raise ValueError('previous call unresolved or failed; create a new run for retry')
             count = db.execute('SELECT COUNT(*) FROM llm_calls WHERE run_id=?', (run_id,)).fetchone()[0]
-            spent = db.execute('SELECT COALESCE(SUM(reserve_usd),0) FROM llm_calls').fetchone()[0]
-            if count >= self.settings.llm_max_calls or (reserve and spent + reserve > self.settings.llm_budget_usd):
+            cumulative_spent = db.execute('SELECT COALESCE(SUM(reserve_usd),0) FROM llm_calls').fetchone()[0]
+            run_spent = db.execute('SELECT COALESCE(SUM(reserve_usd),0) FROM llm_calls WHERE run_id=?', (run_id,)).fetchone()[0]
+            over_run_budget = self.settings.llm_run_budget_usd is not None and run_spent + reserve > self.settings.llm_run_budget_usd
+            if count >= self.settings.llm_max_calls or (reserve and (cumulative_spent + reserve > self.settings.llm_budget_usd or over_run_budget)):
                 raise ValueError('LLM call or cost budget exceeded')
             db.execute('INSERT INTO llm_calls VALUES (?,?,?,?,?,?)', (run_id, call_key, role, 'pending', reserve, json.dumps(metadata)))
             self.store._trace(db, run_id, sim_ts, 'llm_call', metadata, 'supervisor' if role == 'route' else

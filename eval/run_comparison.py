@@ -28,7 +28,7 @@ def load_cases(split):
 def run(split='dev'):
     contract,cases=load_cases(split);id=str(uuid4())
     settings=Settings(_env_file=None,data_mode='sample',llm_mode='fake',evaluation_id=id,
-                      llm_max_calls=contract['max_calls_per_method'])
+                      llm_max_calls=contract['max_calls_per_method'], llm_run_budget_usd=contract['max_cost_usd_per_run'])
     store=EventStore(settings.runtime_dir/'events.sqlite3');agents=Agents(store,settings);results=[]
     for case in cases:
         for method in ('deterministic','single'):
@@ -48,16 +48,17 @@ def run(split='dev'):
                             'calls':sum(t['kind']=='llm_call' for t in traces),'latency_seconds':elapsed,'cost_usd':0,
                             'content_rating':None})
     files=['eval/run_comparison.py','backend/agents/regional_worker.py','backend/agents/regional.py','backend/agents/llm.py',
-           'backend/agents/schemas.py','backend/prompts/regional_worker.txt']
+           'backend/agents/schemas.py','backend/prompts/regional_worker.txt','backend/app/config.py',
+           'scripts/generate_comparison.py','scenarios/comparison/contract.json']
     report={'id':id,'suite':contract['version'],'split':split,'mode':'fake','status':'protocol_only',
-            'case_count':len(cases),'methods_run':['deterministic','single'],'methods_not_run':['collaboration'],
+            'case_count':len(cases),'methods_run':['deterministic','single'],'methods_not_run':[m for m in contract['methods'] if m not in ('deterministic','single')],
             'contract_hash':digest(contract),'input_hash':contract['files'][f'{split}_inputs.json'],
             'label_hash':contract['files'][f'{split}_labels.json'],
             'code_hash':digest({f:hashlib.sha256((ROOT/f).read_bytes()).hexdigest() for f in files}),
             'git_commit':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
             'code_dirty':bool(subprocess.check_output(['git','status','--porcelain','--',*files],cwd=ROOT,text=True).strip()),
             'quality':None,'adoption_decision':'not_evaluated','results':results,
-            'limitations':contract['limitations']+['Fake runs verify contracts only. No live cost or quality evidence.']}
+            'limitations':contract['limitations']+['Fake runs verify contracts only. No live cost or quality evidence.', 'Latency includes each method persistence overhead; A has no model writes.']}
     (settings.runtime_dir/'comparison.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     print((settings.runtime_dir/'comparison.json').relative_to(ROOT))
     return report

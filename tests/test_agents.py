@@ -145,3 +145,14 @@ def test_real_timeout_path_does_not_hide_failure(store, monkeypatch):
     monkeypatch.setattr(adapter, 'remote', slow)
     with pytest.raises(ValueError, match='fallback disabled'):
         adapter.score('r', SIM, {f'q{i}': 0 for i in range(1,7)})
+
+
+def test_run_budget_blocks_without_resetting_cumulative_budget(store, monkeypatch):
+    import backend.agents.llm as module
+    settings = Settings(_env_file=None,llm_mode='live',openai_api_key='fixture',openai_model='fixture',
+        llm_budget_usd=1,llm_run_budget_usd=.000001,input_usd_per_million=1,output_usd_per_million=1,price_version='fixture')
+    monkeypatch.setattr(module,'OpenAI',lambda **kwargs:pytest.fail('must reject before API call'))
+    agents=Agents(store,settings)
+    with pytest.raises(ValueError,match='budget'):agents.call('r',SIM,'analysis',{'text':'synthetic'})
+    assert settings.llm_budget_usd==1
+    with store.connection() as db:assert db.execute('SELECT COUNT(*) FROM llm_calls').fetchone()[0]==0

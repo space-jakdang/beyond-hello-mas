@@ -32,3 +32,11 @@ def test_lookup_boundary_and_budget_never_publish_unreviewed_plan():
     output=single(Agents(),'r','t',OBS,{},lambda *a:None,max_calls=1)
     assert output['status']=='needs_human' and output['plan'] is None
     with pytest.raises(ValueError):RegionalDecision(action='human',targets=[],reason='hold',plan=PLAN)
+
+
+def test_self_review_can_preserve_a_supported_plan():
+    class Agents:
+        def call(self,*args):return RegionalDecision(action='finish',targets=[],reason='Checked sources; no change needed.',plan=PLAN)
+    output=single(Agents(),'r','t',OBS,{},lambda *a:None)
+    assert output['status']=='submitted' and len(output['proposals'])==2
+    assert output['proposals'][0]==output['proposals'][1]

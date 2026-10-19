@@ -39,7 +39,7 @@ def generate(split):
 
 
 def main():
-    root=ROOT/'scenarios/comparison';root.mkdir(exist_ok=True)
+    root=ROOT/'scenarios/comparison';root.mkdir(parents=True,exist_ok=True)
     hashes={}
     for split in ('dev','test'):
         for name,rows in zip(('inputs','labels'),generate(split)):

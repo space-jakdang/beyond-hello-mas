@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     openai_model: str | None = None
     llm_budget_usd: float = Field(default=0, ge=0)
+    llm_run_budget_usd: float | None = Field(default=None, gt=0)
     input_usd_per_million: float | None = Field(default=None, gt=0)
     output_usd_per_million: float | None = Field(default=None, gt=0)
     price_version: str | None = None
