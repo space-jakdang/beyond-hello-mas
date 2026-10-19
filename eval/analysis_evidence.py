@@ -26,6 +26,8 @@ def weekly_sensitivity(rows):
         changed = compared = unavailable = 0
         for key, group in sorted(groups.items()):
             group = sorted(group, key=lambda r: r['week'])
+            if len({r['week'] for r in group}) != len(group):
+                raise ValueError('duplicate weekly observation')
             weak = .90 if key == ('32010', 'F', '20s') else .95
             for indicator in ('T1b', 'R1'):
                 history = []; ratios = []; reference = []
@@ -72,7 +74,7 @@ def weight_sensitivity(rows):
         for weight in (.6, .7, .8):
             alternative = order(weight)
             pairs = [(a, b) for rank, a in enumerate(alternative) for b in alternative[rank + 1:]]
-            result.append({'group': key, 'structure_weight': weight, 'status': 'evaluated',
+            result.append({'group': key, 'structure_weight': weight, 'is_baseline': weight == .7, 'status': 'evaluated',
                            'reversed_pairs': sum(positions[a] > positions[b] for a, b in pairs),
                            'compared_pairs': len(pairs),
                            'max_rank_shift': max(abs(rank - positions[i]) for rank, i in enumerate(alternative))})
@@ -95,10 +97,12 @@ def evaluate(settings):
             source_hashes[basename] = checksum
     lineage = {}
     for row in rows:
-        key = (row.source_file, row.index_name, row.age_group, row.sex, row.preferred, row.source_period)
-        if settings.data_mode == 'local' and row.source_file not in source_hashes:
+        source_file = unicodedata.normalize('NFC', row.source_file)
+        # Sample source periods vary by month; preserve each period as its own lineage.
+        key = (source_file, row.index_name, row.age_group, row.sex, row.preferred, row.source_period)
+        if settings.data_mode == 'local' and source_file not in source_hashes:
             raise ValueError('unregistered source')
-        entry = lineage.setdefault(key, {'source_file': row.source_file, 'source_sha256': source_hashes.get(row.source_file),
+        entry = lineage.setdefault(key, {'source_file': source_file, 'source_sha256': source_hashes.get(source_file),
             'index': row.index_name, 'age_group': row.age_group, 'sex': row.sex, 'preferred': row.preferred,
             'spatial_unit': 'dong_group', 'source_period': row.source_period, 'source_bands': row.source_bands,
             'months': set(), 'rows': 0, 'missing_values': 0})
@@ -108,19 +112,24 @@ def evaluate(settings):
     for entry in lineage.values():
         entry['months'] = sorted(entry['months'], key=lambda v: v or '')
     youth = [r for r in rows if r.preferred and r.index_name in ('S1', 'v3') and r.value is not None]
-    thresholds = [{'absolute_value_shift': shift, 'changed_stages': sum(
-        youth_stage(level_band(r.index_name, r.value + shift)) != youth_stage(level_band(r.index_name, r.value)) for r in youth),
-        'compared_cohorts': len(youth)} for shift in (-.01, 0, .01)]
+    thresholds = [{'index': index, 'absolute_value_shift': shift, 'changed_stages': sum(
+        youth_stage(level_band(r.index_name, r.value + shift)) != youth_stage(level_band(r.index_name, r.value)) for r in youth if r.index_name == index),
+        'compared_cohorts': sum(r.index_name == index for r in youth)} for index in ('S1', 'v3') for shift in (-.01, 0, .01)]
+    baseline = classify(rows)
     missing = classify([r.model_copy(update={'value': None}) for r in rows])
     files = ['eval/analysis_evidence.py', 'scripts/export_groups.py', 'backend/tools/region_stage.py',
-             'backend/tools/segments_v3.py', 'backend/tools/weekly_signals.py', 'rules/age_crosswalk.json']
+             'backend/tools/segments_v3.py', 'backend/tools/weekly_signals.py', 'rules/age_crosswalk.json',
+             'backend/app/contracts.py', 'backend/tools/indicators.py', 'scripts/import_seohee.py', 'scripts/generate_groups.py']
     return {'schema_version': 'analysis-evidence-1', 'data_mode': settings.data_mode,
         'input_hash': metadata['input_hash'], 'weekly_input_hash': digest(weekly['rows']),
         'code_hash': digest({f: hashlib.sha256((ROOT / f).read_bytes()).hexdigest() for f in files}),
+        'code_hash_files': files, 'code_hash_scope': 'listed files only; not full environment provenance',
         'lineage': list(lineage.values()), 'weekly_source': weekly['metadata'],
         'weekly_sensitivity': weekly_sensitivity(weekly['rows']), 'youth_threshold_sensitivity': thresholds,
         'chuncheon_weight_sensitivity': weight_sensitivity(rows),
-        'missingness': {'tested_cohorts': len(rows), 'unclassified_when_missing': sum(r['stage'] is None for r in missing['segments'])},
+        'missingness': {'interpretation': 'missing-value contract check, not empirical sensitivity or accuracy', 'baseline_stageable': sum(r['stage'] is not None for r in baseline['segments']),
+            'stages_lost': sum(a['stage'] is not None and b['stage'] is None for a,b in zip(baseline['segments'],missing['segments'])),
+            'tested_cohorts': len(rows), 'unclassified_when_missing': sum(r['stage'] is None for r in missing['segments'])},
         'actual_isolation_accuracy': None, 'external_person_model_performance': None,
         'limitations': ['Source hashes identify delivered aggregates, not independent reconstruction from provider raw data.',
             'Sensitivity is a perturbation check, not parameter tuning or prediction accuracy.',
