@@ -1,0 +1,36 @@
+{
+  "version": "regional-comparison-1",
+  "frozen_at": "2026-10-20",
+  "files": {
+    "dev_inputs.json": "16b9837b3a375f48f67af84b4b7cd250ac4a55aea55690ee36b482de15207439",
+    "dev_labels.json": "a5e5d6346465592580b47ee625efd95e7bbc4564aa9912f29aa6d8d5bcb83591",
+    "test_inputs.json": "b359de371674426d13e06e095e226b8686d2ed9959e7f0d9c167cd4ffba55d4c",
+    "test_labels.json": "6c3a83d2aa1480682e8f3de153501ddcef7bcc54305a878ad3775214c64da808"
+  },
+  "cases": {
+    "dev": 8,
+    "test": 24
+  },
+  "methods": [
+    "deterministic",
+    "single",
+    "collaboration"
+  ],
+  "max_calls_per_method": 6,
+  "max_cost_usd_per_run": 0.02,
+  "completion_deadline_seconds": 120,
+  "planned_live_repetitions": 3,
+  "primary": "executable_plan_without_major_error / 24",
+  "adoption": {
+    "additional_successful_cases_vs_each_baseline": 2,
+    "new_major_errors_allowed": 0,
+    "requires_complete_independent_ratings": true
+  },
+  "limitations": [
+    "Balanced synthetic challenge set, not population prevalence.",
+    "Labels are developer-authored and not independently reviewed.",
+    "Thresholds are proposed internal adoption rules, not externally validated targets.",
+    "Per-run cost cap does not authorize increasing the existing cumulative live budget.",
+    "All methods retain failures in denominators; repeats are paired by case."
+  ]
+}
