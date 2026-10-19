@@ -78,8 +78,10 @@ def advance(current, action, agents, run_id, sim_ts, emit):
                 checks.append('Source verification requested; lookup required before acceptance.')
             review=agents.call(run_id,sim_ts,'regional_audit',{**shared,'plan':plan,'validation_issues':checks}).model_dump()
             if time.time()>=state['deadline']:return halt(state,'deadline')
-            state['reviews'].append(review);state['feedback']=list(dict.fromkeys(checks+review['concerns']))
+            state['feedback']=list(dict.fromkeys(checks+review['concerns']))
             accepted=review['action']=='accept' and not state['feedback']
+            state['reviews'].append({**review,'validation_issues':checks,
+                'effective_decision':'accept' if accepted else 'revise' if review['action']=='accept' else review['action']})
             emit(f"review-{len(state['reviews'])}",'regional_reviewer','supervisor' if accepted or review['action'] in ('lookup','human') else 'regional_analyst',
                  {'decision':review['action'] if not (review['action']=='accept' and not accepted) else 'revise',
                   'concerns':state['feedback'],'reason':review['reason'],'targets':review['targets']})

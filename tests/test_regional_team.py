@@ -46,3 +46,23 @@ def test_unavailable_lookup_and_invalid_target_require_human():
         state.update(next='regional_lookup',requests=[{'targets':[target],'reason':'source missing'}])
         state=advance(state,'lookup',None,'r','t',lambda *a:None)
         assert finish(state)['reason']==reason and state['plan'] is None
+
+
+def test_analyst_can_request_lookup_and_model_failure_is_typed(service,monkeypatch):
+    import backend.agents.llm as module
+    original=module.fake
+    def model(role,payload):
+        if role=='regional_planner' and not payload['retrieved']:
+            return {'action':'lookup','targets':[payload['observations']['facts'][0]['id']],'reason':'verify source','plan':None}
+        return original(role,payload)
+    monkeypatch.setattr(module,'fake',model)
+    run=service.start(scenario('monthly',ym='2025-09',collaboration=True))
+    result=service.approval(run.id)['proposal']['collaboration']
+    assert result['status']=='reviewed' and result['calls']==3
+    assert result['requests'][0]['sender']=='regional_analyst'
+    def failed(role,payload):raise RuntimeError('PRIVATE_FAILURE_DETAIL')
+    monkeypatch.setattr(module,'fake',failed)
+    run=service.start(scenario('monthly',ym='2025-09',collaboration=True))
+    result=service.approval(run.id)['proposal']['collaboration']
+    assert result['status']=='needs_human' and result['reason']=='ValueError'
+    assert 'PRIVATE_FAILURE_DETAIL' not in str(service.store.traces(run.id,limit=1000))
