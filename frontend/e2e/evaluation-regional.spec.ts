@@ -22,3 +22,15 @@ test('temporal comparison filters seed and explains scope',async({page,request})
  await page.setViewportSize({width:390,height:844});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();
 });
+
+
+test('source review requests lookup, revises plan and retains approval after reload',async({page})=>{
+ await page.goto('/observatory');
+ await page.getByRole('combobox',{name:'시나리오',exact:true}).selectOption({label:'monthly-evidence-loop'});
+ await page.getByRole('button',{name:'실행',exact:true}).click();
+ await expect(page.getByTestId('run-status')).toHaveText('승인 대기');
+ await expect(page.getByTestId('agent-messages')).toContainText('원천 상세 확인 필요');
+ await expect(page.getByTestId('agent-messages')).toContainText('추가 조회 근거를 반영한 검토안');
+ await page.reload();
+ await expect(page.getByTestId('agent-messages').getByRole('listitem')).toHaveCount(7);
+});

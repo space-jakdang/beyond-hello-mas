@@ -34,6 +34,7 @@ class State(TypedDict, total=False):
     decision: dict
     question_route: str
     local_action: str
+    regional: dict
 
 
 def crisis_evidence(payload):
@@ -153,15 +154,34 @@ class GraphService:
         summary_input = {'type': scenario.type, 'text': scenario.payload.get('text', ''),
                          'assessment': result.get('result'), 'aggregate_metadata': result.get('metadata')}
         if scenario.type == 'monthly' and scenario.payload.get('collaboration') is True and result.get('metadata',{}).get('analysis_version') == 'v3':
-            from backend.agents.regional import context,collaborate
-            def emit(key,sender,recipient,payload):
-                with self.store.connection(write=True) as db:
-                    self.once(db,state,'regional-'+key,'agent_message',{'sender':sender,'recipient':recipient,**payload},sender)
-            result['collaboration']=collaborate(self.agents,state['run_id'],scenario.sim_time,context(result,self.settings.data_mode),emit)
+            pass  # Regional work runs in separately checkpointed graph nodes.
         else:
             result['analysis'] = self.agents.call(state['run_id'], scenario.sim_time, 'analysis', summary_input).model_dump()
         self.node_event(state, 'classify', result, started)
         return {'classification': result}
+
+    def regional_emit(self, state):
+        def emit(key,sender,recipient,payload):
+            with self.store.connection(write=True) as db:
+                self.once(db,state,'regional-'+key,'agent_message',{'sender':sender,'recipient':recipient,**payload},sender)
+        return emit
+
+    def regional_prepare(self, state):
+        from backend.agents.regional_team import from_classification
+        regional=from_classification(state['classification'],self.settings.data_mode,self.settings.llm_max_calls)
+        regional['observations']['verification_required']=state['scenario']['payload'].get('verify_sources') is True
+        self.regional_emit(state)('delegate','supervisor','regional_analyst',{'goal':regional['observations']['goal'],'observations':regional['observations']})
+        return {'regional':regional}
+
+    def regional_step(self, state, action):
+        from backend.agents.regional_team import advance
+        return {'regional':advance(state['regional'],action,self.agents,state['run_id'],state['scenario']['sim_time'],self.regional_emit(state))}
+
+    def regional_finalize(self, state):
+        from backend.agents.regional_team import finish
+        result=finish(state['regional'])
+        self.regional_emit(state)('decision','supervisor','match',{'decision':'submit_for_human_approval' if result['plan'] else 'needs_human','reason':result['reason']})
+        return {'classification':{**state['classification'],'collaboration':result}}
 
     def match_node(self, state):
         started = time.monotonic()
@@ -311,9 +331,17 @@ class GraphService:
             for name, action in [('supervisor', self.supervisor), ('classify', self.classify_node), ('match', self.match_node),
                                  ('approval', self.approval_node), ('link', self.link_node), ('reject', self.reject_node), ('question', self.question_node), ('policy', self.policy_node)]:
                 builder.add_node(name, action)
+            builder.add_node('regional_prepare',self.regional_prepare)
+            builder.add_node('regional_analyst',lambda s:self.regional_step(s,'analyze'))
+            builder.add_node('regional_reviewer',lambda s:self.regional_step(s,'review'))
+            builder.add_node('regional_lookup',lambda s:self.regional_step(s,'lookup'))
+            builder.add_node('regional_finalize',self.regional_finalize)
+            for node in ('regional_prepare','regional_analyst','regional_reviewer','regional_lookup'):
+                builder.add_conditional_edges(node,lambda s:s['regional']['next'])
+            builder.add_edge('regional_finalize','match')
             builder.add_edge(START, 'supervisor')
             builder.add_conditional_edges('supervisor', lambda s: 'link' if s['crisis'] else 'policy' if s['scenario']['type'] == 'policy' else ('question' if s.get('question_route') in ('history', 'human', 'classify', 'match') else 'classify'))
-            builder.add_conditional_edges('classify', lambda s: 'link' if s.get('local_action') else 'match')
+            builder.add_conditional_edges('classify', lambda s: 'link' if s.get('local_action') else 'regional_prepare' if s['scenario']['payload'].get('collaboration') is True and s['classification'].get('metadata',{}).get('analysis_version')=='v3' else 'match')
             builder.add_edge('match', 'approval')
             builder.add_conditional_edges('approval', lambda s: 'link' if s['decision']['status'] == 'approved' else 'reject')
             builder.add_edge('link', END)
