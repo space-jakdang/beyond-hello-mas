@@ -33,3 +33,28 @@
 `uv run python -m eval.run_comparison --split dev`는 A/B의 fake 절차를 확인한다. `--split test`도 동일한 회귀 실행이며 내용 품질은 계속 null이다. 결과는 `runtime/sample/evaluations/UUID/comparison.json`에 저장한다. 평가 DB에는 자동 재개되는 workflow를 등록하지 않는다. 모델·프롬프트·도구 스냅샷·입력/라벨·코드 hash와 live 단가 기록은 실제 비교 시 함께 고정해야 한다.
 
 live 비교, C 구현, 독립 평정, 운영 과업, 실제 고립 결과는 이 PR의 완료 주장에 포함하지 않는다.
+
+## A/B/C 실행과 가림 평정
+
+```sh
+# 개발 사례 절차 검증
+uv run python -m eval.run_comparison --study --split dev
+# 잠금 24사례 × 3회 × 3방법: fake 계약 검증, 품질 아님
+uv run python -m eval.run_comparison --study --split test
+# 기존 누적 예산을 사용하는 실제 모델 실행
+uv run python -m eval.run_comparison --study --split test --live
+# 방법 이름을 제거한 사람 검토 패킷과 별도 대응키 생성
+uv run python -m eval.rate_comparison runtime/.../comparison.json
+# 원본 2인 평정과 필요 시 조정 기록 집계
+uv run python -m eval.rate_comparison runtime/.../comparison.json --key runtime/.../private-key.json --ratings ratings.json
+```
+
+live는 기존 `runtime/local/events.sqlite3`의 예약 비용을 유지한다. 전체 비교의 최대 추가 예약액은 $2.88(24×3×2 LLM방법×$0.02)이며 남은 누적 예산이 부족하면 모델 호출 전 차단하고 미실행 144건을 그대로 남긴다. 결정적 A는 유료 호출 없이 실행한다. 이 금액은 지출 예상이나 증액 승인이 아닌 보수적 실행 여유 조건이다. 실행당 예약 상한과 누적 상한 모두 호출 직전 적용한다. 실패·중단의 기존 예약을 지우지 않는다. 같은 비교를 다시 실행하면 새 run이며 예산을 다시 쓴다.
+
+모든 방법은 동일 입력·스냅샷을 받고, 실행 순서는 사례/반복별 고정 난수 순서다. 보고서는 각 실행 뒤 원자적으로 갱신해 중단·미실행·실패를 보존한다. 고정 스냅샷을 사용하는 C를 평가하므로 동적 정책 조회 연결 효과는 포함하지 않는다. 조회/검토 제거 실험과 실제 담당자 교차 과업은 미실행으로 남긴다.
+
+`packet.json`만 평가자에게 제공하고 `private-key.json`은 평가 종료 전 가린다. 방법명·호출량은 제거하지만 문체가 방법을 암시할 수 있다는 한계가 있다. `ratings-template.json`의 reviewers에는 식별자·전문성·개발 참여 여부를, ratings에는 blind_id·평가자·실행 가능·중대 오류·근거 판단·제약 누락·보류 적절성·수정량·시간·이유를 기록한다. 필드 계약은 [평정 모델](../eval/rate_comparison.py)의 Rating을 따른다. 빈 평정을 자동 채우지 않는다.
+
+2인 평정 불일치는 별도로 보존하고, 조정할 때 adjudications에 독립 검토자의 최종 판단과 이유·보류 판단을 추가한다. 기존 raw_ratings는 남는다. 결과 hash가 다른 대응키, 중복 평정, 알 수 없는 ID, 지지 주장 수가 검토 주장 수보다 큰 기록은 거절한다. 각 방법의 반복 평균 성공 사례 수/24와 사례별 승/무/패를 계산한다. 2,000회 사례 단위 bootstrap은 작은 합성 도전 세트의 불확실성이며 실제 모집단 신뢰구간으로 일반화하지 않는다.
+
+fake, 누락·미조정 평정, 개발 참여자만의 평정, dirty 코드, 미완료 live 실행에서는 채택 결정을 내리지 않는다. 조건이 모두 갖춰져도 결과는 기본 경로 변경 **후보**이며 프로그램이 기본 경로를 자동 변경하지 않는다.
