@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 import hashlib
 import json
+import unicodedata
 from pathlib import Path
 from statistics import mean, median, stdev
 from uuid import uuid4
@@ -88,7 +89,7 @@ def evaluate(settings):
         if actual != manifest:
             raise ValueError('source bundle checksum mismatch')
         for name, checksum in manifest.items():
-            basename = Path(name).name
+            basename = unicodedata.normalize("NFC", Path(name).name)
             if basename in source_hashes:
                 raise ValueError('ambiguous source basename')
             source_hashes[basename] = checksum

@@ -26,3 +26,28 @@ def test_weight_reference_and_missing_components():
     assert result[1]['reversed_pairs'] == result[1]['max_rank_shift'] == 0
     assert result[1]['compared_pairs'] == 3
     assert weight_sensitivity([rows[0].model_copy(update={'components': {}})])[0]['status'] == 'missing_components'
+
+
+def test_local_lineage_normalizes_names_and_rejects_tampering(tmp_path, monkeypatch):
+    import hashlib
+    import json
+    import unicodedata
+    from types import SimpleNamespace
+    import pytest
+    import eval.analysis_evidence as module
+    root = tmp_path / 'seohee'; root.mkdir()
+    name = unicodedata.normalize('NFD', '원천.csv')
+    (root / name).write_text('source')
+    checksum = hashlib.sha256(b'source').hexdigest()
+    (root / 'import.json').write_text(json.dumps({'files': {name: checksum}}))
+    row = generate()[0].model_copy(update={'source_file': '원천.csv'})
+    monkeypatch.setattr(module, 'load_segments', lambda _: ([row], {'input_hash': 'fixture'}))
+    monkeypatch.setattr(module, 'load_weekly', lambda _: {'rows': synthetic(), 'metadata': {'synthetic': True}})
+    settings = SimpleNamespace(data_mode='local', data_dir=tmp_path)
+    report = module.evaluate(settings)
+    assert report['lineage'][0]['source_sha256'] == checksum
+    assert report['missingness']['unclassified_when_missing'] == 1
+    assert report['actual_isolation_accuracy'] is None
+    (root / name).write_text('changed')
+    with pytest.raises(ValueError, match='checksum'):
+        module.evaluate(settings)
