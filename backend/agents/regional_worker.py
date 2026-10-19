@@ -37,7 +37,7 @@ def single(agents, run_id, sim_ts, observations, snapshots, emit, max_calls=6, t
     started = time.monotonic()
     for step in range(1, max_calls + 1):
         if time.monotonic() - started >= timeout_seconds:
-            return {'status': 'needs_human', 'plan': None, 'reason': 'deadline', 'proposals': proposals, 'retrieved': retrieved}
+            return {'status': 'needs_human', 'plan': None, 'reason': 'deadline', 'failure_kind': 'deadline', 'proposals': proposals, 'retrieved': retrieved}
         try:
             decision = agents.call(run_id, sim_ts, 'regional_worker', {
                 'observations': observations, 'retrieved': retrieved, 'previous_plan': previous,
@@ -45,9 +45,9 @@ def single(agents, run_id, sim_ts, observations, snapshots, emit, max_calls=6, t
                 'self_review_required': True}).model_dump()
             emit(f'single-{step}', 'regional_analyst', 'supervisor', decision)
             if time.monotonic() - started >= timeout_seconds:
-                return {'status': 'needs_human', 'plan': None, 'reason': 'deadline', 'proposals': proposals, 'retrieved': retrieved}
+                return {'status': 'needs_human', 'plan': None, 'reason': 'deadline', 'failure_kind': 'deadline', 'proposals': proposals, 'retrieved': retrieved}
             if decision['action'] == 'human':
-                return {'status': 'needs_human', 'plan': None, 'reason': decision['reason'], 'proposals': proposals, 'retrieved': retrieved}
+                return {'status': 'needs_human', 'plan': None, 'reason': decision['reason'], 'failure_kind': None, 'proposals': proposals, 'retrieved': retrieved}
             if decision['action'] == 'lookup':
                 result = lookup(observations, snapshots, decision['targets']); retrieved.extend(result)
                 emit(f'lookup-{step}', 'supervisor', 'regional_analyst', {'results': result})
@@ -63,13 +63,13 @@ def single(agents, run_id, sim_ts, observations, snapshots, emit, max_calls=6, t
                         'human_review_required': True}
             feedback = checks or ['Self-review your proposal against observations and retrieved evidence before finishing.']
         except Exception as exc:
-            return {'status': 'needs_human', 'plan': None, 'reason': type(exc).__name__, 'proposals': proposals, 'retrieved': retrieved}
-    return {'status': 'needs_human', 'plan': None, 'reason': 'call_limit', 'proposals': proposals, 'retrieved': retrieved}
+            return {'status': 'needs_human', 'plan': None, 'reason': type(exc).__name__, 'failure_kind': 'exception', 'proposals': proposals, 'retrieved': retrieved}
+    return {'status': 'needs_human', 'plan': None, 'reason': 'call_limit', 'failure_kind': 'call_limit', 'proposals': proposals, 'retrieved': retrieved}
 
 
 def deterministic(observations):
     ids = [r['id'] for r in observations['facts'] if r.get('stage') is not None][:3]
     if not ids:
-        return {'status': 'needs_human', 'plan': None, 'reason': 'no_classified_cohorts'}
-    return {'status': 'submitted', 'plan': {'summary': '결정적 도구의 후보 집단입니다. 담당자가 근거와 자격을 확인해야 합니다.',
+        return {'status': 'needs_human', 'plan': None, 'reason': 'no_classified_cohorts', 'failure_kind': None}
+    return {'status': 'submitted', 'plan': {'summary': '관측된 후보 집단입니다. 담당자가 근거와 자격을 확인해야 합니다.',
         'focus_ids': ids, 'limitations': list(observations['required_limitations'])}, 'human_review_required': True}
