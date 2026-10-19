@@ -77,9 +77,17 @@ def packet(report):
     order=list(enumerate(report['results']));random.Random(20261020).shuffle(order)
     for index,row in order:
         blind_id=str(uuid4());key[blind_id]=index
+        output=row['output'];plan=output.get('plan')
+        reason=output.get('reason')
+        if output['status'] in ('failed','not_executed') or output.get('failure_kind'):
+            reason='실행이 완료되지 않아 담당자 확인이 필요합니다.'
+        else:
+            reason={'no_classified_cohorts':'판정 가능한 관측이 없습니다.',
+                    'no_observations':'판정 가능한 관측이 없습니다.',
+                    'evidence_unavailable':'요청한 관측 근거를 확인할 수 없습니다.'}.get(reason,reason)
         items.append({'blind_id':blind_id,'case_id':row['case_id'],
             'observations':cases[row['case_id']]['observations'],'allowed_evidence':cases[row['case_id']]['snapshots'],
-            'output':{k:row['output'].get(k) for k in ('status','plan','reason')}})
+            'output':{'status':'proposal' if plan else 'human_check','plan':plan,'reason':reason}})
     return {'report_hash':digest(report),'items':items,'limitations':['Method labels removed; wording may reveal method identity.']}, {'report_hash':digest(report),'mapping':key}
 
 

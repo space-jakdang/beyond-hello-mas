@@ -5,7 +5,8 @@ from eval.rate_comparison import packet,aggregate
 
 def test_blinding_missing_and_disagreement_preserved():
     report=run('dev');public,key=packet(report)
-    assert all('method' not in item and 'calls' not in item for item in public['items'])
+    assert all('method' not in item and 'calls' not in item and 'repetition' not in item for item in public['items'])
+    assert {i['output']['status'] for i in public['items']}<={'proposal','human_check'}
     empty=aggregate(report,key,{'reviewers':[],'ratings':[]})
     assert len(empty['missing'])==16 and empty['metrics'] is None
     assert empty['adoption_decision']=='not_evaluated'
@@ -35,6 +36,7 @@ def test_study_pairs_repeats_without_inflating_cases():
         assert len({r['input_hash'] for r in rows})==1
         assert {r['method'] for r in rows}=={'deterministic','single','collaboration'}
     assert report['quality'] is None
+    assert all(r['returned_models']==['fake-v1'] for r in report['results'] if r['method']!='deterministic')
 
 
 def test_live_preflight_uses_existing_budget_and_makes_no_model_call(tmp_path,monkeypatch):
@@ -88,3 +90,19 @@ def test_paired_gate_uses_cases_and_does_not_count_machine_failure_as_hold():
     adjudication={'blind_id':rows[0]['blind_id'],'reviewer':'a','executable':True,'major_errors':[],
                   'reason':'fixture','appropriate_hold':True,'excessive_hold':False}
     with pytest.raises(ValueError,match='differ'):aggregate(report,key,{'reviewers':reviewers,'ratings':rows,'adjudications':[adjudication]})
+
+
+def test_interrupt_preserves_failed_attempt_and_unexecuted_denominator(tmp_path,monkeypatch):
+    import json
+    import backend.app.config as config
+    import eval.run_comparison as module
+    monkeypatch.setattr(config,'ROOT',tmp_path)
+    def stop(*args,**kwargs):raise KeyboardInterrupt('fixture interruption')
+    monkeypatch.setattr(module,'single',stop)
+    with pytest.raises(KeyboardInterrupt):module.run('dev')
+    path=next(tmp_path.glob('runtime/sample/evaluations/*/comparison.json'))
+    report=json.loads(path.read_text())
+    assert report['status']=='interrupted' and len(report['results'])==16
+    assert report['results'][1]['output']['status']=='failed'
+    assert report['results'][1]['output']['reason']=='KeyboardInterrupt'
+    assert sum(r['output']['status']=='not_executed' for r in report['results'])==14
