@@ -42,3 +42,6 @@ SCHEMAS = {'analysis': Analysis, 'recommendations': Recommendations, 'draft': Dr
 
 from backend.policy.agent import PolicyDecision
 SCHEMAS["policy_decision"] = PolicyDecision
+
+from backend.agents.regional import RegionalPlan,RegionalReview
+SCHEMAS.update(regional_analyst=RegionalPlan,regional_reviewer=RegionalReview)

@@ -1067,6 +1067,8 @@
           "link",
           "curator",
           "policy",
+          "regional_analyst",
+          "regional_reviewer",
           "system"
         ],
         "title": "Agent",
@@ -1087,7 +1089,8 @@
           "approval",
           "received",
           "acknowledged",
-          "run_end"
+          "run_end",
+          "agent_message"
         ],
         "title": "Kind",
         "type": "string"

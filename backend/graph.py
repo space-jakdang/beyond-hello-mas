@@ -152,7 +152,14 @@ class GraphService:
             raise ValueError('non-crisis question routing is not implemented yet')
         summary_input = {'type': scenario.type, 'text': scenario.payload.get('text', ''),
                          'assessment': result.get('result'), 'aggregate_metadata': result.get('metadata')}
-        result['analysis'] = self.agents.call(state['run_id'], scenario.sim_time, 'analysis', summary_input).model_dump()
+        if scenario.type == 'monthly' and scenario.payload.get('collaboration') is True and result.get('metadata',{}).get('analysis_version') == 'v3':
+            from backend.agents.regional import context,collaborate
+            def emit(key,sender,recipient,payload):
+                with self.store.connection(write=True) as db:
+                    self.once(db,state,'regional-'+key,'agent_message',{'sender':sender,'recipient':recipient,**payload},sender)
+            result['collaboration']=collaborate(self.agents,state['run_id'],scenario.sim_time,context(result,self.settings.data_mode),emit)
+        else:
+            result['analysis'] = self.agents.call(state['run_id'], scenario.sim_time, 'analysis', summary_input).model_dump()
         self.node_event(state, 'classify', result, started)
         return {'classification': result}
 
@@ -198,14 +205,24 @@ class GraphService:
                     arrears=any(payload.get('admin_flags', {}).get(k,False) for k in ('arrears_utility','arrears_rent','arrears_loan','hi_premium_unpaid')), as_of=utcnow().date())
                 assignments.append(match(resources, request))
         candidates = {r['id']: r for assignment in assignments for r in assignment.get('recommendations', [])}
-        explanations = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'recommendations',
-                                        {'candidates': list(candidates.values())}).model_dump()
-        draft = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'draft',
-                                {'resource_ids': sorted(candidates), 'assessment': result.get('status')}).model_dump()
+        collaboration=result.get('collaboration')
+        if collaboration is not None:
+            # The reviewed summary replaces redundant explanation/draft model calls.
+            plan=collaboration.get('plan') or {}
+            explanations={'items':[], 'summary':plan.get('summary','협업 검토 미완료: 담당자가 원자료를 확인해야 합니다.')}
+            draft={'text':'지역 검토안입니다. 담당자 승인 전에는 연계하지 않습니다.','resource_ids':sorted(candidates)}
+        else:
+            explanations = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'recommendations',
+                                            {'candidates': list(candidates.values())}).model_dump()
+            draft = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'draft',
+                                    {'resource_ids': sorted(candidates), 'assessment': result.get('status')}).model_dump()
         proposal = {'scope': 'monthly_group_allocation' if state['scenario']['type'] == 'monthly' else ('case_referral_plan' if result.get('status') == 'assessed' else 'assessment_followup'),
                     'assignments': assignments, 'assessment': result.get('status'), 'fake': self.settings.llm_mode == 'fake',
                     'explanations': explanations, 'draft': draft,
                     'external_delivery': False, 'scenario_hash': digest(state['scenario'])}
+        if collaboration is not None:
+            proposal['collaboration']=collaboration
+            proposal['priority_review_ids']=(collaboration.get('plan') or {}).get('focus_ids',[])
         proposal['snapshot_version'] = digest(proposal)
         self.node_event(state, 'match', {'snapshot_version': proposal['snapshot_version'], 'assignment_count': len(assignments)}, started)
         return {'proposal': proposal}
