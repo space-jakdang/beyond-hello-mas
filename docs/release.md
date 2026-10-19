@@ -57,3 +57,7 @@ manifest와 zip은 같은 커밋에서 생성해야 합니다. 로컬 작업 폴
 - [8집단 화면](screenshots/groups-v2.png)과 [v2 평가 화면](screenshots/evaluation-v2.png)은 sample/fake로 캡처했다. 실제 집계·개인 정보·키를 포함하지 않는다.
 
 v2 구현 PR(01–08)은 Claude Code Opus 교차 리뷰와 Ponytail 검토를 거쳤다. 마지막 제출 문서 PR(09)도 사용 한도 해제 후 Claude Code Opus 교차 리뷰를 완료했고, 로컬 MCP 설정의 E2E 유입을 추가로 차단했다. v1 당시의 인증 실패 기록은 위에 별도로 보존한다.
+
+## 공모전 요구사항 대조
+
+[심사·제출 증거 현황](contest-evidence.md)에 1008판 기준과 현재 산출물, 최신 공지·외부 원본 제출·독립 평가의 미확인 사항을 정리했다. 공개 코드 후보와 대회 제출 요건 충족을 구분한다.
