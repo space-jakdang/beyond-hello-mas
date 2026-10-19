@@ -83,7 +83,7 @@ def test_secrets_and_examples():
 
 
 def test_eval_keeps_unavailable_mcp_in_denominator(monkeypatch):
-    monkeypatch.delenv('MCP_PYTHON', raising=False)
+    monkeypatch.setenv('MCP_PYTHON', '')  # Override a locally configured .env server too.
     result = subprocess.run(['uv', 'run', 'python', '-m', 'scripts.evaluate', '--without-browser'], capture_output=True, text=True)
     assert result.returncode == 2
     assert json.loads(result.stdout)['evaluated_scenarios'] == 40
