@@ -1,4 +1,4 @@
-import {FormEvent, useEffect, useState} from 'react';
+import {FormEvent, useEffect, useRef, useState} from 'react';
 import {api} from './api';
 const scopes:Record<string,string> = {central:'중앙정부',seoul:'서울시',gangnam:'강남구',gangwon:'강원도',chuncheon:'춘천시'};
 type Coverage = {credentials_configured:boolean; status:string; fetched_at:string|null; stale:boolean; scopes:Record<string,number|null>; source_count:number|null; limitation:string; last_attempt:{status:string;reason?:string}|null};
@@ -10,6 +10,8 @@ export function Policy() {
   const [coverage,setCoverage]=useState<Coverage>();
   const [result,setResult]=useState<SearchResult>();
   const [detail,setDetail]=useState<Detail>();
+  const detailPanel=useRef<HTMLElement>(null);
+  useEffect(()=>{if(detail) detailPanel.current?.focus();},[detail]);
   const [query,setQuery]=useState(''), [scope,setScope]=useState('all');
   const [filter,setFilter]=useState({query:'',scope:'all'});
   const [busy,setBusy]=useState(false), [error,setError]=useState('');
@@ -44,7 +46,7 @@ export function Policy() {
       {result?.items.length===0&&<p className="card">조회된 정책이 없습니다. 수집 상태를 확인하거나 검색어·관할을 변경하세요.</p>}
       {result?.items.map(item=><article className="card" key={item.id}><p className="eyebrow">{scopes[item.scope]} · {item.agency}</p><h3>{item.title}</h3><p>{item.summary||item.support||'상세 정보에서 지원 내용을 확인하세요.'}</p><button disabled={busy} onClick={()=>void perform(async()=>{setDetail(undefined);setDetail(await api<Detail>(`/policies/${encodeURIComponent(item.id)}`));})}>상세 확인 · {item.title}</button></article>)}
       {result&&<div className="toolbar"><button disabled={busy||result.page<=1} onClick={()=>void perform(()=>search(result.page-1))}>이전</button><span>{result.page} 페이지</span><button disabled={busy||!result.next_page} onClick={()=>void perform(()=>search(result.next_page!))}>다음</button></div>}
-    </section><aside className="card policy-detail" aria-label="정책 상세" aria-live="polite"><h2>지원 조건 확인</h2>{detail?.policy?<><p className="eyebrow">{detail.status==='live'?'정부24 최신 상세 확인':'저장된 상세 · 실시간 확인 실패'}</p><h3>{detail.policy.title}</h3><p>확인 시각: {date(detail.checked_at||detail.cached_at)}</p><dl>{(['support','eligibility','criteria','deadline','application','contact'] as const).map((key,i)=><div key={key}><dt>{['지원 내용','지원 대상','선정 기준','신청 기한','신청 방법','문의처'][i]}</dt><dd>{detail.policy![key]||'제공된 정보 없음'}</dd></div>)}</dl>{/^https?:\/\//.test(detail.policy.url)&&<a href={detail.policy.url} target="_blank" rel="noreferrer">공식 안내 원문 열기 ↗</a>}<p className="muted">{detail.limitation}</p></>:<p>{detail?'해당 정책을 찾지 못했습니다. 목록을 갱신해 주세요.':'검색 결과에서 정책을 선택하면 지원 대상·선정 기준·신청 방법을 확인할 수 있습니다.'}</p>}</aside></div>
+    </section><aside ref={detailPanel} tabIndex={-1} className="card policy-detail" aria-label="정책 상세" aria-live="polite"><h2>지원 조건 확인</h2>{detail?.policy?<><p className="eyebrow">{detail.status==='live'?'정부24 최신 상세 확인':'저장된 상세 · 실시간 확인 실패'}</p><h3>{detail.policy.title}</h3><p>확인 시각: {date(detail.checked_at||detail.cached_at)}</p><dl>{(['support','eligibility','criteria','deadline','application','contact'] as const).map((key,i)=><div key={key}><dt>{['지원 내용','지원 대상','선정 기준','신청 기한','신청 방법','문의처'][i]}</dt><dd>{detail.policy![key]||'제공된 정보 없음'}</dd></div>)}</dl>{/^https?:\/\//.test(detail.policy.url)&&<a href={detail.policy.url} target="_blank" rel="noreferrer">공식 안내 원문 열기 ↗</a>}<p className="muted">{detail.limitation}</p></>:<p>{detail?'해당 정책을 찾지 못했습니다. 목록을 갱신해 주세요.':'검색 결과에서 정책을 선택하면 지원 대상·선정 기준·신청 방법을 확인할 수 있습니다.'}</p>}</aside></div>
     <section className="card"><h2>에이전트에게 추가 조사 맡기기</h2><p>관찰 화면에서 조사 목표와 관할을 지정하면 Supervisor가 정책 에이전트에 위임합니다. 에이전트는 MCP의 목록 갱신·검색·상세 조회 도구를 사용하고, 조회 근거를 기록합니다.</p><a className="primary-link" href="/observatory#policy-task">정책 조사 지시하기 →</a><p>API 밖의 미등록 공고나 실제 접수 가능 여부는 공식 안내 원문과 기관 문의로 보완해야 합니다. 현재 자동 조사는 정부24 등록 자료 범위입니다.</p></section>
   </section>;
 }

@@ -35,7 +35,10 @@ test('policy page distinguishes credential, cached list, live detail and failed 
   const searched=page.waitForRequest(r=>r.url().includes('/policies?')&&new URL(r.url()).searchParams.get('query')==='돌봄');
   await page.getByRole('button',{name:'검색',exact:true}).click();
   expect(new URL((await searched).url()).searchParams.getAll('scopes')).toEqual(['seoul']);
+  await page.setViewportSize({width:390,height:844});
   await page.getByRole('button',{name:'상세 확인 · 검증용 돌봄 정책'}).click();
+  await expect(page.getByLabel('정책 상세')).toBeFocused();
+  await expect(page.getByLabel('정책 상세')).toBeInViewport();
   await expect(page.getByLabel('정책 상세')).toContainText('정부24 최신 상세 확인');
   await expect(page.getByRole('link',{name:'공식 안내 원문 열기'})).toHaveAttribute('href','https://www.gov.kr/');
   await page.getByRole('button',{name:'정부24 목록 갱신'}).click();
