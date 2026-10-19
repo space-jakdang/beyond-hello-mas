@@ -2,7 +2,8 @@ import {useEffect, useState} from 'react';
 import {ReactFlow, Background, Controls} from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {api, Run, Trace, scenarios, statusText} from './api';
-const roles = ['supervisor', 'classify', 'match', 'approval', 'link', 'policy'];
+const roles = ['supervisor', 'classify', 'regional_analyst', 'regional_reviewer', 'match', 'approval', 'link', 'policy'];
+const roleNames:Record<string,string>={supervisor:'Supervisor',regional_analyst:'지역 분석',regional_reviewer:'근거 검토',match:'자원 매칭'};
 export function Observatory() {
   const [goal, setGoal] = useState('고립 위험 주민에게 도움이 될 지원 정책을 조사해 주세요.');
   const [policyScopes, setPolicyScopes] = useState(['central','seoul','gangnam','gangwon','chuncheon']);
@@ -39,18 +40,19 @@ export function Observatory() {
     return () => clearTimeout(timer);
   }, [replay, speed, traces.length]);
   const visible = replay === null ? traces : traces.slice(0,replay);
-  const completed = new Set(visible.filter(t => t.kind === 'node_end').map(t => t.agent));
+  const messages=visible.filter(t=>t.kind==='agent_message');
+  const completed = new Set(visible.filter(t => t.kind === 'node_end'||t.kind==='agent_message').map(t => t.agent));
   const waiting = run?.status === 'awaiting_approval' && replay === null;
-  const nodes = roles.map((role, i) => ({id: role, position: {x:i*190,y:40}, data: {label: `${role}${waiting && role==='approval' ? ' · 승인 대기' : completed.has(role) ? ' ✓' : ''}`}, style: {background: waiting && role==='approval' ? '#fff0c2' : completed.has(role) ? '#d4f0e2' : '#fff', borderColor: '#547369'}}));
+  const nodes = roles.map((role, i) => ({id: role, position: {x:(i%4)*200,y:Math.floor(i/4)*140}, data: {label: `${roleNames[role]||role}${waiting && role==='approval' ? ' · 승인 대기' : completed.has(role) ? ' ✓' : ''}`}, style: {background: waiting && role==='approval' ? '#fff0c2' : completed.has(role) ? '#d4f0e2' : '#fff', borderColor: '#547369'}}));
   const path = visible.filter(t => t.kind === 'node_end' && roles.includes(t.agent)).map(t => t.agent);
-  const edges = path.slice(1).map((role, i) => ({id:`${i}`,source:path[i],target:role, animated:run?.status==='running'}));
+  const edges = [...path.slice(1).map((role, i) => ({id:`path-${i}`,source:path[i],target:role, animated:run?.status==='running'})),...messages.filter(t=>roles.includes(String(t.payload.sender))&&roles.includes(String(t.payload.recipient))).map(t=>({id:`message-${t.seq}`,source:String(t.payload.sender),target:String(t.payload.recipient),animated:run?.status==='running'}))];
   async function start(policy = false) {
     setBusy(true); setError('');
     try {const r = await api<Run>('/scenarios/run',policy ? {id:'policy-research',type:'policy',sim_time:new Date().toISOString(),payload:{goal,scopes:policyScopes}} : scenarios[scenario]); setId(r.id);}
     catch(e) {setError(String(e));} finally {setBusy(false);}
   }
   return <section>
-    <p>합성 시나리오 시연 · 기존 승인 흐름 · Supervisor 위임 정책 ReAct</p>
+    <p>지역 협업 시나리오에서 분석안 → 근거 검토 → 필요 시 재작성을 확인할 수 있습니다. fake는 통신 시연이며 모델 판단이 아닙니다.</p>
     <div className="toolbar"><label>시나리오 <select value={scenario} onChange={e=>setScenario(Number(e.target.value))}>{scenarios.map((s,i)=><option key={s.id} value={i}>{s.id}</option>)}</select></label><button disabled={busy} onClick={()=>start()}>실행</button>
     <label>실행 이력 <select aria-label="실행 이력" value={id} onChange={e=>setId(e.target.value)}><option value="">선택</option>{runs.map(r=><option key={r.id} value={r.id}>{r.scenario_id} · {r.id.slice(0,8)}</option>)}</select></label></div>
     <fieldset><legend>Supervisor에게 정책 조사 지시</legend>
@@ -63,6 +65,7 @@ export function Observatory() {
     {!id && <p>시나리오를 실행하거나 이전 실행을 선택하세요.</p>}
     {run && <><div className="card"><strong data-testid="run-status">{statusText[run.status] || run.status}</strong><p data-testid="run-id">{run.id}</p><p>데이터 {run.data_mode} · LLM {run.llm_mode} · 모델 {run.model_version}</p>{run.data_mode==='local' && <p>로컬 데이터: 상세와 캡처를 공개하지 마세요.</p>}<p>SSE {connection}</p></div>
     {visible.filter(t=>t.agent==='policy' && t.kind==='node_end').map(t=><article className="card" key={t.seq} data-testid="policy-result"><h2>정책 조사 결과</h2><p>조사 상태: {String(t.payload.status)} · 담당자 확인 필요</p><pre>{JSON.stringify(t.payload,null,2)}</pre></article>)}
+    {!!messages.length&&<section className="card" data-testid="agent-messages"><h2>에이전트 간 전달</h2><ol>{messages.map(t=>{const plan=t.payload.plan as {summary?:string}|undefined;const concerns=t.payload.concerns as string[]|undefined;return <li key={t.seq}><strong>{roleNames[String(t.payload.sender)]||String(t.payload.sender)} → {roleNames[String(t.payload.recipient)]||String(t.payload.recipient)}</strong><p>{String(plan?.summary||concerns?.join(' · ')||t.payload.goal||t.payload.decision||'근거 전달')}</p><button onClick={()=>setDetail(t)}>전달 근거 보기 #{t.seq}</button></li>;})}</ol></section>}
     <div className="graph" aria-label="온라인 실행 그래프"><ReactFlow nodes={nodes} edges={edges} fitView nodesDraggable={false} nodesConnectable={false}><Background/><Controls showInteractive={false}/></ReactFlow></div>
     <p>실행 경로: {path.join(' → ') || '대기'}{waiting ? ' → 승인 대기' : ''}</p>
     <aside className="card">오프라인 curator · 카탈로그 검수는 온라인 경로 밖에서 수행합니다.</aside>

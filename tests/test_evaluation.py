@@ -66,3 +66,38 @@ def test_reports_are_mode_scoped_and_uuid_validated(tmp_path,monkeypatch):
         assert client.get('/reports/'+ids[0]).json()['evaluated_scenarios']==40
         assert client.get('/reports/'+ids[1]).status_code==404
         assert client.get('/reports/not-uuid').status_code==422
+
+
+def test_local_server_can_read_public_fake_reports_without_exposing_local_to_sample(tmp_path,monkeypatch):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+    from backend.app import config
+    from backend.app.report_routes import report_router
+    from uuid import uuid4
+    monkeypatch.setattr(config,'ROOT',tmp_path)
+    public,private=str(uuid4()),str(uuid4())
+    for id,mode in ((public,'sample'),(private,'local')):
+        p=tmp_path/'eval'/('reports' if mode=='sample' else 'local')/'20261019'/id
+        p.mkdir(parents=True)
+        (p/'summary.json').write_text(json.dumps({'id':id,'data_mode':mode,'llm_mode':'fake','status':'test','evaluated_scenarios':6,'created_at':'2026-10-19','schema_version':'4'}))
+    for mode in ('local','sample'):
+        app=FastAPI();app.include_router(report_router(config.Settings(_env_file=None,data_mode=mode,llm_mode='fake')))
+        with TestClient(app) as c:
+            assert [r['id'] for r in c.get('/reports?source=sample').json()]==[public]
+            assert c.get(f'/reports/{public}?source=sample').status_code==200
+            assert c.get(f'/reports/{private}?source=sample').status_code==404
+            assert c.get('/reports?source=local').status_code==422
+            assert c.get(f'/reports/{private}').status_code==(200 if mode=='local' else 404)
+
+
+def test_collaboration_benchmark_pairs_same_inputs_and_counts_extra_calls():
+    from eval.run_collaboration import run
+    report=run()
+    rows=report['collaboration']['paired_results']
+    assert len(rows)==12 and report['evaluated_scenarios']==6
+    for month in {r['month'] for r in rows}:
+        pair=[r for r in rows if r['month']==month]
+        assert len({r['input_hash'] for r in pair})==1
+    assert report['metrics']['single']['model_calls']==6
+    assert report['metrics']['collaboration']['model_calls']==12
+    assert all(m['content_quality'] is None and m['contract_passed']==6 for m in report['metrics'].values())

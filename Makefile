@@ -28,3 +28,6 @@ classify:
 
 eval-temporal:
 	uv run python -m eval.run_temporal
+
+eval-collaboration:
+	uv run python -m eval.run_collaboration
