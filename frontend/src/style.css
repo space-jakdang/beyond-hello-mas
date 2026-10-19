@@ -1,5 +1,4 @@
-:root { font-family: system-ui, sans-serif; color: #16302c; background: #f4f7f5; }
-body { margin: 0; } header, main { padding: 2rem; max-width: 70rem; margin: auto; }
+body { margin: 0; } main { margin: auto; }
 header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
 nav { display: flex; gap: 1.5rem; } a { color: #126454; } main { line-height: 1.7; }
 a:focus-visible { outline: 3px solid #126454; outline-offset: 4px; }
@@ -25,3 +24,43 @@ table { border-collapse: collapse; width: 100%; } th, td { padding: .5rem; borde
 
 .table-scroll { overflow-x:auto; } .table-scroll table { min-width: 36rem; } .table-scroll small { display:block; font-weight:normal; color:#526960; }
 .trend-chart { width:100%; max-height:19rem; } .trend-chart text { font-size:12px; fill:#16302c; } .trend-chart circle { cursor:pointer; } .trend-chart circle:focus-visible { outline:none; stroke:#b84446; stroke-width:4; }
+
+/* Shared shell and visual tokens; feature-specific charts keep their own styles. */
+:root { --ink:#183b39; --muted:#586c70; --accent:#096b60; --line:#dce5e4; --surface:#fff; --canvas:#f3f6f7; color:var(--ink); background:var(--canvas); font-family:Inter,'Pretendard',system-ui,sans-serif; }
+* { box-sizing:border-box; }
+.app-shell { min-height:100vh; display:flex; flex-direction:column; }
+.site-header { max-width:none; width:100%; padding:0; background:var(--surface); border-bottom:1px solid var(--line); }
+.header-inner { max-width:1240px; margin:auto; padding:1.1rem 2rem; width:100%; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1.5rem; }
+.brand { display:flex; align-items:center; gap:.7rem; color:var(--ink); font-size:1.2rem; font-weight:750; text-decoration:none; }
+.brand small { display:block; font-size:.7rem; color:var(--muted); font-weight:500; margin-top:.2rem; }
+.brand-mark { display:grid; place-items:center; background:var(--accent); color:white; width:2.6rem; height:2.6rem; border-radius:.8rem .8rem .8rem .2rem; }
+.site-header nav { gap:.3rem; flex-wrap:wrap; }
+.site-header nav a { min-height:44px; display:inline-flex; align-items:center; padding:.55rem .75rem; text-decoration:none; font-size:.9rem; border-radius:.45rem; color:var(--muted); }
+.site-header nav a:hover,.site-header nav a[aria-current="page"] { background:#e6f3ef; color:#07594f; }
+.site-header nav a[aria-current="page"] { font-weight:750; }
+main { width:100%; max-width:1240px; padding:2rem; flex:1; min-width:0; }
+h1,h2,h3 { line-height:1.35; letter-spacing:-.03em; } h1 { margin:.3rem 0; font-size:1.85rem; } h2 { font-size:1.35rem; } h3 { font-size:1.1rem; }
+.eyebrow { color:var(--accent); font-size:.75rem; letter-spacing:.07em; font-weight:750; margin:0 0 .5rem; }
+.page-heading,.section-heading { display:flex; justify-content:space-between; gap:1rem; align-items:center; flex-wrap:wrap; margin-bottom:1.5rem; }
+.connection-status { font-size:.78rem; padding:.5rem .8rem; border:1px solid var(--line); background:white; border-radius:2rem; color:var(--muted); }
+.hero { background:#133f3c; color:#fff; padding:clamp(1.5rem,4vw,3.5rem); border-radius:1rem; margin:0 0 2.5rem; }
+.hero .eyebrow { color:#a5dfca; } .hero h2 { font-size:clamp(1.8rem,3.5vw,3rem); max-width:48rem; margin:1rem 0; } .hero p:not(.eyebrow) { max-width:44rem; color:#dbe9e6; }
+.primary-link { display:inline-block; padding:.65rem 1rem; background:var(--accent); color:#fff; border-radius:.5rem; text-decoration:none; font-weight:650; }
+.hero .primary-link { background:#b9edda; color:#103d34; margin-top:.8rem; }
+.destination-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+.card { border-color:var(--line); border-radius:.8rem; padding:1.35rem; box-shadow:0 2px 5px #153b3903; }
+.destination { display:flex; flex-direction:column; margin:0; } .destination p:not(.eyebrow) { color:var(--muted); flex:1; } .destination a { font-weight:650; text-underline-offset:4px; }
+.scope-note { margin-top:2rem; border-left:4px solid var(--accent); }
+.site-footer { max-width:1240px; width:100%; margin:2rem auto 0; padding:1.5rem 2rem; border-top:1px solid var(--line); display:flex; flex-wrap:wrap; justify-content:space-between; gap:1rem; color:var(--muted); font-size:.8rem; line-height:1.7; }
+.skip-link { position:absolute; left:1rem; top:-5rem; z-index:100; background:white; padding:1rem; } .skip-link:focus { top:1rem; }
+fieldset { border:1px solid var(--line); border-radius:.8rem; padding:1.2rem; background:white; scroll-margin:1rem; } fieldset label { display:inline-block; margin:.35rem; }
+button:hover:not(:disabled) { border-color:var(--accent); background:#e9f5f0; }
+input,select { max-width:100%; } input[type="checkbox"] { accent-color:var(--accent); }
+.page-intro,.muted { color:var(--muted); } .source-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; } .source-stats span,.source-stats strong { display:block; } .source-stats span { font-size:.8rem; color:var(--muted); } .source-stats strong { margin-top:.4rem; }
+.scope-counts { display:flex; flex-wrap:wrap; gap:.6rem; } .scope-counts span { padding:.4rem .7rem; background:#edf5f1; border-radius:.4rem; }
+.policy-layout { display:grid; grid-template-columns:minmax(0,3fr) minmax(0,2fr); gap:1.5rem; align-items:start; } .policy-layout h2 small { font-size:.9rem; color:var(--muted); }
+.policy-detail dl>div { padding:.7rem 0; border-bottom:1px solid var(--line); } dt { font-weight:700; } dd { margin:.4rem 0; white-space:pre-wrap; } .search-field { flex:1; } .search-field input { width:min(100%,30rem); }
+@media(max-width:900px) { .destination-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) { main,.header-inner,.site-footer { padding:1rem; } .destination-grid,.policy-layout,.source-stats { grid-template-columns:1fr; } .site-header nav { gap:.1rem; } .site-header nav a { padding:.5rem; } .page-heading { gap:.3rem; } .connection-status { border-radius:.5rem; } .hero { margin-bottom:1.5rem; } .card { padding:1rem; } .toolbar label { max-width:100%; } }
+
+@media(max-width:800px) { main { padding:1rem; } }
