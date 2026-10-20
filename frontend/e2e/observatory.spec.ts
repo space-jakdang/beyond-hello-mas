@@ -29,3 +29,13 @@ test('execute, inspect, restore, switch and reconnect a run', async ({page, cont
   await expect.poll(()=>page.getByTestId('trace-row').count()).toBeGreaterThanOrEqual(count);
   await page.screenshot({path:'../runtime/sample/screenshots/observatory.png', fullPage:true});
 });
+
+
+test('empty observatory guides a real regional task without starting a run',async({page})=>{
+ let starts=0;page.on('request',r=>{if(r.method()==='POST'&&r.url().endsWith('/scenarios/run'))starts++;});
+ await page.goto('/observatory');
+ await expect(page.getByLabel('협업 관찰 시작 안내')).toContainText('추가 조회와 보완 확인');
+ await expect(page.getByLabel('온라인 실행 그래프')).toHaveCount(0);
+ await page.getByRole('link',{name:'지도에서 지역 업무 시작 →'}).click();
+ await expect(page).toHaveURL(/neighborhoods/);expect(starts).toBe(0);
+});
