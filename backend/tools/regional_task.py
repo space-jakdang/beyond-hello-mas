@@ -65,4 +65,4 @@ def assess(settings, task):
     return {**result, 'task': task.model_dump(mode='json'), 'methodology_version': VERSION,
             'data_mode': settings.data_mode, 'period_aggregate': any(r.ym is None for r in selected),
             'metadata': {**result['metadata'], 'analysis_version':'v3', 'workflow_version':VERSION,
-                         'source':source, 'synthetic_future':bool(future), 'provisional':True, 'card_signals_applied':False, 'synthetic_signals_applied':bool(future)}}
+                         'source':source, 'baseline_period_aggregate':future.get('baseline_period_aggregate') if future else None, 'synthetic_future':bool(future), 'provisional':True, 'card_signals_applied':False, 'synthetic_signals_applied':bool(future)}}

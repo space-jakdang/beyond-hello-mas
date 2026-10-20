@@ -41,7 +41,7 @@ def future_months(day):
 
 def read_snapshot(settings,identifier):
     identifier=str(UUID(str(identifier)))
-    with closing(sqlite3.connect(f'file:{settings.runtime_dir / "events.sqlite3"}?mode=ro',uri=True)) as db:
+    with closing(sqlite3.connect((settings.runtime_dir / 'events.sqlite3').resolve().as_uri()+'?mode=ro',uri=True)) as db:
         row=db.execute('SELECT body FROM future_batches WHERE id=?',(identifier,)).fetchone()
     if row is None:raise ValueError('future scenario not found')
     body=json.loads(row[0])
@@ -65,12 +65,14 @@ def create_batch(service,request):
         existing=db.execute('SELECT body FROM future_batches WHERE id=?',(identifier,)).fetchone()
     if existing:
         body=json.loads(existing[0])
+        if body['data_mode']!=service.settings.data_mode:raise ValueError('restore original data mode')
         if body['llm_mode']!=service.settings.llm_mode:raise ValueError('restore original LLM mode')
         if body['sgg']!=request.sgg:raise ValueError('request id already used for another region')
         return body
     rows,metadata=load_segments(service.settings)
     region=[r for r in rows if r.sgg==request.sgg and r.sex=='M' and r.age_group=='youth' and r.preferred]
     if not region:raise ValueError('no regional baseline')
+    if any(r.index_name not in ('S1','v3') for r in region):raise ValueError('unsupported future baseline index')
     # For monthly sources use the latest known month; aggregate sources retain their original scope.
     latest=max((r.ym for r in region if r.ym),default=None)
     baseline=[r for r in region if r.ym in (None,latest)]
@@ -82,6 +84,7 @@ def create_batch(service,request):
         for row in sorted(baseline,key=lambda r:r.dong_cd):
             value=None if row.value is None else round(row.value+rng.uniform(-.06,.06),6)
             generated=row.model_copy(update={'ym':month,'value':value,
+                'source_file':f'synthetic:{row.source_file}',
                 'source_period':f'합성 미래 시나리오 {month} · 기준자료: {row.source_period}',
                 'flags':[*row.flags,'synthetic_future','not_a_forecast']})
             inputs.append(FutureSegment.model_validate(generated.model_dump()).model_dump(mode='json'))
@@ -89,7 +92,7 @@ def create_batch(service,request):
     body={'id':identifier,'sgg':request.sgg,'sex':'M','age_group':'youth','as_of':day.isoformat(),
           'created_at':utcnow().isoformat(),'generator_version':VERSION,'seed':SEED,
           'data_mode':service.settings.data_mode,'llm_mode':service.settings.llm_mode,
-          'baseline_input_hash':metadata['input_hash'],'months':months,'inputs':inputs,'signals':signals,
+          'baseline_input_hash':metadata['input_hash'],'baseline_period_aggregate':any(r.ym is None for r in baseline),'months':months,'inputs':inputs,'signals':signals,
           'input_hash':digest({'inputs':inputs,'signals':signals}),
           'assumptions':['실제 관측과 분리한 합성 미래 시나리오이며 예측 모델의 출력이 아닙니다.',
                          '원천 지수 ±0.06 균등 변형과 가정된 주간 신호 2개를 사용합니다.',
@@ -108,6 +111,7 @@ def create_batch(service,request):
         existing=db.execute('SELECT body FROM future_batches WHERE id=?',(identifier,)).fetchone()
         if existing:
             previous=json.loads(existing[0])
+            if previous['data_mode']!=service.settings.data_mode:raise ValueError('restore original data mode')
             if previous['llm_mode']!=service.settings.llm_mode:raise ValueError('restore original LLM mode')
             if previous['sgg']!=request.sgg:raise ValueError('request id already used for another region')
             return previous
@@ -128,7 +132,7 @@ def public_batch(service,body):
 
 def execute_batch(service,body):
     for period in body['periods']:
-        service.execute(period['run_id'])
+        if service.store.get_run(period['run_id']).status in ('pending','running'):service.execute(period['run_id'])
 
 
 def future_router(service):

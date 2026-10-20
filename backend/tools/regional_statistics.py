@@ -76,7 +76,7 @@ def sensitivity(assessment):
     items=[]
     for row in assessment['segments']:
         value=row['value'];index=row['index_name']
-        stages=[youth_stage(level_band(index,value+delta)) for delta in (-.01,0,.01)] if value is not None and index in ('S1','v3') else None
+        stages=[youth_stage(level_band(index,value+delta),row.get('scenario_signals',())) for delta in (-.01,0,.01)] if value is not None and index in ('S1','v3') else None
         items.append({'evidence_id':row['evidence_id'],'stages':stages,
                       'base_stage_stable':len(set(stages))==1 if stages else None})
     return {'tool':'sensitivity','tool_version':'regional-statistics-1','delta':.01,'items':items,
