@@ -8,6 +8,7 @@ import {GroupDashboard} from './GroupDashboard';
 import {Neighborhoods} from './Neighborhoods';
 import {Home, destinations} from './Home';
 import {Policy} from './Policy';
+import {Workflow} from './Workflow';
 
 const pages: Record<string, string> = {'/': '프로젝트 안내', ...Object.fromEntries(destinations.map(p=>[p.href,p.title])), '/neighborhoods/legacy':'과거 6연령 분석'};
 function App() {
@@ -25,7 +26,7 @@ function App() {
       <nav aria-label="주 메뉴"><a href="/" aria-current={path==='/'?'page':undefined}>인덱스</a>{destinations.map(p=><a key={p.href} href={p.href} aria-current={path===p.href?'page':undefined}>{p.title}</a>)}</nav>
     </div></header>
     <main id="main-content" tabIndex={-1}><div className="page-heading"><div><p className="eyebrow">BEYOND HELLO / WORKSPACE</p><h1>{pages[path] ?? '페이지를 찾을 수 없습니다'}</h1></div><p className="connection-status" role="status">{health}</p></div>
-      {path==='/' && <Home/>}{path==='/observatory' && <Observatory/>}{path==='/policy' && <Policy/>}{path==='/neighborhoods' && <GroupDashboard/>}{path==='/neighborhoods/legacy' && <Neighborhoods/>}{path==='/console' && <Console/>}{path==='/evaluation' && <Evaluation/>}
+      {path==='/' && <Home/>}{path==='/workspace' && <Workflow/>}{path==='/observatory' && <Observatory/>}{path==='/policy' && <Policy/>}{path==='/neighborhoods' && <GroupDashboard/>}{path==='/neighborhoods/legacy' && <Neighborhoods/>}{path==='/console' && <Console/>}{path==='/evaluation' && <Evaluation/>}
       {!pages[path] && <p>주소를 확인하거나 <a href="/">인덱스로 돌아가세요.</a></p>}
     </main><footer className="site-footer"><div><strong>Beyond Hello MAS</strong><p>지역의 근거를 검토하고, 사람의 판단으로 대응합니다.</p></div><p>연구·개발용 대시보드 · 자동 자격 판정 및 실제 자원 배정 아님<br/><a href="/">프로젝트 안내로 돌아가기</a></p></footer>
   </div>;
