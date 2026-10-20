@@ -37,3 +37,14 @@ test('Seoul and within-Gangnam comparison use their own stage rows',async({page,
   await expect(page.getByTestId('group-selected')).toContainText('5단계');
   await expect(page.getByTestId('group-detail')).toContainText('G_seoul');
 });
+
+
+test('source evidence starts with readable cards and raw data is collapsed',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.goto('/neighborhoods');
+ await expect(page.getByLabel('T1b 요약')).toContainText('직전 8관측주 기준선');
+ await expect(page.getByTestId('group-detail').locator('pre')).toBeHidden();
+ await page.getByText('원천 기록 자세히 보기',{exact:true}).click();
+ await expect(page.getByTestId('group-detail').locator('pre')).toBeVisible();
+ await page.getByText('원천 기록 자세히 보기',{exact:true}).click();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});

@@ -35,3 +35,7 @@ eval-collaboration:
 .PHONY: eval-workflow
 eval-workflow:
 	uv run python -m eval.run_workflow
+
+.PHONY: dev-live
+dev-live:
+	uv run python -m scripts.dev --live
