@@ -31,3 +31,7 @@ eval-temporal:
 
 eval-collaboration:
 	uv run python -m eval.run_collaboration
+
+.PHONY: eval-workflow
+eval-workflow:
+	uv run python -m eval.run_workflow

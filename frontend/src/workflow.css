@@ -16,3 +16,4 @@
 .workflow-map {display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:1.5rem;margin:1.5rem 0;align-items:center}.workflow-map svg{max-height:320px}.workflow-map select{display:block;width:100%;margin:.5rem 0}.workflow-results small{overflow-wrap:anywhere}.workflow-results td small{display:block}@media(max-width:700px){.workflow-map{grid-template-columns:1fr}}
 .workflow-steps .step-held{background:#eee8f6;color:#60447a}
 @media(max-width:480px){.task-fields label:nth-child(4),.task-fields label:nth-child(5){grid-column:span 2}}
+.workflow-evaluation .workflow-tabs{flex-wrap:wrap}
