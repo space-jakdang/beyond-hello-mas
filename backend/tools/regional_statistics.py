@@ -27,8 +27,13 @@ def summary(assessment):
 
 
 def trend(settings,assessment):
-    rows,_=load_segments(settings)
     task=assessment['task']
+    if task.get('future_id'):
+        from backend.future import scenario_rows
+        from backend.tools.regional_task import RegionalTask
+        rows,_,_=scenario_rows(settings,RegionalTask.model_validate(task))
+    else:
+        rows,_=load_segments(settings)
     ids={(r['dong_cd'],r['sex'],r['age_group'],r['index_name']) for r in assessment['segments']}
     series={}
     for row in rows:
@@ -48,14 +53,14 @@ def trend(settings,assessment):
         result.append({'cohort_id':'/'.join(key),'points':points})
     return {'tool':'trend','tool_version':'regional-statistics-1','status':'available' if result else 'unavailable',
             'reason':None if result else 'no_monthly_observations','series':result,
-            'data_mode':assessment['data_mode'],'input_hash':inputs_hash,'output_hash':digest(result),'forecast':False}
+            'data_mode':assessment['data_mode'],'input_hash':inputs_hash,'output_hash':digest(result),'forecast':False,'synthetic_future':bool(task.get('future_id'))}
 
 
 def source_check(assessment):
     return {'tool':'source_check','tool_version':'regional-statistics-1','items':[
         {'evidence_id':r['evidence_id'],'source_file':r['source_file'],'source_period':r['source_period'],
          'source_bands':r['source_bands'],'flags':r.get('flags',[]),'value_missing':r['value'] is None,
-         'stage_missing':r['stage'] is None,'status':'missing' if r['value'] is None or r['stage'] is None else 'observed'} for r in assessment['segments']]}
+         'stage_missing':r['stage'] is None,'status':'missing' if r['value'] is None or r['stage'] is None else 'synthetic_scenario' if 'synthetic_future' in r.get('flags',[]) else 'observed'} for r in assessment['segments']]}
 
 
 def run_tool(name,settings,assessment):
@@ -71,7 +76,7 @@ def sensitivity(assessment):
     items=[]
     for row in assessment['segments']:
         value=row['value'];index=row['index_name']
-        stages=[youth_stage(level_band(index,value+delta)) for delta in (-.01,0,.01)] if value is not None and index in ('S1','v3') else None
+        stages=[youth_stage(level_band(index,value+delta),row.get('scenario_signals',())) for delta in (-.01,0,.01)] if value is not None and index in ('S1','v3') else None
         items.append({'evidence_id':row['evidence_id'],'stages':stages,
                       'base_stage_stable':len(set(stages))==1 if stages else None})
     return {'tool':'sensitivity','tool_version':'regional-statistics-1','delta':.01,'items':items,

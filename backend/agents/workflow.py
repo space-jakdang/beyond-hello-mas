@@ -29,18 +29,37 @@ def observations(assessment):
     return [{'evidence_id':r['evidence_id'],**{k:r.get(k) for k in ('dong_nm','stage','stage_label','index_name','value','source_period','source_bands','flags')}} for r in assessment['segments']]
 
 
+def model_observations(items):
+    """Remove repeated source fields already supplied in facts; keep full stored tools."""
+    result=[]
+    for observation in items:
+        view=dict(observation)
+        if observation['tool']=='source_check':
+            sources=list(dict.fromkeys(r['source_file'] for r in observation['items']))
+            view['sources']=sources
+            view['items']=[{k:r[k] for k in ('evidence_id','status','value_missing','stage_missing')} |
+                           {'source_index':sources.index(r['source_file'])} for r in observation['items']]
+        elif observation['tool']=='trend':
+            view['series']=[{**series,'points':[{k:v for k,v in point.items() if k!='source_bands'} for point in series['points']]} for series in observation['series']]
+        result.append(view)
+    return result
+
+
 def methodology(assessment):
     from backend.tools.regional_task import STAGES
     return {'version':assessment['methodology_version'],'stage_meanings':STAGES,
             'group_definition':', '.join(json.loads((Path(__file__).resolve().parents[2]/'rules/age_crosswalk.json').read_text())['concept'][assessment['task']['age_group']]),
             'provisional':True,'purpose':'within-region outreach priority; not individual diagnosis or absolute cross-region risk',
             'source_age_mapping':'source-specific ranges are retained; requested group labels are not measured population equivalence',
-            'period_role':'execution reference only; not a monthly observation' if assessment['period_aggregate'] else 'observed month',
+            'synthetic_future':assessment['metadata'].get('synthetic_future',False),
+            'period_role':'synthetic future scenario; not an observation or calibrated forecast' if assessment['metadata'].get('synthetic_future') else 'execution reference only; not a monthly observation' if assessment['period_aggregate'] else 'observed month',
             'policy_role':'policy evidence is researched downstream; statistical tools do not establish policy eligibility'}
 
 
 def analyze(agents,run_id,sim_ts,assessment,feedback=None):
     facts=observations(assessment)
+    if feedback and feedback.get('statistics'):
+        feedback={**feedback,'statistics':{**feedback['statistics'],'observations':model_observations(feedback['statistics']['observations'])}}
     plan=agents.call(run_id,sim_ts,'workflow_analyst',{'facts':facts,'task':assessment['task'],
         'feedback':feedback,'methodology':methodology(assessment),'provisional':True,'period_aggregate':assessment['period_aggregate']}).model_dump()
     allowed={r['evidence_id'] for r in facts}
@@ -59,7 +78,7 @@ def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadli
             if time()>=deadline:raise WorkflowError('deadline')
             decision=agents.call(run_id,sim_ts,'workflow_statistics',{'task':assessment['task'],'plan':plan,
                 'summary':base,'facts':observations(assessment),'methodology':methodology(assessment),'period_aggregate':assessment['period_aggregate'],
-                'observations':retrieved,'step':step,'available_tools':['trend','source_check','sensitivity']}).model_dump()
+                'observations':model_observations(retrieved),'step':step,'available_tools':['trend','source_check','sensitivity']}).model_dump()
             if time()>=deadline:raise WorkflowError('deadline')
             blocked=decision['blocked_evidence_ids']
             if len(set(blocked))!=len(blocked) or not set(blocked)<=allowed:raise WorkflowError('unobserved_statistics_evidence')

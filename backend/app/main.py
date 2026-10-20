@@ -26,6 +26,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="Beyond Hello MAS", version="0.1.0", lifespan=lifespan)
     app.state.graph = service
     app.include_router(graph_router(service))
+    from backend.future import future_router
+    app.include_router(future_router(service))
     app.state.store = store
     app.include_router(event_router(store))
     app.include_router(report_router(settings))
