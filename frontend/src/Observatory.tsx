@@ -14,6 +14,7 @@ export function Observatory() {
   const [traces, setTraces] = useState<Trace[]>([]), [detail, setDetail] = useState<Trace>();
   const [connection, setConnection] = useState('대기'), [agent, setAgent] = useState('all');
   const [replay, setReplay] = useState<number | null>(null), [speed, setSpeed] = useState(1);
+  useEffect(()=>{const jump=()=>{if(location.hash==='#policy-task'){const target=document.getElementById('policy-task');target?.focus();target?.scrollIntoView({block:'start'});}};jump();window.addEventListener('hashchange',jump);return()=>window.removeEventListener('hashchange',jump);},[]);
   useEffect(() => { api<Run[]>('/runs').then(setRuns).catch(e => setError(String(e))); }, []);
   useEffect(() => {
     setTraces([]); setDetail(undefined); setRun(undefined); setReplay(null); setError('');
@@ -55,7 +56,7 @@ export function Observatory() {
     <p>지역 협업 시나리오에서 분석안 → 근거 검토 → 필요 시 재작성을 확인할 수 있습니다. fake는 통신 시연이며 모델 판단이 아닙니다.</p>
     <div className="toolbar"><label>시나리오 <select value={scenario} onChange={e=>setScenario(Number(e.target.value))}>{scenarios.map((s,i)=><option key={s.id} value={i}>{s.id}</option>)}</select></label><button disabled={busy} onClick={()=>start()}>실행</button>
     <label>실행 이력 <select aria-label="실행 이력" value={id} onChange={e=>setId(e.target.value)}><option value="">선택</option>{runs.map(r=><option key={r.id} value={r.id}>{r.scenario_id} · {r.id.slice(0,8)}</option>)}</select></label></div>
-    <fieldset id="policy-task"><legend>Supervisor에게 정책 조사 지시</legend>
+    <fieldset id="policy-task" tabIndex={-1}><legend>Supervisor에게 정책 조사 지시</legend>
       <label>조사 목표 <input value={goal} maxLength={1000} onChange={e=>setGoal(e.target.value)}/></label>
       {Object.entries(scopeNames).map(([scope,name])=><label key={scope}><input type="checkbox" checked={policyScopes.includes(scope)} onChange={e=>setPolicyScopes(old=>e.target.checked?[...old,scope]:old.filter(s=>s!==scope))}/>{name}</label>)}
       <button disabled={busy || !goal.trim() || !policyScopes.length} onClick={()=>start(true)}>정책 조사 위임</button>
