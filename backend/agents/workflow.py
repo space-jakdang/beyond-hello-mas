@@ -1,5 +1,7 @@
 """Bounded statistical collaboration over immutable tool observations."""
 from time import time
+import json
+from pathlib import Path
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 from backend.tools.regional_statistics import summary, run_tool
@@ -24,13 +26,23 @@ class StatisticsDecision(BaseModel):
 
 
 def observations(assessment):
-    return [{'evidence_id':r['evidence_id'],**{k:r.get(k) for k in ('dong_nm','stage','index_name','value','source_period','source_bands')}} for r in assessment['segments']]
+    return [{'evidence_id':r['evidence_id'],**{k:r.get(k) for k in ('dong_nm','stage','stage_label','index_name','value','source_period','source_bands','flags')}} for r in assessment['segments']]
+
+
+def methodology(assessment):
+    from backend.tools.regional_task import STAGES
+    return {'version':assessment['methodology_version'],'stage_meanings':STAGES,
+            'group_definition':', '.join(json.loads((Path(__file__).resolve().parents[2]/'rules/age_crosswalk.json').read_text())['concept'][assessment['task']['age_group']]),
+            'provisional':True,'purpose':'within-region outreach priority; not individual diagnosis or absolute cross-region risk',
+            'source_age_mapping':'source-specific ranges are retained; requested group labels are not measured population equivalence',
+            'period_role':'execution reference only; not a monthly observation' if assessment['period_aggregate'] else 'observed month',
+            'policy_role':'policy evidence is researched downstream; statistical tools do not establish policy eligibility'}
 
 
 def analyze(agents,run_id,sim_ts,assessment,feedback=None):
     facts=observations(assessment)
     plan=agents.call(run_id,sim_ts,'workflow_analyst',{'facts':facts,'task':assessment['task'],
-        'feedback':feedback,'provisional':True,'period_aggregate':assessment['period_aggregate']}).model_dump()
+        'feedback':feedback,'methodology':methodology(assessment),'provisional':True,'period_aggregate':assessment['period_aggregate']}).model_dump()
     allowed={r['evidence_id'] for r in facts}
     if len(set(plan['priority_evidence_ids']))!=len(plan['priority_evidence_ids']) or not set(plan['priority_evidence_ids'])<=allowed:
         raise WorkflowError('unobserved_analyst_evidence')
@@ -46,7 +58,7 @@ def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadli
         for step in range(2):
             if time()>=deadline:raise WorkflowError('deadline')
             decision=agents.call(run_id,sim_ts,'workflow_statistics',{'task':assessment['task'],'plan':plan,
-                'summary':base,'facts':observations(assessment),'period_aggregate':assessment['period_aggregate'],
+                'summary':base,'facts':observations(assessment),'methodology':methodology(assessment),'period_aggregate':assessment['period_aggregate'],
                 'observations':retrieved,'step':step,'available_tools':['trend','source_check','sensitivity']}).model_dump()
             if time()>=deadline:raise WorkflowError('deadline')
             blocked=decision['blocked_evidence_ids']
