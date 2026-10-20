@@ -5,16 +5,16 @@ import {Analysis,stageOf} from './neighborhoodData';
 type Metric={value:number;baseline:number|null;ratio:number|null;signal:string};
 type Weekly={week:string;sgg:string;sex:string;age_band:string;metrics:Record<string,Metric>};
 type Group={ym:string|null;sgg:string;dong_cd:string;dong_nm:string;sex:string;age_group:string;index_name:string;value:number|null;stage:number|null;preferred:boolean;source_bands:Record<string,string[]>;source_period:string;source_file:string;flags:string[];priority_group_applied:boolean;exploratory_replay:boolean;weekly?:Weekly};
-type Data=Pick<Analysis,'data_mode'|'months'|'neighborhoods'|'geometry'|'geography'|'coverage'>&{segments:Group[];period_aggregate:boolean;weekly:{rows:Weekly[];weeks:string[]};metadata:{selected_week:string;card_age:string;rule_version:string}};
+export type GroupData=Pick<Analysis,'data_mode'|'months'|'neighborhoods'|'geometry'|'geography'|'coverage'>&{segments:Group[];period_aggregate:boolean;weekly:{rows:Weekly[];weeks:string[]};metadata:{selected_week:string;card_age:string;rule_version:string}};
 const names:Record<string,string>={youth:'청년 (19~34)',midlife:'중년 (35~49)',prime:'장년 (50~64)',elderly:'노년 (65+)'};
 const stageName=(n:number|null)=>n===null?'미평가':`${n}단계`;
 
 export function GroupDashboard({embedded=false}:{embedded?:boolean}){
   const read=()=>{const result:Record<string,string>={};new URLSearchParams(embedded?'':location.search).forEach((value,key)=>{result[key]=value;});return result;};
-  const [selection,setSelection]=useState<Record<string,string>>(read),[data,setData]=useState<Data>(),[error,setError]=useState(''),[refresh,setRefresh]=useState(0),[loading,setLoading]=useState(false);
+  const [selection,setSelection]=useState<Record<string,string>>(read),[data,setData]=useState<GroupData>(),[error,setError]=useState(''),[refresh,setRefresh]=useState(0),[loading,setLoading]=useState(false);
   useEffect(()=>{if(embedded)return;const restore=()=>setSelection(read());window.addEventListener('popstate',restore);return()=>window.removeEventListener('popstate',restore);},[embedded]);
   useEffect(()=>{let active=true;setLoading(true);setError('');const q=new URLSearchParams({card_age:selection.card_age==='30s'?'30s':'20s'});if(selection.week)q.set('week',selection.week);
-    api<Data>('/analysis/groups?'+q).then(d=>{if(active)setData(d);}).catch(e=>{if(active)setError(String(e));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};
+    api<GroupData>('/analysis/groups?'+q).then(d=>{if(active)setData(d);}).catch(e=>{if(active)setError(String(e));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};
   },[selection.week,selection.card_age,refresh]);
   if(error)return <div role="alert">{error}<button onClick={()=>{setSelection({});if(!embedded)history.replaceState(null,'','/neighborhoods');setRefresh(n=>n+1);}}>집단 분석 다시 불러오기</button></div>;
   if(!data)return <p>8집단 분석을 불러오는 중입니다.</p>;
@@ -31,7 +31,7 @@ export function GroupDashboard({embedded=false}:{embedded?:boolean}){
   function choose(patch:Record<string,string>){const next:Record<string,string>={region,sex,age,dong,month:month??'',basis,week:selection.week??data!.metadata.selected_week,card_age:selection.card_age??data!.metadata.card_age,...patch};if(patch.region)next.dong=data!.neighborhoods.find(d=>d.sgg===patch.region)?.dong_cd??'';if(patch.week)next.month=patch.week.slice(0,7);if(data!.period_aggregate)delete next.month;setSelection(next);if(!embedded)history.pushState(null,'','/neighborhoods?'+new URLSearchParams(next));}
   return <section className="neighborhoods" aria-label="8집단 분석">
     <p className="mode-banner">{data.data_mode==='sample'?'합성 데이터 · 실제 위치가 아닌 격자':'로컬 분석 · 실제 행정동 경계'} · 먼저 찾아갈 순서이며 개인의 고립 진단이 아닙니다.</p>
-    <p>지역마다 지표·연령 범위가 달라 강남과 춘천의 수치를 직접 비교할 수 없습니다. {data.period_aggregate?'월 정보 없는 기간 집계입니다. 주간 선택은 과거 신호를 결합한 탐색이며 당시 동별 관측을 뜻하지 않습니다.':'합성 월별 집계'}</p>
+    <p>지역마다 지표·연령 범위가 달라 강남과 춘천의 수치를 직접 비교할 수 없습니다. {data.period_aggregate?'월 정보 없는 기간 집계입니다. 주간 선택은 과거 신호를 결합한 탐색이며 당시 동별 관측을 뜻하지 않습니다.':data.data_mode==='sample'?'합성 월별 집계':'실제 월별 집계'}</p>
     <div className="toolbar"><label>지역 <select value={region} onChange={e=>choose({region:e.target.value})}><option value="11230">강남구</option><option value="32010">춘천시</option></select></label>
     <label>성별 <select value={sex} onChange={e=>choose({sex:e.target.value})}><option value="M">남성</option><option value="F">여성</option></select></label>
     <label>연령집단 <select value={age} onChange={e=>choose({age:e.target.value})}>{Object.entries(names).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
@@ -48,6 +48,7 @@ export function GroupDashboard({embedded=false}:{embedded?:boolean}){
     {chosen&&<article className="card" data-testid="group-detail"><h2>{chosen.dong_nm} 원천과 해석</h2><p>{chosen.index_name} · 값 {chosen.value??'결측'} · {stageName(chosen.stage)} · {chosen.source_period}</p>
       <p>이 지표의 자료별 연령: {Object.entries(chosen.source_bands).map(([source,bands])=>`${source}: ${bands.join(', ')}`).join(' / ')}</p>
       <p>주의: {chosen.flags.join(' · ')||'없음'} · 우선집단 +1 {chosen.priority_group_applied?'적용':'미적용'} · 탐색 리플레이 {chosen.exploratory_replay?'예':'아니오'}</p>
+      <a className="primary-link" href={'/workspace?'+new URLSearchParams({region,sex,age,dong,month:month??data.metadata.selected_week.slice(0,7)})}>이 동·집단을 Supervisor에게 분석 지시 →</a><p>지도는 주간 신호를 결합한 탐색 결과입니다. 지역 업무는 기본 지수 등급을 별도로 검토하므로 등급이 달라질 수 있습니다.</p>
       <p>원천 {chosen.source_file} · 규칙 {data.metadata.rule_version}</p><pre>{JSON.stringify(chosen.weekly?.metrics??{},null,2)}</pre></article>}
     <article className="card"><h2>주간 신호 리플레이 · {data.metadata.card_age==='20s'?'20대':'30대'}</h2><p>각 주를 누르면 지도와 상세가 연결됩니다. 비율은 직전 8관측주 중앙값 대비이며, 점이 없는 구간은 기준선 결측입니다.</p>
       <p>청록색 T1b · 주황색 R1 · 가로선은 기준선 대비 1.0</p>

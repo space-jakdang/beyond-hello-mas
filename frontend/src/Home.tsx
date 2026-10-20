@@ -1,3 +1,4 @@
+import {MasFlow} from './MasFlow';
 export const destinations = [
   {href:'/workspace',title:'지역 업무',eyebrow:'에이전트 업무',description:'Supervisor에게 지역 분석을 지시하고, 통계 근거와 자원 제안을 함께 검토합니다.',action:'업무 공간 열기'},
   {href:'/neighborhoods', title:'동네 분석', eyebrow:'지역 이해', description:'동네와 집단별 지표, 주간 변화, 결측과 분석 근거를 확인합니다.', action:'분석 대시보드 열기'},
@@ -14,7 +15,7 @@ export function Home() {
       <p>통신·카드 등 지역 집계에서 우선 확인할 동네와 집단을 찾고, 에이전트가 근거를 검토하며 지원 자원을 조사하는 개발 대시보드입니다. 최종 대응은 담당자가 확인합니다.</p>
       <a className="primary-link" href="/workspace">지역 업무 시작하기 →</a>
     </section>
-    <section className="card"><h2>에이전트는 어떻게 함께 일하나요?</h2><p>Supervisor 업무 위임 → 지역 분석가의 잠정 등급·근거 해석 → 통계 분석가의 도구 조회·재검토 → 복지자원 매칭 → Supervisor 제안과 공무원 검토</p><p>통계 근거가 부족하면 분석을 보완하거나 추천을 보류합니다. 담당자는 승인·반려·보완 요청을 선택할 수 있습니다.</p></section>
+    <MasFlow/>
     <section aria-labelledby="guide-title"><div className="section-heading"><div><p className="eyebrow">WORKSPACE GUIDE</p><h2 id="guide-title">무엇을 확인하고 싶으신가요?</h2></div><p>지역 업무에서 시작하고, 제안이 준비되면 담당자 콘솔에서 검토하세요.</p></div>
       <div className="destination-grid">{destinations.map(item=><article className="destination card" key={item.href}><p className="eyebrow">{item.eyebrow}</p><h3>{item.title}</h3><p>{item.description}</p><a href={item.href}>{item.action} →</a></article>)}</div>
     </section>

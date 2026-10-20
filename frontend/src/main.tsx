@@ -26,6 +26,7 @@ function App() {
       <nav aria-label="주 메뉴"><a href="/" aria-current={path==='/'?'page':undefined}>인덱스</a>{destinations.map(p=><a key={p.href} href={p.href} aria-current={path===p.href?'page':undefined}>{p.title}</a>)}</nav>
     </div></header>
     <main id="main-content" tabIndex={-1}><div className="page-heading"><div><p className="eyebrow">BEYOND HELLO / WORKSPACE</p><h1>{pages[path] ?? '페이지를 찾을 수 없습니다'}</h1></div><p className="connection-status" role="status">{health}</p></div>
+      {path!=='/' && <section className="journey" aria-label="업무 흐름 안내"><span>자료 탐색 → 업무 지시 → 근거 검토 → 정책·자원 → 공무원 검토</span><a href="/neighborhoods" aria-current={path==='/neighborhoods'?'page':undefined}>실제 지역·자료 확인</a><a href="/workspace" aria-current={path==='/workspace'?'page':undefined}>에이전트 업무</a><a href="/console" aria-current={path==='/console'?'page':undefined}>검토함</a><a href="/evaluation" aria-current={path==='/evaluation'?'page':undefined}>평가 근거</a></section>}
       {path==='/' && <Home/>}{path==='/workspace' && <Workflow/>}{path==='/observatory' && <Observatory/>}{path==='/policy' && <Policy/>}{path==='/neighborhoods' && <GroupDashboard/>}{path==='/neighborhoods/legacy' && <Neighborhoods/>}{path==='/console' && <Console/>}{path==='/evaluation' && <Evaluation/>}
       {!pages[path] && <p>주소를 확인하거나 <a href="/">인덱스로 돌아가세요.</a></p>}
     </main><footer className="site-footer"><div><strong>Beyond Hello MAS</strong><p>지역의 근거를 검토하고, 사람의 판단으로 대응합니다.</p></div><p>연구·개발용 대시보드 · 자동 자격 판정 및 실제 자원 배정 아님<br/><a href="/">프로젝트 안내로 돌아가기</a></p></footer>
