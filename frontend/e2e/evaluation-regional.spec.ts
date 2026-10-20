@@ -66,3 +66,13 @@ test('workflow evaluation separates synthetic contracts from unmeasured field qu
  await page.setViewportSize({width:390,height:844});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
+
+
+test('evaluation summary retains report denominators on mobile',async({page,request})=>{
+ const reports=await(await request.get('/reports?source=sample')).json();const report=reports.find((r:any)=>r.schema_version==='5');expect(report).toBeTruthy();
+ await page.setViewportSize({width:390,height:844});await page.goto('/evaluation');
+ await page.getByRole('combobox',{name:/평가 실행/}).selectOption(report.id);
+ await expect(page.getByLabel('평가 핵심 요약')).toContainText(String(report.evaluated_scenarios));
+ await expect(page.getByLabel('지역 업무 계약 요약')).toContainText('미측정');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
