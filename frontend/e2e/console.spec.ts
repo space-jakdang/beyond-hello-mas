@@ -26,7 +26,7 @@ test('operator receives, acknowledges, approves, rejects and inspects monthly pl
   await consolePage.getByLabel('반려 사유').fill('추가 상담 필요');
   await consolePage.getByRole('button',{name:'반려',exact:true}).click();
   await expect(consolePage.getByRole('heading',{name:'실행 상세 · 반려',exact:true})).toBeVisible();
-  expect((await page.request.get(`http://127.0.0.1:8000/runs/${rejected}/linkage`)).status()).toBe(404);
+  expect((await page.request.get(`/runs/${rejected}/linkage`)).status()).toBe(404);
   const crisis=await run('1','완료');
   await expect(consolePage.getByTestId(`alert-${crisis}-crisis`)).toBeVisible();
   const handoffResponse=await consolePage.request.post('/scenarios/run',{data:{id:'ordering-handoff',type:'case',sim_time:'2025-09-08T09:00:00+09:00',payload:{person:{person_id:'synthetic-order',age:24,sgg:'11230',consent:true,responses_confirmed:true,responses:{'synthetic-contract-fixture':{case:201}}}}}});
@@ -43,7 +43,7 @@ test('operator receives, acknowledges, approves, rejects and inspects monthly pl
   await consolePage.screenshot({path:'../runtime/sample/screenshots/console.png',fullPage:true});
 });
 test('console retries its initial load and restores a pending approval after reload', async ({page,request})=>{
-  const response=await request.post('http://127.0.0.1:8000/scenarios/run',{data:{id:'reload-case',type:'case',sim_time:'2025-07-01T09:00:00+09:00',payload:{text:'합성 상담'}}});
+  const response=await request.post('/scenarios/run',{data:{id:'reload-case',type:'case',sim_time:'2025-07-01T09:00:00+09:00',payload:{text:'합성 상담'}}});
   const run=await response.json();
   let failed=false;
   await page.route('**/alerts?recent=true&limit=200',route=>{if(!failed){failed=true;return route.abort();}return route.continue();});
