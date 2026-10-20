@@ -1,0 +1,1762 @@
+{
+  "schema_version": "5",
+  "id": "bafb085f-f004-4d9c-b262-3727e0a3a26c",
+  "created_at": "2026-10-20T16:16:28.569262+00:00",
+  "data_mode": "sample",
+  "llm_mode": "fake",
+  "status": "contract_passed",
+  "evaluated_scenarios": 36,
+  "metrics": {
+    "classification_mixed_contract": {
+      "grade_agreement": {
+        "numerator": 30,
+        "denominator": 30,
+        "value": 1.0
+      },
+      "ordinal_mae": {
+        "value": 0.0,
+        "denominator": 30
+      },
+      "missing_predictions": 0,
+      "priority_miss": {
+        "numerator": 0,
+        "denominator": 12,
+        "value": 0.0
+      },
+      "correct_abstention": {
+        "numerator": 6,
+        "denominator": 6,
+        "value": 1.0
+      },
+      "confusion": {
+        "1->None": 0,
+        "1->1": 6,
+        "1->2": 0,
+        "1->3": 0,
+        "1->4": 0,
+        "1->5": 0,
+        "2->None": 0,
+        "2->1": 0,
+        "2->2": 6,
+        "2->3": 0,
+        "2->4": 0,
+        "2->5": 0,
+        "3->None": 0,
+        "3->1": 0,
+        "3->2": 0,
+        "3->3": 6,
+        "3->4": 0,
+        "3->5": 0,
+        "4->None": 0,
+        "4->1": 0,
+        "4->2": 0,
+        "4->3": 0,
+        "4->4": 6,
+        "4->5": 0,
+        "5->None": 0,
+        "5->1": 0,
+        "5->2": 0,
+        "5->3": 0,
+        "5->4": 0,
+        "5->5": 6
+      }
+    },
+    "by_basis": {
+      "hand_rule_example": {
+        "grade_agreement": {
+          "numerator": 18,
+          "denominator": 18,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 18
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 0,
+          "value": null
+        },
+        "correct_abstention": {
+          "numerator": 6,
+          "denominator": 6,
+          "value": 1.0
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 6,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 6,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 6,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 0,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 0
+        }
+      },
+      "provided_stage_preservation": {
+        "grade_agreement": {
+          "numerator": 12,
+          "denominator": 12,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 12
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 12,
+          "value": 0.0
+        },
+        "correct_abstention": {
+          "numerator": 0,
+          "denominator": 0,
+          "value": null
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 0,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 0,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 0,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 6,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 6
+        }
+      }
+    },
+    "resource_constraints": {
+      "violations": 0,
+      "recommended": 18,
+      "recommendation_coverage": {
+        "numerator": 18,
+        "denominator": 18,
+        "value": 1.0
+      }
+    },
+    "splits": {
+      "development": {
+        "grade_agreement": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 15
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 6,
+          "value": 0.0
+        },
+        "correct_abstention": {
+          "numerator": 3,
+          "denominator": 3,
+          "value": 1.0
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 3,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 3,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 3,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 3,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 3
+        }
+      },
+      "test": {
+        "grade_agreement": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 15
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 6,
+          "value": 0.0
+        },
+        "correct_abstention": {
+          "numerator": 3,
+          "denominator": 3,
+          "value": 1.0
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 3,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 3,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 3,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 3,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 3
+        }
+      }
+    },
+    "periods": {
+      "2025-07": {
+        "grade_agreement": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 5
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 2,
+          "value": 0.0
+        },
+        "correct_abstention": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 1,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 1,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 1,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 1,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 1
+        }
+      },
+      "2025-08": {
+        "grade_agreement": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 5
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 2,
+          "value": 0.0
+        },
+        "correct_abstention": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 1,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 1,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 1,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 1,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 1
+        }
+      },
+      "2025-09": {
+        "grade_agreement": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 5
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 2,
+          "value": 0.0
+        },
+        "correct_abstention": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 1,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 1,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 1,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 1,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 1
+        }
+      },
+      "2025-10": {
+        "grade_agreement": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 5
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 2,
+          "value": 0.0
+        },
+        "correct_abstention": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 1,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 1,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 1,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 1,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 1
+        }
+      },
+      "2025-11": {
+        "grade_agreement": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 5
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 2,
+          "value": 0.0
+        },
+        "correct_abstention": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 1,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 1,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 1,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 1,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 1
+        }
+      },
+      "2025-12": {
+        "grade_agreement": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 5
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 2,
+          "value": 0.0
+        },
+        "correct_abstention": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 1,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 1,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 1,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 1,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 1
+        }
+      }
+    }
+  },
+  "workflow": {
+    "protocol": {
+      "version": "regional-workflow-evaluation-1",
+      "methodology_version": "regional-workflow-1",
+      "generator_version": "regional-workflow-cases-1",
+      "cases": 36,
+      "families": 12,
+      "repetitions": 2,
+      "top_k": 3,
+      "contract_acceptance": "all reference grades and holds agree; no mandatory resource violation; every eligible synthetic case receives a candidate; unsupported region rejected; no case execution error",
+      "field_acceptance": {
+        "minimum_independent_cases": 24,
+        "independent_reviewers": 2,
+        "comparison": "same inputs, tools and budgets for deterministic / single / multi-agent; case-cluster paired confidence interval",
+        "minimum_C_minus_B_percentage_points": 5,
+        "lower_95_percent_bound_above": 0,
+        "major_errors_allowed": 0,
+        "status": "not_evaluated"
+      }
+    },
+    "protocol_hash": "141d5dd105aae5f87dcf893d684dada0aa643914886c9b793ee41c7be33c8bec",
+    "contract_passed": true,
+    "contract": {
+      "classification_mixed_contract": {
+        "grade_agreement": {
+          "numerator": 30,
+          "denominator": 30,
+          "value": 1.0
+        },
+        "ordinal_mae": {
+          "value": 0.0,
+          "denominator": 30
+        },
+        "missing_predictions": 0,
+        "priority_miss": {
+          "numerator": 0,
+          "denominator": 12,
+          "value": 0.0
+        },
+        "correct_abstention": {
+          "numerator": 6,
+          "denominator": 6,
+          "value": 1.0
+        },
+        "confusion": {
+          "1->None": 0,
+          "1->1": 6,
+          "1->2": 0,
+          "1->3": 0,
+          "1->4": 0,
+          "1->5": 0,
+          "2->None": 0,
+          "2->1": 0,
+          "2->2": 6,
+          "2->3": 0,
+          "2->4": 0,
+          "2->5": 0,
+          "3->None": 0,
+          "3->1": 0,
+          "3->2": 0,
+          "3->3": 6,
+          "3->4": 0,
+          "3->5": 0,
+          "4->None": 0,
+          "4->1": 0,
+          "4->2": 0,
+          "4->3": 0,
+          "4->4": 6,
+          "4->5": 0,
+          "5->None": 0,
+          "5->1": 0,
+          "5->2": 0,
+          "5->3": 0,
+          "5->4": 0,
+          "5->5": 6
+        }
+      },
+      "by_basis": {
+        "hand_rule_example": {
+          "grade_agreement": {
+            "numerator": 18,
+            "denominator": 18,
+            "value": 1.0
+          },
+          "ordinal_mae": {
+            "value": 0.0,
+            "denominator": 18
+          },
+          "missing_predictions": 0,
+          "priority_miss": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "correct_abstention": {
+            "numerator": 6,
+            "denominator": 6,
+            "value": 1.0
+          },
+          "confusion": {
+            "1->None": 0,
+            "1->1": 6,
+            "1->2": 0,
+            "1->3": 0,
+            "1->4": 0,
+            "1->5": 0,
+            "2->None": 0,
+            "2->1": 0,
+            "2->2": 6,
+            "2->3": 0,
+            "2->4": 0,
+            "2->5": 0,
+            "3->None": 0,
+            "3->1": 0,
+            "3->2": 0,
+            "3->3": 6,
+            "3->4": 0,
+            "3->5": 0,
+            "4->None": 0,
+            "4->1": 0,
+            "4->2": 0,
+            "4->3": 0,
+            "4->4": 0,
+            "4->5": 0,
+            "5->None": 0,
+            "5->1": 0,
+            "5->2": 0,
+            "5->3": 0,
+            "5->4": 0,
+            "5->5": 0
+          }
+        },
+        "provided_stage_preservation": {
+          "grade_agreement": {
+            "numerator": 12,
+            "denominator": 12,
+            "value": 1.0
+          },
+          "ordinal_mae": {
+            "value": 0.0,
+            "denominator": 12
+          },
+          "missing_predictions": 0,
+          "priority_miss": {
+            "numerator": 0,
+            "denominator": 12,
+            "value": 0.0
+          },
+          "correct_abstention": {
+            "numerator": 0,
+            "denominator": 0,
+            "value": null
+          },
+          "confusion": {
+            "1->None": 0,
+            "1->1": 0,
+            "1->2": 0,
+            "1->3": 0,
+            "1->4": 0,
+            "1->5": 0,
+            "2->None": 0,
+            "2->1": 0,
+            "2->2": 0,
+            "2->3": 0,
+            "2->4": 0,
+            "2->5": 0,
+            "3->None": 0,
+            "3->1": 0,
+            "3->2": 0,
+            "3->3": 0,
+            "3->4": 0,
+            "3->5": 0,
+            "4->None": 0,
+            "4->1": 0,
+            "4->2": 0,
+            "4->3": 0,
+            "4->4": 6,
+            "4->5": 0,
+            "5->None": 0,
+            "5->1": 0,
+            "5->2": 0,
+            "5->3": 0,
+            "5->4": 0,
+            "5->5": 6
+          }
+        }
+      },
+      "resource_constraints": {
+        "violations": 0,
+        "recommended": 18,
+        "recommendation_coverage": {
+          "numerator": 18,
+          "denominator": 18,
+          "value": 1.0
+        }
+      },
+      "splits": {
+        "development": {
+          "grade_agreement": {
+            "numerator": 15,
+            "denominator": 15,
+            "value": 1.0
+          },
+          "ordinal_mae": {
+            "value": 0.0,
+            "denominator": 15
+          },
+          "missing_predictions": 0,
+          "priority_miss": {
+            "numerator": 0,
+            "denominator": 6,
+            "value": 0.0
+          },
+          "correct_abstention": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1.0
+          },
+          "confusion": {
+            "1->None": 0,
+            "1->1": 3,
+            "1->2": 0,
+            "1->3": 0,
+            "1->4": 0,
+            "1->5": 0,
+            "2->None": 0,
+            "2->1": 0,
+            "2->2": 3,
+            "2->3": 0,
+            "2->4": 0,
+            "2->5": 0,
+            "3->None": 0,
+            "3->1": 0,
+            "3->2": 0,
+            "3->3": 3,
+            "3->4": 0,
+            "3->5": 0,
+            "4->None": 0,
+            "4->1": 0,
+            "4->2": 0,
+            "4->3": 0,
+            "4->4": 3,
+            "4->5": 0,
+            "5->None": 0,
+            "5->1": 0,
+            "5->2": 0,
+            "5->3": 0,
+            "5->4": 0,
+            "5->5": 3
+          }
+        },
+        "test": {
+          "grade_agreement": {
+            "numerator": 15,
+            "denominator": 15,
+            "value": 1.0
+          },
+          "ordinal_mae": {
+            "value": 0.0,
+            "denominator": 15
+          },
+          "missing_predictions": 0,
+          "priority_miss": {
+            "numerator": 0,
+            "denominator": 6,
+            "value": 0.0
+          },
+          "correct_abstention": {
+            "numerator": 3,
+            "denominator": 3,
+            "value": 1.0
+          },
+          "confusion": {
+            "1->None": 0,
+            "1->1": 3,
+            "1->2": 0,
+            "1->3": 0,
+            "1->4": 0,
+            "1->5": 0,
+            "2->None": 0,
+            "2->1": 0,
+            "2->2": 3,
+            "2->3": 0,
+            "2->4": 0,
+            "2->5": 0,
+            "3->None": 0,
+            "3->1": 0,
+            "3->2": 0,
+            "3->3": 3,
+            "3->4": 0,
+            "3->5": 0,
+            "4->None": 0,
+            "4->1": 0,
+            "4->2": 0,
+            "4->3": 0,
+            "4->4": 3,
+            "4->5": 0,
+            "5->None": 0,
+            "5->1": 0,
+            "5->2": 0,
+            "5->3": 0,
+            "5->4": 0,
+            "5->5": 3
+          }
+        }
+      },
+      "periods": {
+        "2025-07": {
+          "grade_agreement": {
+            "numerator": 5,
+            "denominator": 5,
+            "value": 1.0
+          },
+          "ordinal_mae": {
+            "value": 0.0,
+            "denominator": 5
+          },
+          "missing_predictions": 0,
+          "priority_miss": {
+            "numerator": 0,
+            "denominator": 2,
+            "value": 0.0
+          },
+          "correct_abstention": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1.0
+          },
+          "confusion": {
+            "1->None": 0,
+            "1->1": 1,
+            "1->2": 0,
+            "1->3": 0,
+            "1->4": 0,
+            "1->5": 0,
+            "2->None": 0,
+            "2->1": 0,
+            "2->2": 1,
+            "2->3": 0,
+            "2->4": 0,
+            "2->5": 0,
+            "3->None": 0,
+            "3->1": 0,
+            "3->2": 0,
+            "3->3": 1,
+            "3->4": 0,
+            "3->5": 0,
+            "4->None": 0,
+            "4->1": 0,
+            "4->2": 0,
+            "4->3": 0,
+            "4->4": 1,
+            "4->5": 0,
+            "5->None": 0,
+            "5->1": 0,
+            "5->2": 0,
+            "5->3": 0,
+            "5->4": 0,
+            "5->5": 1
+          }
+        },
+        "2025-08": {
+          "grade_agreement": {
+            "numerator": 5,
+            "denominator": 5,
+            "value": 1.0
+          },
+          "ordinal_mae": {
+            "value": 0.0,
+            "denominator": 5
+          },
+          "missing_predictions": 0,
+          "priority_miss": {
+            "numerator": 0,
+            "denominator": 2,
+            "value": 0.0
+          },
+          "correct_abstention": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1.0
+          },
+          "confusion": {
+            "1->None": 0,
+            "1->1": 1,
+            "1->2": 0,
+            "1->3": 0,
+            "1->4": 0,
+            "1->5": 0,
+            "2->None": 0,
+            "2->1": 0,
+            "2->2": 1,
+            "2->3": 0,
+            "2->4": 0,
+            "2->5": 0,
+            "3->None": 0,
+            "3->1": 0,
+            "3->2": 0,
+            "3->3": 1,
+            "3->4": 0,
+            "3->5": 0,
+            "4->None": 0,
+            "4->1": 0,
+            "4->2": 0,
+            "4->3": 0,
+            "4->4": 1,
+            "4->5": 0,
+            "5->None": 0,
+            "5->1": 0,
+            "5->2": 0,
+            "5->3": 0,
+            "5->4": 0,
+            "5->5": 1
+          }
+        },
+        "2025-09": {
+          "grade_agreement": {
+            "numerator": 5,
+            "denominator": 5,
+            "value": 1.0
+          },
+          "ordinal_mae": {
+            "value": 0.0,
+            "denominator": 5
+          },
+          "missing_predictions": 0,
+          "priority_miss": {
+            "numerator": 0,
+            "denominator": 2,
+            "value": 0.0
+          },
+          "correct_abstention": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1.0
+          },
+          "confusion": {
+            "1->None": 0,
+            "1->1": 1,
+            "1->2": 0,
+            "1->3": 0,
+            "1->4": 0,
+            "1->5": 0,
+            "2->None": 0,
+            "2->1": 0,
+            "2->2": 1,
+            "2->3": 0,
+            "2->4": 0,
+            "2->5": 0,
+            "3->None": 0,
+            "3->1": 0,
+            "3->2": 0,
+            "3->3": 1,
+            "3->4": 0,
+            "3->5": 0,
+            "4->None": 0,
+            "4->1": 0,
+            "4->2": 0,
+            "4->3": 0,
+            "4->4": 1,
+            "4->5": 0,
+            "5->None": 0,
+            "5->1": 0,
+            "5->2": 0,
+            "5->3": 0,
+            "5->4": 0,
+            "5->5": 1
+          }
+        },
+        "2025-10": {
+          "grade_agreement": {
+            "numerator": 5,
+            "denominator": 5,
+            "value": 1.0
+          },
+          "ordinal_mae": {
+            "value": 0.0,
+            "denominator": 5
+          },
+          "missing_predictions": 0,
+          "priority_miss": {
+            "numerator": 0,
+            "denominator": 2,
+            "value": 0.0
+          },
+          "correct_abstention": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1.0
+          },
+          "confusion": {
+            "1->None": 0,
+            "1->1": 1,
+            "1->2": 0,
+            "1->3": 0,
+            "1->4": 0,
+            "1->5": 0,
+            "2->None": 0,
+            "2->1": 0,
+            "2->2": 1,
+            "2->3": 0,
+            "2->4": 0,
+            "2->5": 0,
+            "3->None": 0,
+            "3->1": 0,
+            "3->2": 0,
+            "3->3": 1,
+            "3->4": 0,
+            "3->5": 0,
+            "4->None": 0,
+            "4->1": 0,
+            "4->2": 0,
+            "4->3": 0,
+            "4->4": 1,
+            "4->5": 0,
+            "5->None": 0,
+            "5->1": 0,
+            "5->2": 0,
+            "5->3": 0,
+            "5->4": 0,
+            "5->5": 1
+          }
+        },
+        "2025-11": {
+          "grade_agreement": {
+            "numerator": 5,
+            "denominator": 5,
+            "value": 1.0
+          },
+          "ordinal_mae": {
+            "value": 0.0,
+            "denominator": 5
+          },
+          "missing_predictions": 0,
+          "priority_miss": {
+            "numerator": 0,
+            "denominator": 2,
+            "value": 0.0
+          },
+          "correct_abstention": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1.0
+          },
+          "confusion": {
+            "1->None": 0,
+            "1->1": 1,
+            "1->2": 0,
+            "1->3": 0,
+            "1->4": 0,
+            "1->5": 0,
+            "2->None": 0,
+            "2->1": 0,
+            "2->2": 1,
+            "2->3": 0,
+            "2->4": 0,
+            "2->5": 0,
+            "3->None": 0,
+            "3->1": 0,
+            "3->2": 0,
+            "3->3": 1,
+            "3->4": 0,
+            "3->5": 0,
+            "4->None": 0,
+            "4->1": 0,
+            "4->2": 0,
+            "4->3": 0,
+            "4->4": 1,
+            "4->5": 0,
+            "5->None": 0,
+            "5->1": 0,
+            "5->2": 0,
+            "5->3": 0,
+            "5->4": 0,
+            "5->5": 1
+          }
+        },
+        "2025-12": {
+          "grade_agreement": {
+            "numerator": 5,
+            "denominator": 5,
+            "value": 1.0
+          },
+          "ordinal_mae": {
+            "value": 0.0,
+            "denominator": 5
+          },
+          "missing_predictions": 0,
+          "priority_miss": {
+            "numerator": 0,
+            "denominator": 2,
+            "value": 0.0
+          },
+          "correct_abstention": {
+            "numerator": 1,
+            "denominator": 1,
+            "value": 1.0
+          },
+          "confusion": {
+            "1->None": 0,
+            "1->1": 1,
+            "1->2": 0,
+            "1->3": 0,
+            "1->4": 0,
+            "1->5": 0,
+            "2->None": 0,
+            "2->1": 0,
+            "2->2": 1,
+            "2->3": 0,
+            "2->4": 0,
+            "2->5": 0,
+            "3->None": 0,
+            "3->1": 0,
+            "3->2": 0,
+            "3->3": 1,
+            "3->4": 0,
+            "3->5": 0,
+            "4->None": 0,
+            "4->1": 0,
+            "4->2": 0,
+            "4->3": 0,
+            "4->4": 1,
+            "4->5": 0,
+            "5->None": 0,
+            "5->1": 0,
+            "5->2": 0,
+            "5->3": 0,
+            "5->4": 0,
+            "5->5": 1
+          }
+        }
+      }
+    },
+    "results": [
+      {
+        "id": "11230-2025-07-0",
+        "split": "development",
+        "family": "11230-0",
+        "sgg": "11230",
+        "ym": "2025-07",
+        "basis": "hand_rule_example",
+        "expected": 3,
+        "predicted": 3,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "11230-2025-07-1",
+        "split": "development",
+        "family": "11230-1",
+        "sgg": "11230",
+        "ym": "2025-07",
+        "basis": "hand_rule_example",
+        "expected": 2,
+        "predicted": 2,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "11230-2025-07-2",
+        "split": "development",
+        "family": "11230-2",
+        "sgg": "11230",
+        "ym": "2025-07",
+        "basis": "hand_rule_example",
+        "expected": 1,
+        "predicted": 1,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "11230-2025-07-3",
+        "split": "development",
+        "family": "11230-3",
+        "sgg": "11230",
+        "ym": "2025-07",
+        "basis": "hand_rule_example",
+        "expected": null,
+        "predicted": null,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "11230-2025-07-4",
+        "split": "development",
+        "family": "11230-4",
+        "sgg": "11230",
+        "ym": "2025-07",
+        "basis": "provided_stage_preservation",
+        "expected": 5,
+        "predicted": 5,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "11230-2025-07-5",
+        "split": "development",
+        "family": "11230-5",
+        "sgg": "11230",
+        "ym": "2025-07",
+        "basis": "provided_stage_preservation",
+        "expected": 4,
+        "predicted": 4,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "11230-2025-08-0",
+        "split": "development",
+        "family": "11230-0",
+        "sgg": "11230",
+        "ym": "2025-08",
+        "basis": "hand_rule_example",
+        "expected": 3,
+        "predicted": 3,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "11230-2025-08-1",
+        "split": "development",
+        "family": "11230-1",
+        "sgg": "11230",
+        "ym": "2025-08",
+        "basis": "hand_rule_example",
+        "expected": 2,
+        "predicted": 2,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "11230-2025-08-2",
+        "split": "development",
+        "family": "11230-2",
+        "sgg": "11230",
+        "ym": "2025-08",
+        "basis": "hand_rule_example",
+        "expected": 1,
+        "predicted": 1,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "11230-2025-08-3",
+        "split": "development",
+        "family": "11230-3",
+        "sgg": "11230",
+        "ym": "2025-08",
+        "basis": "hand_rule_example",
+        "expected": null,
+        "predicted": null,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "11230-2025-08-4",
+        "split": "development",
+        "family": "11230-4",
+        "sgg": "11230",
+        "ym": "2025-08",
+        "basis": "provided_stage_preservation",
+        "expected": 5,
+        "predicted": 5,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "11230-2025-08-5",
+        "split": "development",
+        "family": "11230-5",
+        "sgg": "11230",
+        "ym": "2025-08",
+        "basis": "provided_stage_preservation",
+        "expected": 4,
+        "predicted": 4,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "11230-2025-09-0",
+        "split": "development",
+        "family": "11230-0",
+        "sgg": "11230",
+        "ym": "2025-09",
+        "basis": "hand_rule_example",
+        "expected": 3,
+        "predicted": 3,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "11230-2025-09-1",
+        "split": "development",
+        "family": "11230-1",
+        "sgg": "11230",
+        "ym": "2025-09",
+        "basis": "hand_rule_example",
+        "expected": 2,
+        "predicted": 2,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "11230-2025-09-2",
+        "split": "development",
+        "family": "11230-2",
+        "sgg": "11230",
+        "ym": "2025-09",
+        "basis": "hand_rule_example",
+        "expected": 1,
+        "predicted": 1,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "11230-2025-09-3",
+        "split": "development",
+        "family": "11230-3",
+        "sgg": "11230",
+        "ym": "2025-09",
+        "basis": "hand_rule_example",
+        "expected": null,
+        "predicted": null,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "11230-2025-09-4",
+        "split": "development",
+        "family": "11230-4",
+        "sgg": "11230",
+        "ym": "2025-09",
+        "basis": "provided_stage_preservation",
+        "expected": 5,
+        "predicted": 5,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "11230-2025-09-5",
+        "split": "development",
+        "family": "11230-5",
+        "sgg": "11230",
+        "ym": "2025-09",
+        "basis": "provided_stage_preservation",
+        "expected": 4,
+        "predicted": 4,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "32010-2025-10-0",
+        "split": "test",
+        "family": "32010-0",
+        "sgg": "32010",
+        "ym": "2025-10",
+        "basis": "hand_rule_example",
+        "expected": 3,
+        "predicted": 3,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "32010-2025-10-1",
+        "split": "test",
+        "family": "32010-1",
+        "sgg": "32010",
+        "ym": "2025-10",
+        "basis": "hand_rule_example",
+        "expected": 2,
+        "predicted": 2,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "32010-2025-10-2",
+        "split": "test",
+        "family": "32010-2",
+        "sgg": "32010",
+        "ym": "2025-10",
+        "basis": "hand_rule_example",
+        "expected": 1,
+        "predicted": 1,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "32010-2025-10-3",
+        "split": "test",
+        "family": "32010-3",
+        "sgg": "32010",
+        "ym": "2025-10",
+        "basis": "hand_rule_example",
+        "expected": null,
+        "predicted": null,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "32010-2025-10-4",
+        "split": "test",
+        "family": "32010-4",
+        "sgg": "32010",
+        "ym": "2025-10",
+        "basis": "provided_stage_preservation",
+        "expected": 5,
+        "predicted": 5,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "32010-2025-10-5",
+        "split": "test",
+        "family": "32010-5",
+        "sgg": "32010",
+        "ym": "2025-10",
+        "basis": "provided_stage_preservation",
+        "expected": 4,
+        "predicted": 4,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "32010-2025-11-0",
+        "split": "test",
+        "family": "32010-0",
+        "sgg": "32010",
+        "ym": "2025-11",
+        "basis": "hand_rule_example",
+        "expected": 3,
+        "predicted": 3,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "32010-2025-11-1",
+        "split": "test",
+        "family": "32010-1",
+        "sgg": "32010",
+        "ym": "2025-11",
+        "basis": "hand_rule_example",
+        "expected": 2,
+        "predicted": 2,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "32010-2025-11-2",
+        "split": "test",
+        "family": "32010-2",
+        "sgg": "32010",
+        "ym": "2025-11",
+        "basis": "hand_rule_example",
+        "expected": 1,
+        "predicted": 1,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "32010-2025-11-3",
+        "split": "test",
+        "family": "32010-3",
+        "sgg": "32010",
+        "ym": "2025-11",
+        "basis": "hand_rule_example",
+        "expected": null,
+        "predicted": null,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "32010-2025-11-4",
+        "split": "test",
+        "family": "32010-4",
+        "sgg": "32010",
+        "ym": "2025-11",
+        "basis": "provided_stage_preservation",
+        "expected": 5,
+        "predicted": 5,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "32010-2025-11-5",
+        "split": "test",
+        "family": "32010-5",
+        "sgg": "32010",
+        "ym": "2025-11",
+        "basis": "provided_stage_preservation",
+        "expected": 4,
+        "predicted": 4,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "32010-2025-12-0",
+        "split": "test",
+        "family": "32010-0",
+        "sgg": "32010",
+        "ym": "2025-12",
+        "basis": "hand_rule_example",
+        "expected": 3,
+        "predicted": 3,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "32010-2025-12-1",
+        "split": "test",
+        "family": "32010-1",
+        "sgg": "32010",
+        "ym": "2025-12",
+        "basis": "hand_rule_example",
+        "expected": 2,
+        "predicted": 2,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "32010-2025-12-2",
+        "split": "test",
+        "family": "32010-2",
+        "sgg": "32010",
+        "ym": "2025-12",
+        "basis": "hand_rule_example",
+        "expected": 1,
+        "predicted": 1,
+        "resource_ids": [
+          "eligible"
+        ],
+        "error": null
+      },
+      {
+        "id": "32010-2025-12-3",
+        "split": "test",
+        "family": "32010-3",
+        "sgg": "32010",
+        "ym": "2025-12",
+        "basis": "hand_rule_example",
+        "expected": null,
+        "predicted": null,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "32010-2025-12-4",
+        "split": "test",
+        "family": "32010-4",
+        "sgg": "32010",
+        "ym": "2025-12",
+        "basis": "provided_stage_preservation",
+        "expected": 5,
+        "predicted": 5,
+        "resource_ids": [],
+        "error": null
+      },
+      {
+        "id": "32010-2025-12-5",
+        "split": "test",
+        "family": "32010-5",
+        "sgg": "32010",
+        "ym": "2025-12",
+        "basis": "provided_stage_preservation",
+        "expected": 4,
+        "predicted": 4,
+        "resource_ids": [],
+        "error": null
+      }
+    ],
+    "reproducible": true,
+    "unsupported_region_rejected": true,
+    "external_classification_validity": null,
+    "expert_resource_suitability": null,
+    "real_region_transfer": null,
+    "collaboration_effect": null,
+    "adoption_decision": "not_evaluated"
+  },
+  "metadata": {
+    "version": "regional-workflow-cases-1",
+    "seed": 20261021,
+    "input_hash": "5d5ecb68ef1a9d28a7eec01735c6c43b5df0d3bb492d1d03d24d0c1bae3dbf8a",
+    "label_hash": "3bcbe28bd91ff091320a2b2ff08f68b3b7bb8bb570580181cd7a96110e741096",
+    "external_ground_truth": false,
+    "methodology_version": "regional-workflow-1",
+    "mapping_version": "regional-needs-1",
+    "reference_source": "AI-assisted hand-specified rule examples",
+    "family_count": 12,
+    "llm_calls": 0,
+    "code_hash": "69a3e234097b8ab0d6b7f5ab452cf4d7102eb7adb1dc5b37eaa6575caded399d"
+  },
+  "stage_reproducibility": {
+    "identical": true,
+    "repetitions": 2
+  },
+  "results": [],
+  "uncompleted": [
+    "independent regional ratings",
+    "resource suitability ratings",
+    "real third-region transfer",
+    "new-workflow A/B/C live comparison"
+  ],
+  "limitations": [
+    "AI-assisted synthetic contract cases; not observed people or independent field labels.",
+    "Development/test families and periods do not overlap; both are hand-designed synthetic examples, not external generalization.",
+    "Provided non-youth stages test preservation only. Youth examples test provisional rule implementation.",
+    "Matching uses synthetic decoys and no actual capacity or budget. No LLM calls were made.",
+    "Repeated runs are reproducibility checks, not additional independent cases. Existing temporal and A/B/C reports remain separate."
+  ]
+}
