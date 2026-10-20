@@ -51,3 +51,7 @@ SCHEMAS["regional_worker"] = RegionalDecision
 
 from backend.agents.regional_team import RegionalAudit
 SCHEMAS.update(regional_planner=RegionalDecision, regional_audit=RegionalAudit)
+
+from backend.agents.workflow import AnalystPlan,StatisticsDecision
+from backend.agents.workflow_matching import MatchingPlan
+SCHEMAS.update(workflow_analyst=AnalystPlan,workflow_statistics=StatisticsDecision,workflow_matching=MatchingPlan)

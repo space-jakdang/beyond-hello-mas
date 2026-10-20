@@ -35,6 +35,8 @@ class State(TypedDict, total=False):
     question_route: str
     local_action: str
     regional: dict
+    workflow: dict
+    workflow_deadline: float
 
 
 def crisis_evidence(payload):
@@ -100,7 +102,7 @@ class GraphService:
             task = PolicyTask.model_validate(state['scenario']['payload'])
             with self.store.connection(write=True) as db:
                 self.once(db, state, 'policy-delegation', 'route', {'worker': 'policy', 'task': task.model_dump()}, 'supervisor')
-        return {'crisis': evidence, 'question_route': route}
+        return {'crisis': evidence, 'question_route': route, 'workflow_deadline':time.time()+120}
 
     def classify_node(self, state):
         started = time.monotonic()
@@ -174,6 +176,49 @@ class GraphService:
             with self.store.connection(write=True) as db:
                 self.once(db,state,'regional-'+key,'agent_message',{'sender':sender,'recipient':recipient,**payload},sender)
         return emit
+
+    def workflow_analyze(self, state):
+        from backend.agents.workflow import analyze,WorkflowError
+        started=time.monotonic()
+        try:
+            if time.time()>=state['workflow_deadline']:raise WorkflowError('deadline')
+            plan=analyze(self.agents,state['run_id'],state['scenario']['sim_time'],state['classification'])
+            if time.time()>=state['workflow_deadline']:raise WorkflowError('deadline')
+            result={'analysis':plan,'status':'analyzed'}
+            self.regional_emit(state)('workflow-analysis','regional_analyst','statistics',{'plan':plan})
+        except Exception as exc:
+            result={'analysis':None,'status':'needs_human','reason':str(exc) if isinstance(exc,WorkflowError) else 'model_or_tool_unavailable','error_type':type(exc).__name__}
+        self.node_event(state,'regional_analyst',result,started)
+        return {'workflow':result}
+
+    def workflow_statistics(self, state):
+        from backend.agents.workflow import statistical_review
+        started=time.monotonic();workflow=dict(state['workflow'])
+        if workflow['analysis'] is None:
+            stats={'status':'needs_human','reason':'analysis_unavailable','blocked_evidence_ids':[]}
+        else:
+            stats=statistical_review(self.agents,self.settings,state['run_id'],state['scenario']['sim_time'],
+                state['classification'],workflow['analysis'],self.regional_emit(state),state['workflow_deadline'],
+                [t['payload']['observation'] for t in self.store.traces(state['run_id'],limit=1000)
+                 if t['kind']=='agent_message' and t['agent']=='statistics' and 'observation' in t['payload']])
+        workflow['statistics']=stats;workflow['status']=stats['status']
+        if stats.get('revised_plan'):workflow['analysis']=stats['revised_plan']
+        self.node_event(state,'statistics',stats,started)
+        return {'workflow':workflow}
+
+    def workflow_proposal(self,state):
+        started=time.monotonic();workflow=state['workflow']
+        proposal={'scope':'regional_evidence_review','workflow_version':'regional-workflow-1',
+            'task':state['classification']['task'],'assessment':state['classification'],
+            'workflow':workflow,'assignments':workflow.get('assignments',[]),
+            'human_review_required':True,'provisional':True,'external_delivery':False,
+            'fake':self.settings.llm_mode=='fake','scenario_hash':digest(state['scenario']),
+            'draft':{'text':'지역 분석·통계 근거를 담당자가 검토해야 합니다. 실제 배정이 아닙니다.','resource_ids':[]}}
+        proposal['snapshot_version']=digest(proposal)
+        self.regional_emit(state)('workflow-proposal','supervisor','approval',{'status':workflow['status'],'snapshot_version':proposal['snapshot_version']})
+        with self.store.connection(write=True) as db:
+            self.once(db,state,'workflow-proposal','node_end',{'snapshot_version':proposal['snapshot_version']},'supervisor')
+        return {'proposal':proposal}
 
     def regional_prepare(self, state):
         from backend.agents.regional_team import from_classification
@@ -368,6 +413,12 @@ class GraphService:
             for name, action in [('supervisor', self.supervisor), ('classify', self.classify_node), ('match', self.match_node),
                                  ('approval', self.approval_node), ('link', self.link_node), ('reject', self.reject_node), ('question', self.question_node), ('policy', self.policy_node)]:
                 builder.add_node(name, action)
+            builder.add_node('workflow_analyze',self.workflow_analyze)
+            builder.add_node('workflow_statistics',self.workflow_statistics)
+            builder.add_node('workflow_proposal',self.workflow_proposal)
+            builder.add_edge('workflow_analyze','workflow_statistics')
+            builder.add_edge('workflow_statistics','workflow_proposal')
+            builder.add_edge('workflow_proposal','approval')
             builder.add_node('regional_prepare',self.regional_prepare)
             builder.add_node('regional_analyst',lambda s:self.regional_step(s,'analyze'))
             builder.add_node('regional_reviewer',lambda s:self.regional_step(s,'review'))
@@ -378,7 +429,7 @@ class GraphService:
             builder.add_edge('regional_finalize','match')
             builder.add_edge(START, 'supervisor')
             builder.add_conditional_edges('supervisor', lambda s: 'link' if s['crisis'] else 'policy' if s['scenario']['type'] == 'policy' else ('question' if s.get('question_route') in ('history', 'human', 'classify', 'match') else 'classify'))
-            builder.add_conditional_edges('classify', lambda s: 'link' if s.get('local_action') else 'regional_prepare' if s['scenario']['payload'].get('collaboration') is True and s['classification'].get('metadata',{}).get('analysis_version')=='v3' else 'match')
+            builder.add_conditional_edges('classify', lambda s: 'link' if s.get('local_action') else 'workflow_analyze' if s['scenario']['payload'].get('workflow_version') else 'regional_prepare' if s['scenario']['payload'].get('collaboration') is True and s['classification'].get('metadata',{}).get('analysis_version')=='v3' else 'match')
             builder.add_node('regional_policy',self.regional_policy_node)
             builder.add_conditional_edges('match',lambda s:'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and s['proposal'].get('collaboration') and any(a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else 'approval')
             builder.add_edge('regional_policy','approval')
