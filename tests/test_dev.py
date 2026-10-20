@@ -10,7 +10,8 @@ def test_live_preflight_keeps_ledger_and_does_not_fallback(monkeypatch):
     checked=[]
     settings=SimpleNamespace(evaluation_id=None,openai_model='configured',llm_budget_usd=20,
         input_usd_per_million=1,output_usd_per_million=1,price_version='configured',
-        gov24_service_key=SimpleNamespace(get_secret_value=lambda:'configured'),catalog_path='existing')
+        catalog_path='existing')
+    settings.gov24_service_key=SimpleNamespace(get_secret_value=lambda:'configured')
     def make_settings(**kwargs):
         assert kwargs==dict(data_mode='local',llm_mode='live',resource_catalog='v3')
         return settings
