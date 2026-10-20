@@ -101,6 +101,8 @@ curl -X POST http://127.0.0.1:8000/scenarios/run -H 'Content-Type: application/j
 
 ### 지역 에이전트 업무
 
+`/future`에서는 지역 선택과 시작 버튼 하나로 다음 3개 기간의 합성 시나리오 분석을 예약합니다. 기간을 고르고 실제 지도에서 동을 선택하면 조건부 자원 제안과 추천 슬롯이 반응합니다. 원자료를 교체하지 않으며 미래 예측·실제 정원 배정이 아닙니다. 생성 가정과 복구 방식은 [미래 시나리오](docs/future-simulation.md)를 참고하세요.
+
 `/workspace`에서 지역·성별·집단·관측 월·자원 기준일을 지정해 Supervisor에게 업무를 지시합니다. 지역 분석 → 통계 도구 조회/보완 → 조건부 자원 매칭 → 담당자 검토를 같은 실행의 지도와 탭에서 확인합니다. `/console?run=…`에서 보완 요청을 하면 기존 제안과 사유를 남기고 새 승인 대상으로 다시 실행합니다. 기존 동네 분석은 `/neighborhoods`, 세부 에이전트 전달 기록은 `/observatory`에 유지합니다.
 
 등급 의미와 욕구 매핑은 교체 가능한 잠정 기준입니다. 개인 진단·실제 배정·기관 도입 성과를 뜻하지 않습니다. [업무 계약](docs/regional-workflow.md), [UI 설계](docs/design/agent-workspace.md), [AI 보조 합성 데이터와 평가](docs/synthetic-datasets.md)를 참고하세요. `make eval-workflow`로 지역 업무의 합성 규칙/자원 조건 검증을 생성하고 `/evaluation`에서 확인할 수 있습니다. 실제 분류 타당성·전문가 적합성·타 지역 일반화·새 업무의 협업 효과는 별도 검증이 필요합니다.
