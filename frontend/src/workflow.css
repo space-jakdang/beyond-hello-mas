@@ -17,3 +17,4 @@
 .workflow-steps .step-held{background:#eee8f6;color:#60447a}
 @media(max-width:480px){.task-fields label:nth-child(4),.task-fields label:nth-child(5){grid-column:span 2}}
 .workflow-evaluation .workflow-tabs{flex-wrap:wrap}
+.policy-candidate-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:16px}.policy-candidate-grid .card{margin:0;min-width:0;overflow-wrap:anywhere}.policy-candidate-grid h4{font-size:1.1rem}.policy-candidate-grid dd{margin:8px 0;white-space:pre-line}.policy-candidates{margin-top:2rem;padding-top:1rem;border-top:1px solid #e5e8eb}

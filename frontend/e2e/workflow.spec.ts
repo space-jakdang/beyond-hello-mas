@@ -91,3 +91,18 @@ test('geographic geometry renders dong labels and keyboard selection',async({pag
  const shape=page.locator('.map-scroll path').first();await shape.focus();await page.keyboard.press('Enter');
  await expect(shape).toHaveAttribute('aria-pressed','true');
 });
+
+
+test('policy evidence cards remain tentative and responsive',async({page,request})=>{
+ const source=await(await request.get('/analysis/groups')).json();
+ const response=await request.post('/scenarios/run',{data:{id:'regional-workflow-cards',type:'monthly',sim_time:'2026-10-21T09:00:00+09:00',payload:{workflow_version:'regional-workflow-1',task:{sgg:'11230',sex:'M',age_group:'youth',ym:source.months.at(-1),as_of:'2026-10-21'}}}});
+ const run=await response.json();let overview:any;
+ await expect.poll(async()=>{overview=await(await request.get(`/runs/${run.id}/overview`)).json();return overview.run.status;}).toBe('awaiting_approval');
+ overview.review.proposal.policy_research={status:'completed',steps:3,candidates:[{policy:{id:'test',title:'테스트 관계망 지원',agency:'테스트 기관',scope:'gangnam',url:'https://www.gov.kr/'},explanation:'관계망 욕구의 조사 후보',evidence:{field:'title',value:'테스트 관계망 지원'},detail_status:'live',checked_at:'2026-10-21'}]};
+ await page.route(`**/runs/${run.id}/overview`,r=>r.fulfill({json:overview}));
+ await page.setViewportSize({width:390,height:844});await page.goto(`/workspace?run=${run.id}`);
+ await page.getByRole('tab',{name:'자원 제안'}).click();
+ await expect(page.getByLabel('추가 정책 조사 후보')).toContainText('확정 배정에 포함되지 않습니다');
+ await expect(page.getByRole('link',{name:'공식 정책 원문 ↗'})).toHaveAttribute('href','https://www.gov.kr/');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
