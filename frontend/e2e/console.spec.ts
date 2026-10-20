@@ -72,3 +72,16 @@ test('switching review targets hides stale controls until the new snapshot arriv
  await expect(page.getByTestId('review-panel')).toContainText('실행 상세 · 반려');
  expect((await(await request.get(`/runs/${first}/approval`)).json()).approval.status).toBe('pending');
 });
+
+
+test('operator can focus urgent and unconfirmed alerts without changing decisions',async({page,request})=>{
+ const r=await request.post('/scenarios/run',{data:{id:'priority-filter-test',type:'crisis',sim_time:'2025-07-01T09:00:00+09:00',payload:{text:'죽고 싶어요.'}}});const run=await r.json();
+ await page.goto('/console');await page.getByTestId(`alert-${run.id}-crisis`).waitFor();
+ await page.getByRole('button',{name:/위기·인계/}).click();
+ await expect(page.getByTestId(`alert-${run.id}-crisis`)).toBeVisible();
+ expect(await page.locator('.alert-list article').evaluateAll(elements=>elements.every(e=>['crisis','human_handoff'].includes(e.getAttribute('data-alert-type')||'')))).toBe(true);
+ await page.getByRole('button',{name:/사람 미확인/}).click();
+ await expect(page.getByTestId(`alert-${run.id}-crisis`)).toBeVisible();
+ expect(await page.locator('.alert-list article').evaluateAll(elements=>elements.every(e=>e.getAttribute('data-alert-status')!=='acknowledged'))).toBe(true);
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
