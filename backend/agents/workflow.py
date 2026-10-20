@@ -35,7 +35,8 @@ def methodology(assessment):
             'group_definition':', '.join(json.loads((Path(__file__).resolve().parents[2]/'rules/age_crosswalk.json').read_text())['concept'][assessment['task']['age_group']]),
             'provisional':True,'purpose':'within-region outreach priority; not individual diagnosis or absolute cross-region risk',
             'source_age_mapping':'source-specific ranges are retained; requested group labels are not measured population equivalence',
-            'period_role':'execution reference only; not a monthly observation' if assessment['period_aggregate'] else 'observed month',
+            'synthetic_future':assessment['metadata'].get('synthetic_future',False),
+            'period_role':'synthetic future scenario; not an observation or calibrated forecast' if assessment['metadata'].get('synthetic_future') else 'execution reference only; not a monthly observation' if assessment['period_aggregate'] else 'observed month',
             'policy_role':'policy evidence is researched downstream; statistical tools do not establish policy eligibility'}
 
 

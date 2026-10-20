@@ -491,6 +491,10 @@ class GraphService:
             raise ValueError('restore the original LLM_MODE before resuming this run')
         config = {'configurable': {'thread_id': run_id}}
         with self.lock(run_id), self.graph() as graph, tracing_context(enabled=False):
+            run=self.store.get_run(run_id)
+            if run.scenario_id=='regional-workflow-future' and run.status=='failed':return run
+            if run.status=='pending':
+                with self.store.connection(write=True) as db:self.update_run(db,run_id,status='running')
             snapshot = graph.get_state(config)
             with self.store.connection() as db:
                 row = db.execute('SELECT body FROM approvals WHERE run_id=?', (run_id,)).fetchone()
@@ -587,7 +591,7 @@ class GraphService:
 
     def recover(self):
         with self.store.connection() as db:
-            ids = [r[0] for r in db.execute('SELECT run_id FROM workflows')]
+            ids = [r[0] for r in db.execute('SELECT run_id FROM workflows ORDER BY rowid')]
         for run_id in ids:
             try:
                 self.drive(run_id)
