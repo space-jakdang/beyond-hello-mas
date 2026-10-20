@@ -33,6 +33,7 @@ def select(agents,run_id,sim_ts,rows,statistics):
         recommendations=[c for c in row['recommendations'] if selection and c['id'] in selection['resource_ids']]
         result.append({**row,'recommendations':recommendations,'shortfall':3-len(recommendations),
             'uncovered_needs':sorted(set(row['needs'])-{n for c in recommendations for n in c['needs']}),
+            'catalog_reason':row['reason'],
             'reason':selection['reason'] if selection else row['reason'] or 'agent_deferred',
             'status':'conditional_recommendation' if recommendations else 'needs_human'})
-    return result,{'status':'reviewed','summary':plan['summary']}
+    return result,{'status':'reviewed' if any(r['recommendations'] for r in result) else 'needs_human','summary':plan['summary']}

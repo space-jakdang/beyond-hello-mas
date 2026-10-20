@@ -206,6 +206,27 @@ class GraphService:
         self.node_event(state,'statistics',stats,started)
         return {'workflow':workflow}
 
+    def workflow_match(self,state):
+        from backend.tools.regional_resources import candidates
+        from backend.agents.workflow_matching import select
+        started=time.monotonic();workflow=dict(state['workflow']);rows=[]
+        cached=next((t['payload']['candidates'] for t in self.store.traces(state['run_id'],limit=1000)
+                     if t['kind']=='agent_message' and t['payload'].get('result_kind')=='workflow_candidates'),None)
+        try:
+            if time.time()>=state['workflow_deadline']:raise ValueError('deadline')
+            rows=cached if cached is not None else candidates(state['classification'],workflow['statistics'],load_catalog(self.settings.catalog_path))
+            self.regional_emit(state)('workflow-candidates','statistics','match',{'result_kind':'workflow_candidates','candidates':rows})
+            rows,matching=select(self.agents,state['run_id'],state['scenario']['sim_time'],rows,workflow['statistics'])
+            if time.time()>=state['workflow_deadline']:raise ValueError('deadline')
+        except Exception as exc:
+            if not rows:rows=candidates(state['classification'],{'status':'needs_human'},[])
+            rows=[{**r,'recommendations':[],'shortfall':3,'uncovered_needs':r['needs'],'reason':'matching_unavailable','status':'needs_human'} for r in rows]
+            matching={'status':'needs_human','summary':'매칭을 완료하지 못했습니다. 담당자 확인이 필요합니다.','error_type':type(exc).__name__}
+        workflow.update(assignments=rows,matching=matching,status='reviewed' if matching['status']=='reviewed' and workflow['statistics']['status']=='reviewed' else 'needs_human')
+        self.regional_emit(state)('workflow-match','match','supervisor',matching)
+        self.node_event(state,'match',{'status':matching['status'],'assignment_count':len(rows)},started)
+        return {'workflow':workflow}
+
     def workflow_proposal(self,state):
         started=time.monotonic();workflow=state['workflow']
         proposal={'scope':'regional_evidence_review','workflow_version':'regional-workflow-1',
@@ -213,7 +234,8 @@ class GraphService:
             'workflow':workflow,'assignments':workflow.get('assignments',[]),
             'human_review_required':True,'provisional':True,'external_delivery':False,
             'fake':self.settings.llm_mode=='fake','scenario_hash':digest(state['scenario']),
-            'draft':{'text':'지역 분석·통계 근거를 담당자가 검토해야 합니다. 실제 배정이 아닙니다.','resource_ids':[]}}
+            'draft':{'text':'지역 분석·통계 근거와 조건부 자원을 담당자가 검토해야 합니다. 실제 배정이 아닙니다.',
+                     'resource_ids':sorted({c['id'] for r in workflow.get('assignments',[]) for c in r['recommendations']})}}
         proposal['snapshot_version']=digest(proposal)
         self.regional_emit(state)('workflow-proposal','supervisor','approval',{'status':workflow['status'],'snapshot_version':proposal['snapshot_version']})
         with self.store.connection(write=True) as db:
@@ -304,15 +326,19 @@ class GraphService:
     def regional_policy_node(self, state):
         started=time.monotonic()
         proposal=dict(state['proposal'])
-        gaps=[a for a in proposal['assignments'] if a.get('shortfall',0)>0]
+        gaps=[a for a in proposal['assignments'] if a.get('shortfall',0)>0 and (not proposal.get('workflow_version') or a.get('catalog_filter_performed'))]
         scopes={'central'}
         jurisdiction={'11230':('seoul','gangnam'),'32010':('gangwon','chuncheon')}
         unsupported=any(a['dong_cd'][:5] not in jurisdiction for a in gaps)
         for assignment in gaps:
             scopes.update(jurisdiction.get(assignment['dong_cd'][:5],()))
-        remaining=max(0,min(6,self.settings.llm_max_calls)-state['classification']['collaboration']['calls'])
+        with self.store.connection() as db:
+            calls=db.execute('SELECT COUNT(*) FROM llm_calls WHERE run_id=?',(state['run_id'],)).fetchone()[0]
+        remaining=max(0,min(6,self.settings.llm_max_calls)-calls)
         task={'goal':'지역 집단 자원 부족을 보완할 정책 후보를 조사하세요. 개인 자격·정원·배정은 확정하지 마세요.',
               'scopes':sorted(scopes),'query':'','max_steps':max(1,remaining)}
+        if proposal.get('workflow_version'):
+            task['goal']+=' 욕구 가설: '+', '.join(sorted({n for a in gaps for n in a.get('needs',[])}))+'; 기준일: '+proposal['task']['as_of']
         emit=self.regional_emit(state)
         emit('policy-delegate','supervisor','policy',{'goal':task['goal'],'task':task,'gap_count':len(gaps),'remaining_calls':remaining})
         cached=next((t['payload']['result'] for t in self.store.traces(state['run_id'],limit=1000)
@@ -417,8 +443,10 @@ class GraphService:
             builder.add_node('workflow_statistics',self.workflow_statistics)
             builder.add_node('workflow_proposal',self.workflow_proposal)
             builder.add_edge('workflow_analyze','workflow_statistics')
-            builder.add_edge('workflow_statistics','workflow_proposal')
-            builder.add_edge('workflow_proposal','approval')
+            builder.add_node('workflow_match',self.workflow_match)
+            builder.add_edge('workflow_statistics','workflow_match')
+            builder.add_edge('workflow_match','workflow_proposal')
+            builder.add_conditional_edges('workflow_proposal',lambda s:'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and any(a.get('catalog_filter_performed') and a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else 'approval')
             builder.add_node('regional_prepare',self.regional_prepare)
             builder.add_node('regional_analyst',lambda s:self.regional_step(s,'analyze'))
             builder.add_node('regional_reviewer',lambda s:self.regional_step(s,'review'))

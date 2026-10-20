@@ -32,7 +32,7 @@ def test_budget_holds_and_checkpoint_reuses_calls(service,monkeypatch):
     monkeypatch.setattr(workflow_module,'run_tool',lambda *args: (_ for _ in ()).throw(AssertionError('tool must be replayed')))
     assert service.drive(run.id).status=='awaiting_approval'
     traces=service.store.traces(run.id,limit=1000)
-    assert sum(t['kind']=='llm_call' for t in traces)==3
+    assert sum(t['kind']=='llm_call' for t in traces) in (3,4)
     assert sum(t['kind']=='agent_message' and 'observation' in t['payload'] for t in traces)==1
     service.settings.llm_max_calls=1
     held=run_task(service)
@@ -63,3 +63,23 @@ def test_statistics_revision_removes_unassessable_priorities(service,monkeypatch
     stats=workflow['statistics']
     assert stats['status']=='reviewed' and stats['revised_plan']
     assert not set(workflow['analysis']['priority_evidence_ids'])&set(stats['blocked_evidence_ids'])
+
+
+def test_matching_replay_and_catalog_failure_preserve_evidence(service,monkeypatch):
+    original=service.workflow_match
+    def crash(state):
+        original(state)
+        raise KeyboardInterrupt()
+    monkeypatch.setattr(service,'workflow_match',crash)
+    run=service.register(scenario('monthly',workflow_version='regional-workflow-1',task=task().model_dump(mode='json')))
+    with pytest.raises(KeyboardInterrupt):service.drive(run.id)
+    calls=lambda:sum(t['kind']=='llm_call' for t in service.store.traces(run.id,limit=1000))
+    before=calls()
+    monkeypatch.setattr(service,'workflow_match',original)
+    assert service.drive(run.id).status=='awaiting_approval' and calls()==before
+    import backend.graph as module
+    monkeypatch.setattr(module,'load_catalog',lambda *args: (_ for _ in ()).throw(OSError('unavailable')))
+    held=service.start(scenario('monthly',workflow_version='regional-workflow-1',task=task().model_dump(mode='json'),research_gaps=True))
+    proposal=service.approval(held.id)['proposal']
+    assert proposal['assignments'] and all(not r['recommendations'] for r in proposal['assignments'])
+    assert 'policy_research' not in proposal
