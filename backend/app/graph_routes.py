@@ -1,7 +1,7 @@
 from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
-from pydantic import ValidationError
+from pydantic import ValidationError, Field
 from backend.app.contracts import Contract, Nonempty, Scenario
 
 
@@ -10,6 +10,12 @@ class DecisionInput(Contract):
     status: Literal['approved', 'rejected']
     operator: Nonempty
     reason: Nonempty | None = None
+
+
+class RevisionInput(Contract):
+    snapshot_version: Nonempty
+    operator: Nonempty
+    reason: Nonempty = Field(max_length=1000)
 
 
 def graph_router(service):
@@ -37,7 +43,10 @@ def graph_router(service):
         except KeyError:
             proposal = None
         policy = next((t['payload'] for t in traces if t['agent'] == 'policy' and t['kind'] == 'node_end'), None)
-        return {'run': run, 'policy': policy, 'classification': classification, 'review': proposal, 'traces': traces}
+        with service.store.connection() as db:
+            parent=db.execute('SELECT parent_run_id FROM revisions WHERE child_run_id=?',(run_id,)).fetchone()
+            child=db.execute('SELECT child_run_id FROM revisions WHERE parent_run_id=?',(run_id,)).fetchone()
+        return {'revision':{'parent_run_id':parent[0] if parent else None,'child_run_id':child[0] if child else None},'run': run, 'policy': policy, 'classification': classification, 'review': proposal, 'traces': traces}
 
     @router.get('/runs/{run_id}/approval')
     def approval(run_id: str):
@@ -54,6 +63,18 @@ def graph_router(service):
             raise HTTPException(404, 'approval not found')
         except (ValueError, ValidationError) as exc:
             raise HTTPException(409, str(exc))
+
+    @router.post('/runs/{run_id}/revision',status_code=202)
+    def revise(run_id:str,body:RevisionInput,background:BackgroundTasks):
+        from backend.revisions import request_revision
+        try:
+            child=request_revision(service,run_id,body.snapshot_version,body.operator,body.reason)
+            background.add_task(service.execute,child.id)
+            return child
+        except KeyError:
+            raise HTTPException(404,'approval not found')
+        except ValueError as exc:
+            raise HTTPException(409,str(exc))
 
     @router.get('/runs/{run_id}/linkage')
     def linkage(run_id: str):

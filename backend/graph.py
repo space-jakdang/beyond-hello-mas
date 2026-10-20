@@ -66,6 +66,7 @@ class GraphService:
                 CREATE TABLE IF NOT EXISTS workflows (run_id TEXT PRIMARY KEY REFERENCES runs(id), scenario TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS approvals (id TEXT PRIMARY KEY, run_id TEXT NOT NULL UNIQUE REFERENCES runs(id), body TEXT NOT NULL, proposal TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS linkages (run_id TEXT PRIMARY KEY REFERENCES runs(id), body TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS revisions (parent_run_id TEXT PRIMARY KEY REFERENCES runs(id), child_run_id TEXT NOT NULL UNIQUE REFERENCES runs(id), request_hash TEXT NOT NULL);
                 CREATE TABLE IF NOT EXISTS effects (run_id TEXT NOT NULL REFERENCES runs(id), name TEXT NOT NULL, PRIMARY KEY(run_id,name));
             ''')
 
@@ -182,7 +183,7 @@ class GraphService:
         started=time.monotonic()
         try:
             if time.time()>=state['workflow_deadline']:raise WorkflowError('deadline')
-            plan=analyze(self.agents,state['run_id'],state['scenario']['sim_time'],state['classification'])
+            plan=analyze(self.agents,state['run_id'],state['scenario']['sim_time'],state['classification'],state['scenario']['payload'].get('revision'))
             if time.time()>=state['workflow_deadline']:raise WorkflowError('deadline')
             result={'analysis':plan,'status':'analyzed'}
             self.regional_emit(state)('workflow-analysis','regional_analyst','statistics',{'plan':plan})
@@ -236,6 +237,7 @@ class GraphService:
             'fake':self.settings.llm_mode=='fake','scenario_hash':digest(state['scenario']),
             'draft':{'text':'지역 분석·통계 근거와 조건부 자원을 담당자가 검토해야 합니다. 실제 배정이 아닙니다.',
                      'resource_ids':sorted({c['id'] for r in workflow.get('assignments',[]) for c in r['recommendations']})}}
+        if state['scenario']['payload'].get('revision'):proposal['revision']=state['scenario']['payload']['revision']
         proposal['snapshot_version']=digest(proposal)
         self.regional_emit(state)('workflow-proposal','supervisor','approval',{'status':workflow['status'],'snapshot_version':proposal['snapshot_version']})
         with self.store.connection(write=True) as db:
@@ -516,6 +518,7 @@ class GraphService:
         return self.store.get_run(run_id)
 
     def register(self, scenario):
+        if 'revision' in scenario.payload:raise ValueError('use the revision endpoint for linked reruns')
         if scenario.payload.get('workflow_version'):
             from backend.tools.regional_task import task_from
             if scenario.type != 'monthly':raise ValueError('regional task requires monthly scenario')
@@ -532,14 +535,17 @@ class GraphService:
                 if (person.person_id, person.age, person.sgg) != (original.person_id, original.age, original.sgg):
                     raise ValueError('reply_to person mismatch')
         run_id = str(uuid4())
-        run = Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
-            data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
-            rule_version='person-v02' if 'person' in scenario.payload else 'seohee-region-2' if scenario.type=='monthly' and scenario.payload.get('analysis_version')!='legacy-v1' else 'provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='seohee-resources-3' if self.settings.resource_catalog == 'v3' else 'curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
+        run = self.new_run(scenario,run_id)
         with self.lock(run_id):
             self.store.create_run(run)
             with self.store.connection(write=True) as db:
                 db.execute('INSERT INTO workflows VALUES (?,?)', (run_id, scenario.model_dump_json()))
             return run
+
+    def new_run(self,scenario,run_id):
+        return Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
+            data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
+            rule_version='person-v02' if 'person' in scenario.payload else 'seohee-region-2' if scenario.type=='monthly' and scenario.payload.get('analysis_version')!='legacy-v1' else 'provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='seohee-resources-3' if self.settings.resource_catalog == 'v3' else 'curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
 
     def start(self, scenario):
         return self.drive(self.register(scenario).id)
@@ -573,7 +579,8 @@ class GraphService:
                 raise ValueError('resumable approval checkpoint not ready')
             decision = Approval.model_validate({**current, 'status': status, 'operator': operator, 'reason': reason, 'decided_at': utcnow()})
             with self.store.connection(write=True) as db:
-                db.execute('UPDATE approvals SET body=? WHERE run_id=?', (decision.model_dump_json(), run_id))
+                changed=db.execute("UPDATE approvals SET body=? WHERE run_id=? AND json_extract(body,'$.status')='pending' AND json_extract(body,'$.snapshot_version')=?", (decision.model_dump_json(),run_id,snapshot_version))
+                if changed.rowcount!=1:raise ValueError('approval changed; refresh before deciding')
                 self.once(db, state.values, 'decision', 'approval', decision.model_dump(mode='json'), 'approval')
             return self.drive(run_id)
 
