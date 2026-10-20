@@ -24,7 +24,12 @@ export function MapView({data,dongs,segments,selected,onSelect}:{data:Pick<Analy
     <div className="map-scroll" tabIndex={0} aria-label="동별 지도 이동 영역"><svg viewBox="0 0 700 500" style={{width:`${zoom*100}%`}} aria-label={geographic?'동별 분석 지도':'합성 동 격자'}>
       {features.map(f=>{const code=f.properties.dong_cd,stage=stageOf(segments.filter(s=>s.dong_cd===code));
         const path=polygons(f.geometry).flatMap(p=>p.map(r=>r.map((v,i)=>`${i?'L':'M'}${project(v).join(',')}`).join(' ')+'Z')).join(' ');
-        return <path key={code} d={path} fill={colors[stage??0]} fillRule="evenodd" stroke={selected===code?'#142f36':'#fff'} strokeWidth={selected===code?3:1} vectorEffect="non-scaling-stroke" tabIndex={0} role="button" aria-label={`${f.properties.dong_nm} ${stageName(stage)}`} aria-pressed={selected===code} onClick={()=>onSelect(code)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(code);}}}><title>{f.properties.dong_nm} · {stageName(stage)}</title></path>;
+        // Labels are approximate anchors; exact identity is also available in the selectable table.
+        const rings=polygons(f.geometry).map(p=>p[0].slice(0,-1));
+        const area=(r:number[][])=>Math.abs(r.reduce((sum,p,i)=>{const q=r[(i+1)%r.length];return sum+p[0]*q[1]-q[0]*p[1];},0));
+        const ring=rings.reduce((a,b)=>area(a)>=area(b)?a:b);
+        const center=project([(Math.min(...ring.map(p=>p[0]))+Math.max(...ring.map(p=>p[0])))/2,(Math.min(...ring.map(p=>p[1]))+Math.max(...ring.map(p=>p[1])))/2]);
+        return <g key={code}><path d={path} fill={colors[stage??0]} fillRule="evenodd" stroke={selected===code?'#142f36':'#fff'} strokeWidth={selected===code?3:1} vectorEffect="non-scaling-stroke" tabIndex={0} role="button" aria-label={`${f.properties.dong_nm} ${stageName(stage)}`} aria-pressed={selected===code} onClick={()=>onSelect(code)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(code);}}}><title>{f.properties.dong_nm} · {stageName(stage)}</title></path>{geographic&&<text className="map-label" x={center[0]} y={center[1]} textAnchor="middle">{f.properties.dong_nm}</text>}</g>;
       })}
     </svg></div></>;
 }
