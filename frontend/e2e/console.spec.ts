@@ -55,3 +55,20 @@ test('console retries its initial load and restores a pending approval after rel
   await alert.getByRole('button',{name:'실행 상세'}).click();
   await expect(page.getByRole('heading',{name:'실행 상세 · 승인 대기'})).toBeVisible();
 });
+
+test('switching review targets hides stale controls until the new snapshot arrives',async({page,request})=>{
+ const run=async(id:string)=>(await(await request.post('/scenarios/run',{data:{id,type:'case',sim_time:'2025-07-01T09:00:00+09:00',payload:{text:'합성 상담 요청'}}})).json()).id;
+ const first=await run('review-first'),second=await run('review-second');
+ await page.goto(`/console?run=${first}`);
+ await expect(page.getByTestId('review-panel')).toContainText(first);
+ let release:()=>void=()=>{};const held=new Promise<void>(resolve=>{release=resolve;});
+ await page.route(`**/runs/${second}/overview`,async route=>{await held;await route.continue();});
+ await page.getByTestId(`alert-${second}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
+ await expect(page.getByTestId('review-panel')).toHaveCount(0);
+ release();await expect(page.getByTestId('review-panel')).toContainText(second);
+ await page.getByLabel('담당자 이름').fill('전환 검토자');
+ await page.getByLabel('반려 사유').fill('새 대상의 자료 보완');
+ await page.getByRole('button',{name:'반려',exact:true}).click();
+ await expect(page.getByTestId('review-panel')).toContainText('실행 상세 · 반려');
+ expect((await(await request.get(`/runs/${first}/approval`)).json()).approval.status).toBe('pending');
+});

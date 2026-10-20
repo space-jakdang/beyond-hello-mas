@@ -1,0 +1,19 @@
+{
+  "version": "regional-workflow-evaluation-1",
+  "methodology_version": "regional-workflow-1",
+  "generator_version": "regional-workflow-cases-1",
+  "cases": 36,
+  "families": 12,
+  "repetitions": 2,
+  "top_k": 3,
+  "contract_acceptance": "all reference grades and holds agree; no mandatory resource violation; every eligible synthetic case receives a candidate; unsupported region rejected; no case execution error",
+  "field_acceptance": {
+    "minimum_independent_cases": 24,
+    "independent_reviewers": 2,
+    "comparison": "same inputs, tools and budgets for deterministic / single / multi-agent; case-cluster paired confidence interval",
+    "minimum_C_minus_B_percentage_points": 5,
+    "lower_95_percent_bound_above": 0,
+    "major_errors_allowed": 0,
+    "status": "not_evaluated"
+  }
+}

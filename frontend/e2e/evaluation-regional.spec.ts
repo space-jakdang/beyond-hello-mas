@@ -50,3 +50,19 @@ test('resource gap research stays a candidate outside approved assignments',asyn
  await page.getByTestId(`alert-${id}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
  await expect(page.getByText('정책 조사 결과는 후보입니다.',{exact:false})).toBeVisible();
 });
+
+test('workflow evaluation separates synthetic contracts from unmeasured field quality',async({page,request})=>{
+ const reports=await(await request.get('/reports?source=sample')).json();
+ const report=reports.find((r:any)=>r.schema_version==='5');expect(report).toBeTruthy();
+ await page.goto('/evaluation');await page.getByRole('combobox',{name:'평가 실행'}).selectOption(report.id);
+ await expect(page.getByTestId('suite-count')).toHaveText('36');
+ await expect(page.getByRole('tabpanel')).toContainText('실제 지역 분류 타당성: 미측정');
+ await page.getByRole('tab',{name:'자원 적합성'}).click();
+ await expect(page.getByRole('tabpanel')).toContainText('전문가 자원 적합성: 미측정');
+ await page.getByRole('tab',{name:'자원 적합성'}).press('End');
+ await expect(page.getByRole('tabpanel')).toContainText('새 업무의 다중 에이전트 효과: 미측정');
+ await page.getByRole('tab',{name:'지역·시간 전이'}).click();
+ await expect(page.getByRole('tabpanel')).toContainText('2025-12');
+ await page.setViewportSize({width:390,height:844});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});

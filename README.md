@@ -84,3 +84,9 @@ curl -X POST http://127.0.0.1:8000/scenarios/run -H 'Content-Type: application/j
 개인 판정 확장은 후순위로 두고 지역 협업·월별 합성 검증을 진행합니다. `/observatory`의 `monthly-collaboration`은 분석안→별도 근거 검토→필요 시 한 번 재작성→담당자 승인 순서입니다. 화면에서 에이전트 간 전달과 수정 요청을 확인할 수 있습니다.
 
 `/evaluation`에서 공개 합성 평가를 기본 조회합니다. `make eval-v2`는 계약, `make eval-temporal`은 시간순 한 달 예측과 기준선, `make eval-collaboration`은 동일 입력의 단일 제안/협업 통신 계약을 평가합니다. 합성 신호 예측을 실제 고립 예측으로, fake 협업 통과를 실제 모델의 품질 개선으로 해석하지 않습니다.
+
+### 지역 에이전트 업무
+
+`/workspace`에서 지역·성별·집단·관측 월·자원 기준일을 지정해 Supervisor에게 업무를 지시합니다. 지역 분석 → 통계 도구 조회/보완 → 조건부 자원 매칭 → 담당자 검토를 같은 실행의 지도와 탭에서 확인합니다. `/console?run=…`에서 보완 요청을 하면 기존 제안과 사유를 남기고 새 승인 대상으로 다시 실행합니다. 기존 동네 분석은 `/neighborhoods`, 세부 에이전트 전달 기록은 `/observatory`에 유지합니다.
+
+등급 의미와 욕구 매핑은 교체 가능한 잠정 기준입니다. 개인 진단·실제 배정·기관 도입 성과를 뜻하지 않습니다. [업무 계약](docs/regional-workflow.md), [UI 설계](docs/design/agent-workspace.md), [AI 보조 합성 데이터와 평가](docs/synthetic-datasets.md)를 참고하세요. `make eval-workflow`로 지역 업무의 합성 규칙/자원 조건 검증을 생성하고 `/evaluation`에서 확인할 수 있습니다. 실제 분류 타당성·전문가 적합성·타 지역 일반화·새 업무의 협업 효과는 별도 검증이 필요합니다.
