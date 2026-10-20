@@ -12,8 +12,10 @@ export function Policy() {
   const [detail,setDetail]=useState<Detail>();
   const detailPanel=useRef<HTMLElement>(null);
   useEffect(()=>{if(detail) detailPanel.current?.focus();},[detail]);
-  const [query,setQuery]=useState(''), [scope,setScope]=useState('all');
-  const [filter,setFilter]=useState({query:'',scope:'all'});
+  const initialScope=new URLSearchParams(location.search).get('scope')||'all';
+  const validScope=initialScope in scopes?initialScope:'all';
+  const [query,setQuery]=useState(''), [scope,setScope]=useState(validScope);
+  const [filter,setFilter]=useState({query:'',scope:validScope});
   const [busy,setBusy]=useState(false), [error,setError]=useState('');
   async function search(page=1, selection=filter) {
     const params=new URLSearchParams({query:selection.query,page:String(page),per_page:'12'});

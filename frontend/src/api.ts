@@ -3,7 +3,7 @@ export async function api<T>(path: string, body?: unknown): Promise<T> {
   if (!response.ok) throw new Error(`${response.status}: ${await response.text()}`);
   return response.json();
 }
-export type Run = {id: string; scenario_id: string; status: string; data_mode: string; llm_mode: string; model_version: string; started_at: string};
+export type Run = {id: string; scenario_id: string; status: string; error?:string|null; data_mode: string; llm_mode: string; model_version: string; started_at: string};
 export type Trace = {run_id: string; seq: number; agent: string; kind: string; sim_ts: string; wall_ts: string; latency_ms: number; tokens_in: number; tokens_out: number; payload: Record<string, unknown>};
 export const statusText: Record<string, string> = {running: '실행 중', awaiting_approval: '승인 대기', completed: '완료', rejected: '반려', failed: '실패'};
 export const scenarios = [
