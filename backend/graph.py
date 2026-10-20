@@ -90,6 +90,10 @@ class GraphService:
         evidence = crisis_evidence(state['scenario']['payload'])
         self.node_event(state, 'supervisor', {'crisis_rule_version': 'crisis-expression-2', 'evidence': evidence}, started)
         route = None
+        if not evidence and state['scenario']['payload'].get('workflow_version'):
+            from backend.tools.regional_task import task_from
+            task=task_from(state['scenario']['payload'])
+            self.regional_emit(state)('task','supervisor','regional_analyst',{'task':task.model_dump(mode='json'),'goal':task.goal})
         if not evidence and state['scenario']['type'] == 'question':
             route = self.agents.call(state['run_id'], state['scenario']['sim_time'], 'route', state['scenario']['payload']).route
         if not evidence and state['scenario']['type'] == 'policy':
@@ -101,7 +105,12 @@ class GraphService:
     def classify_node(self, state):
         started = time.monotonic()
         scenario = Scenario.model_validate(state['scenario'])
-        if scenario.type == 'admin' or 'person' in scenario.payload:
+        if scenario.payload.get('workflow_version'):
+            from backend.tools.regional_task import assess, task_from
+            result=assess(self.settings,task_from(scenario.payload))
+            self.node_event(state, 'classify', result, started)
+            return {'classification':result}
+        elif scenario.type == 'admin' or 'person' in scenario.payload:
             person = PersonCase.model_validate(scenario.payload['person'])
             group = person_age_group(person.age)
             if scenario.type == 'admin':
@@ -428,6 +437,10 @@ class GraphService:
         return self.store.get_run(run_id)
 
     def register(self, scenario):
+        if scenario.payload.get('workflow_version'):
+            from backend.tools.regional_task import task_from
+            if scenario.type != 'monthly':raise ValueError('regional task requires monthly scenario')
+            task_from(scenario.payload)
         if 'person' in scenario.payload:
             person = PersonCase.model_validate(scenario.payload['person'])
             if person.reply_to:
