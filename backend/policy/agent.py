@@ -91,14 +91,46 @@ class PolicyAgent:
         try:return asyncio.run(invoke())
         except Exception as exc:return {'status':'error','error':type(exc).__name__}
 
+    def model_payload(self,task,observations,remaining):
+        # Full observations stay in policy_steps; only this model view is reduced.
+        view=[]
+        for original in observations:
+            entry=compact(original)
+            action=entry['action']['action']
+            if action=='policy_search':
+                entry['result']['items']=[{k:p[k] for k in ('id','title','scope','agency') if k in p} |
+                    {'summary_preview':str(p.get('summary',''))[:160]} for p in original['result'].get('items',[])[:5]]
+            if action=='policy_detail' and original['result'].get('policy'):
+                p=original['result']['policy']
+                entry['result']['policy']={k:p[k] for k in ('id','title','scope','agency') if k in p} | {
+                    'support_preview':str(p.get('support',''))[:160],
+                    'eligibility_preview':str(p.get('eligibility',''))[:160]}
+            view.append(entry)
+        payload={'task':task.model_dump(),'observations':view,'steps_remaining':remaining,
+                 'tools':['policy_coverage','policy_refresh','policy_search','policy_detail','finish']}
+        prompt=(ROOT/'backend/prompts/policy_decision.txt').read_text()
+        def fits():
+            return len(json.dumps({'prompt':prompt,'payload':payload,'schema':PolicyDecision.model_json_schema()},ensure_ascii=False).encode())<=self.settings.llm_max_input_bytes
+        while not fits():
+            search=next((o for o in view if o['action']['action']=='policy_search' and o['result'].get('items')),None)
+            if search:
+                search['result']['items'].pop(0)
+                search['result']['model_items_omitted']=True
+            elif len(view)>1:
+                index=next((i for i,o in enumerate(view) if o['action']['action']!='policy_detail'),0)
+                view.pop(index)
+            else:
+                raise ValueError('policy_context_limit')
+        return payload
+
     def run(self,run_id,sim_ts,task):
         task=PolicyTask.model_validate(task)
         with self.store.connection() as db:
             observations=[json.loads(r[0]) for r in db.execute('SELECT body FROM policy_steps WHERE run_id=? ORDER BY step',(run_id,))]
         limit=min(task.max_steps,self.settings.llm_max_calls)
         for step in range(len(observations),limit):
-            payload={'task':task.model_dump(),'observations':[compact(o) for o in observations],'steps_remaining':limit-step,
-                     'tools':['policy_coverage','policy_refresh','policy_search','policy_detail','finish']}
+            try:payload=self.model_payload(task,observations,limit-step)
+            except ValueError:return self.finish('context_input_limit',[],observations)
             try:decision=self.agents.call(run_id,sim_ts,'policy_decision',payload)
             except ValueError:return self.finish('model_unavailable_or_budget',[],observations)
             if decision.action=='finish':

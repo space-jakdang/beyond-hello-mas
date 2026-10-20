@@ -164,3 +164,26 @@ def test_evidence_accepts_only_line_ending_equivalence(graph):
         changed.recommendations[0].value=value
         with pytest.raises(ValueError,match='evidence'):
             graph.policy_agent.recommendations(changed,obs,task)
+
+
+def test_policy_model_view_fits_budget_and_preserves_exact_detail(graph):
+    import copy
+    from backend.agents.llm import PROMPTS
+    from backend.policy.agent import PolicyDecision,PolicyTask
+    task=PolicyTask(goal='관계망 지원 조사',scopes=['seoul'])
+    policy={'id':'actual-observed','title':'정확한 원문 정책명','scope':'seoul','agency':'서울시','summary':'긴 요약'*2000,'support':'지원 내용'*2000,'eligibility':'조건'*2000}
+    search={'action':{'action':'policy_search'},'arguments':{'query':'','page':1},'result':{'items':[policy]*5}}
+    detail={'action':{'action':'policy_detail'},'arguments':{'policy_id':policy['id']},'result':{'status':'live','policy':policy}}
+    observations=[copy.deepcopy(search) for _ in range(6)]+[copy.deepcopy(detail)]
+    before=copy.deepcopy(observations)
+    payload=graph.policy_agent.model_payload(task,observations,1)
+    encoded=json.dumps({'prompt':(PROMPTS/'policy_decision.txt').read_text(),'payload':payload,'schema':PolicyDecision.model_json_schema()},ensure_ascii=False).encode()
+    assert len(encoded)<=graph.settings.llm_max_input_bytes
+    assert observations==before
+    visible=next(o['result']['policy'] for o in payload['observations'] if o['action']['action']=='policy_detail')
+    assert visible['title']==policy['title'] and 'eligibility' not in visible
+    assert len(visible['support_preview'])<=160
+    decision=PolicyDecision(action='finish',query='',page=1,policy_id=None,recommendations=[{'policy_id':policy['id'],'field':'title','value':visible['title'],'explanation':'조사 후보'}],reason='근거 확인')
+    assert graph.policy_agent.recommendations(decision,observations,task)[0]['policy']['support']==policy['support']
+    graph.settings.llm_max_input_bytes=1000
+    with pytest.raises(ValueError,match='policy_context_limit'):graph.policy_agent.model_payload(task,observations,1)
