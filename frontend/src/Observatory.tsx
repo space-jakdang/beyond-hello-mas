@@ -53,7 +53,9 @@ export function Observatory() {
     catch(e) {setError(String(e));} finally {setBusy(false);}
   }
   return <section>
-    <p>지역 협업 시나리오에서 분석안 → 근거 검토 → 필요 시 재작성을 확인할 수 있습니다. fake는 통신 시연이며 모델 판단이 아닙니다.</p>
+    {!id&&<section className="card" aria-label="협업 관찰 시작 안내"><p className="eyebrow">START HERE</p><h2>업무를 시작하면 에이전트의 협업이 보입니다</h2><ol><li><strong>지역과 집단 선택</strong><p>동네 분석 지도에서 근거를 확인한 뒤 Supervisor에게 업무를 지시합니다.</p><a className="primary-link" href="/neighborhoods">지도에서 지역 업무 시작 →</a></li><li><strong>추가 조회와 보완 확인</strong><p>실행 이력을 선택하면 역할별 전달, 사용한 도구, 수정 요청과 진행 상태가 나타납니다.</p></li><li><strong>제안 검토</strong><p>자원 후보와 미확인 사항을 읽고 담당자 콘솔에서 승인·반려·보완 요청을 결정합니다.</p></li></ol><p>정부24 정책만 조사하려면 아래 정책 조사 지시를 사용하세요. 과거 개발 시나리오는 연결·회귀 검증용입니다.</p></section>}
+    {id&&<div className="toolbar">{run?.scenario_id.startsWith('regional-workflow')&&<a href={`/workspace?run=${encodeURIComponent(id)}`}>지역 업무 결과 확인</a>}<a href={`/console?run=${encodeURIComponent(id)}`}>담당자 검토함</a></div>}
+    <h2>개발 시나리오와 실행 이력</h2><p>지역 협업 시나리오에서 분석안 → 근거 검토 → 필요 시 재작성을 확인할 수 있습니다. fake는 통신 시연이며 모델 판단이 아닙니다.</p>
     <div className="toolbar"><label>시나리오 <select value={scenario} onChange={e=>setScenario(Number(e.target.value))}>{scenarios.map((s,i)=><option key={s.id} value={i}>{s.id}</option>)}</select></label><button disabled={busy} onClick={()=>start()}>실행</button>
     <label>실행 이력 <select aria-label="실행 이력" value={id} onChange={e=>setId(e.target.value)}><option value="">선택</option>{runs.map(r=><option key={r.id} value={r.id}>{r.scenario_id} · {r.id.slice(0,8)}</option>)}</select></label></div>
     <fieldset id="policy-task" tabIndex={-1}><legend>Supervisor에게 정책 조사 지시</legend>
