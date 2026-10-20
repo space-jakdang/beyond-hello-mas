@@ -83,3 +83,19 @@ def test_matching_replay_and_catalog_failure_preserve_evidence(service,monkeypat
     proposal=service.approval(held.id)['proposal']
     assert proposal['assignments'] and all(not r['recommendations'] for r in proposal['assignments'])
     assert 'policy_research' not in proposal
+
+
+def test_both_roles_receive_stage_meaning_and_source_limits(service,monkeypatch):
+    original=service.agents.call;seen=[]
+    def call(run_id,sim_ts,role,payload):
+        if role in ('workflow_analyst','workflow_statistics'):
+            context=payload['methodology'];seen.append(role)
+            assert context['stage_meanings'][5]=='집중 검토'
+            assert context['group_definition']=='19–34'
+            assert context['provisional'] is True
+            assert 'flags' in payload['facts'][0] and 'stage_label' in payload['facts'][0]
+        return original(run_id,sim_ts,role,payload)
+    monkeypatch.setattr(service.agents,'call',call)
+    run=run_task(service)
+    assert run.status=='awaiting_approval'
+    assert set(seen)=={'workflow_analyst','workflow_statistics'}
