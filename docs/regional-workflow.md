@@ -61,3 +61,7 @@ Supervisor → 지역 분석가 → 통계 분석가 → 자원 매칭 → Super
 | failed | 실패·오류 유형 | 실패 포함 |
 | rejected / revision_requested | 반려 / 보완 요청 | 승인·도입 성공으로 세지 않음 |
 | not_evaluated / null | 미평가 / 자료 없음 | 하위 종합도 미평가 |
+
+## 통계 도구
+
+`backend.tools.regional_statistics.run_tool`은 summary/trend/source_check/sensitivity만 받는다. summary는 선택 관할 내 같은 지수·집단·원천기간·연령 범위의 동 분포다. trend는 개별 동의 실제 관측 월만 사용하며 월이 끊기거나 연령 범위가 달라지면 변화량은 null이다. sensitivity는 S1/v3 기본 지수 ±0.01의 단계 변화이며 주간 신호 가산이나 통계적 신뢰구간을 뜻하지 않는다. 비청년 지수는 민감도 미측정이다.
