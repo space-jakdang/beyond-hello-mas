@@ -336,11 +336,12 @@ class GraphService:
             scopes.update(jurisdiction.get(assignment['dong_cd'][:5],()))
         with self.store.connection() as db:
             calls=db.execute('SELECT COUNT(*) FROM llm_calls WHERE run_id=?',(state['run_id'],)).fetchone()[0]
-        remaining=max(0,min(6,self.settings.llm_max_calls)-calls)
+        limit=self.settings.llm_max_calls if proposal.get('workflow_version')=='regional-workflow-1' else min(6,self.settings.llm_max_calls)
+        remaining=max(0,limit-calls)
         task={'goal':'지역 집단 자원 부족을 보완할 정책 후보를 조사하세요. 개인 자격·정원·배정은 확정하지 마세요.',
               'scopes':sorted(scopes),'query':'','max_steps':max(1,remaining)}
         if proposal.get('workflow_version'):
-            task['goal']+=' 욕구 가설: '+', '.join(sorted({n for a in gaps for n in a.get('needs',[])}))+'; 기준일: '+proposal['task']['as_of']
+            task['goal']+=' 검색 후 적합한 후보의 상세 원문을 확인하고 근거를 반환하세요. 욕구 가설: '+', '.join(sorted({n for a in gaps for n in a.get('needs',[])}))+'; 기준일: '+proposal['task']['as_of']
         emit=self.regional_emit(state)
         emit('policy-delegate','supervisor','policy',{'goal':task['goal'],'task':task,'gap_count':len(gaps),'remaining_calls':remaining})
         cached=next((t['payload']['result'] for t in self.store.traces(state['run_id'],limit=1000)
@@ -352,7 +353,7 @@ class GraphService:
             emit('policy-result','policy','supervisor',{'result_kind':'regional_policy_candidates','result':result})
         self.node_event(state,'policy',result,started)
         proposal['policy_research']={'status':result['status'],'candidates':result.get('recommendations',[]),
-            'gap_count':len(gaps),'task':task,'eligibility_verified':False,'remaining_capacity':None,
+            'gap_count':len(gaps),'task':task,'coverage':result.get('coverage'),'steps':result.get('steps',0),'eligibility_verified':False,'remaining_capacity':None,
             'allocation_performed':False,'human_review_required':True}
         proposal.pop('snapshot_version',None);proposal['snapshot_version']=digest(proposal)
         return {'proposal':proposal}

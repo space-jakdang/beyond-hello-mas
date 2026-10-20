@@ -55,3 +55,26 @@ def test_unknown_district_does_not_research_wrong_jurisdiction(service,monkeypat
         'classification':{'collaboration':{'calls':0}},'proposal':{'assignments':[{'dong_cd':'99999101','shortfall':3,'recommendations':[]}]}})
     assert output['proposal']['policy_research']['status']=='unsupported_scope'
     assert output['proposal']['policy_research']['candidates']==[]
+
+
+def test_workflow_uses_configured_policy_budget_without_changing_legacy(service,monkeypatch):
+    from tests.test_regional_task import task
+    import backend.graph as module
+    monkeypatch.setattr(module,'load_catalog',lambda _:[])
+    service.settings.llm_max_calls=10
+    delegated=[]
+    def research(run_id,sim_ts,payload):
+        with service.store.connection() as db:
+            calls=db.execute('SELECT COUNT(*) FROM llm_calls WHERE run_id=?',(run_id,)).fetchone()[0]
+        assert payload['max_steps']==(10 if not delegated else 6)-calls
+        delegated.append(payload)
+        return {'status':'no_verified_candidates','recommendations':[],'steps':0}
+    monkeypatch.setattr(service.policy_agent,'run',research)
+    run=service.start(scenario('monthly',workflow_version='regional-workflow-1',task=task().model_dump(mode='json'),research_gaps=True))
+    assert delegated and delegated[0]['max_steps']>3
+    assert service.approval(run.id)['proposal']['policy_research']['steps']==0
+    assert counts(service,run.id)[0]==0
+
+    legacy=service.start(scenario('monthly',ym='2025-09',collaboration=True,research_gaps=True))
+    assert len(delegated)==2 and delegated[1]['max_steps']<=6
+    assert counts(service,legacy.id)[0]==0
