@@ -1,5 +1,6 @@
 import {MasFlow} from './MasFlow';
 export const destinations = [
+  {href:'/future',title:'미래 시나리오',eyebrow:'자동 분석 시연',description:'지역을 선택하면 합성 미래 3기간을 분석하고, 동별 자원 제안을 확인할 수 있습니다.',action:'미래 시나리오 시작'},
   {href:'/workspace',title:'지역 업무',eyebrow:'에이전트 업무',description:'Supervisor에게 지역 분석을 지시하고, 통계 근거와 자원 제안을 함께 검토합니다.',action:'업무 공간 열기'},
   {href:'/neighborhoods', title:'동네 분석', eyebrow:'지역 이해', description:'동네와 집단별 지표, 주간 변화, 결측과 분석 근거를 확인합니다.', action:'분석 대시보드 열기'},
   {href:'/observatory', title:'관찰', eyebrow:'에이전트 협업', description:'시나리오를 실행하고 분석·검토·추가 조회 과정과 전달 근거를 따라갑니다.', action:'협업 과정 살펴보기'},
@@ -13,7 +14,7 @@ export function Home() {
       <p className="eyebrow">BEYOND HELLO · 지역 기반 고립 대응 연구</p>
       <h2>지역의 신호를 이해하고,<br/>함께 검토할 대응으로 연결합니다.</h2>
       <p>통신·카드 등 지역 집계에서 우선 확인할 동네와 집단을 찾고, 에이전트가 근거를 검토하며 지원 자원을 조사하는 개발 대시보드입니다. 최종 대응은 담당자가 확인합니다.</p>
-      <a className="primary-link" href="/workspace">지역 업무 시작하기 →</a>
+      <a className="primary-link" href="/future">미래 시나리오 자동 분석 →</a> <a className="primary-link" href="/workspace">지역 업무 시작하기 →</a>
     </section>
     <MasFlow/>
     <section aria-labelledby="guide-title"><div className="section-heading"><div><p className="eyebrow">WORKSPACE GUIDE</p><h2 id="guide-title">무엇을 확인하고 싶으신가요?</h2></div><p>지역 업무에서 시작하고, 제안이 준비되면 담당자 콘솔에서 검토하세요.</p></div>
