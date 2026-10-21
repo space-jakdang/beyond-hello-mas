@@ -341,9 +341,15 @@ class GraphService:
         limit=self.settings.llm_max_calls if proposal.get('workflow_version')=='regional-workflow-1' else min(6,self.settings.llm_max_calls)
         remaining=max(0,limit-calls)
         task={'goal':'지역 집단 자원 부족을 보완할 정책 후보를 조사하세요. 개인 자격·정원·배정은 확정하지 마세요.',
-              'scopes':sorted(scopes),'query':'','max_steps':max(1,remaining)}
+              'scopes':sorted(scopes),'query':'','max_steps':max(1,remaining-2 if proposal.get('workflow_version') and remaining>=5 else remaining)}
         if proposal.get('workflow_version'):
             task['goal']+=' 검색 후 적합한 후보의 상세 원문을 확인하고 근거를 반환하세요. 욕구 가설: '+', '.join(sorted({n for a in gaps for n in a.get('needs',[])}))+'; 기준일: '+proposal['task']['as_of']
+            task['goal']+=' 요청 집단(관측 모집단과 동등함을 뜻하지 않음): '+json.dumps({k:proposal['task'].get(k) for k in ('sgg','sex','age_group','ym','dong_cd')},ensure_ascii=False)
+            task['goal']+=' 명백히 대상 연령·관할이 다른 정책은 현행 후보에서 제외하고 대상 조건을 설명하세요.'
+        else:
+            groups=sorted({str(a.get('sex','미분류'))+'/'+str(a.get('age_group',a.get('age_band','미분류'))) for a in gaps})
+            task['goal']+=' 요청 집단(성별/연령; 개별 자격 미확인): '+', '.join(groups)
+            task['goal']+=' 요청 집단에 명백히 해당하지 않는 정책은 제외하세요.'
         emit=self.regional_emit(state)
         emit('policy-delegate','supervisor','policy',{'goal':task['goal'],'task':task,'gap_count':len(gaps),'remaining_calls':remaining})
         cached=next((t['payload']['result'] for t in self.store.traces(state['run_id'],limit=1000)
