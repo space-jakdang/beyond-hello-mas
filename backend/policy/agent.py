@@ -31,11 +31,12 @@ class PolicyEvidence(BaseModel):
 
 class PolicyDecision(BaseModel):
     model_config=ConfigDict(extra='forbid')
-    action:Literal['policy_coverage','policy_refresh','policy_search','policy_detail','finish']
+    action:Literal['policy_coverage','policy_refresh','policy_search','policy_detail','policy_details','finish']
     query:str
     page:int
     policy_id:str | None
-    recommendations:list[PolicyEvidence]
+    policy_ids:list[str]=Field(default_factory=list,max_length=5)
+    recommendations:list[PolicyEvidence]=Field(max_length=5)
     reason:str
 
 
@@ -48,9 +49,12 @@ def fake_decision(payload):
     if tool=='policy_refresh' and last.get('status')=='cached':
         result.update(action='policy_search',query=payload['task']['query'])
     elif tool=='policy_search' and last.get('items'):
-        result.update(action='policy_detail',policy_id=last['items'][0]['id'])
+        result.update(action='policy_details',policy_ids=[p['id'] for p in last['items'][:5]]) if len(last['items'])>1 else result.update(action='policy_detail',policy_id=last['items'][0]['id'])
     else:
         result['action']='finish'
+        if tool=='policy_details':
+            result['recommendations']=[{'policy_id':r['policy']['id'],'field':'title','value':r['policy']['title'],
+                'explanation':'fake: 조회된 정책 후보이며 현장 적격성은 미확인입니다.'} for r in last.get('items',[]) if r.get('policy')]
         if tool=='policy_detail' and last.get('policy'):
             p=last['policy'];result['recommendations']=[{'policy_id':p['id'],'field':'title','value':p['title'],
                 'explanation':'fake: 조회된 정책 후보입니다. 적격성은 담당자가 확인해야 합니다.'}]
@@ -87,7 +91,7 @@ class PolicyAgent:
 
     def call_tool(self,tool,args):
         async def invoke():
-            timeout=60+self.settings.policy_timeout_seconds+5 if tool=='policy_refresh' else 2*self.settings.policy_timeout_seconds+10
+            timeout=60+self.settings.policy_timeout_seconds+5 if tool=='policy_refresh' else (10 if tool=='policy_details' else 2)*self.settings.policy_timeout_seconds+10
             return await asyncio.wait_for(self.remote(tool,args),timeout)
         try:return asyncio.run(invoke())
         except Exception as exc:return {'status':'error','error':type(exc).__name__}
@@ -106,9 +110,15 @@ class PolicyAgent:
                 entry['result']['policy']={k:p[k] for k in ('id','title','scope','agency') if k in p} | {
                     'support_preview':str(p.get('support',''))[:160],
                     'eligibility_preview':str(p.get('eligibility',''))[:160]}
+            if action=='policy_details':
+                entry['result']['items']=[{k:r.get(k) for k in ('status','checked_at','cached_at')} | {
+                    'policy':{k:r['policy'][k] for k in ('id','title','scope','agency') if k in r['policy']} | {
+                        'support_preview':str(r['policy'].get('support',''))[:160],
+                        'eligibility_preview':str(r['policy'].get('eligibility',''))[:160]}
+                    if r.get('policy') else None} for r in original['result'].get('items',[])[:5]]
             view.append(entry)
         payload={'task':task.model_dump(),'observations':view,'steps_remaining':remaining,
-                 'tools':['policy_coverage','policy_refresh','policy_search','policy_detail','finish']}
+                 'tools':['policy_coverage','policy_refresh','policy_search','policy_detail','policy_details','finish']}
         prompt=(ROOT/'backend/prompts/policy_decision.txt').read_text()
         def fits():
             return len(json.dumps({'prompt':prompt,'payload':payload,'schema':PolicyDecision.model_json_schema()},ensure_ascii=False).encode())<=self.settings.llm_max_input_bytes
@@ -118,7 +128,7 @@ class PolicyAgent:
                 search['result']['items'].pop(0)
                 search['result']['model_items_omitted']=True
             elif len(view)>1:
-                index=next((i for i,o in enumerate(view) if o['action']['action']!='policy_detail'),0)
+                index=next((i for i,o in enumerate(view) if o['action']['action'] not in ('policy_detail','policy_details')),0)
                 view.pop(index)
             else:
                 raise ValueError('policy_context_limit')
@@ -155,15 +165,17 @@ class PolicyAgent:
         if decision.action=='policy_search':
             if len(decision.query)>200 or not 1<=decision.page<=10000:raise ValueError('invalid_search')
             return {'scopes':task.scopes,'query':decision.query,'page':decision.page,'per_page':5}
-        if decision.action=='policy_detail':
+        if decision.action in ('policy_detail','policy_details'):
             seen={p['id'] for o in observations if o['action']['action']=='policy_search' for p in o['result'].get('items',[]) if p['scope'] in task.scopes}
-            if decision.policy_id not in seen:raise ValueError('unobserved_policy')
-            return {'policy_id':decision.policy_id}
+            ids=decision.policy_ids if decision.action=='policy_details' else [decision.policy_id]
+            if not ids or len(ids)>5 or len(set(ids))!=len(ids) or not set(ids)<=seen:raise ValueError('unobserved_policy')
+            return {'policy_ids':ids} if decision.action=='policy_details' else {'policy_id':decision.policy_id}
         return {}
 
     def recommendations(self,decision,observations,task):
-        details={o['result']['policy']['id']:o['result'] for o in observations
-                 if o['action']['action']=='policy_detail' and o['result'].get('policy')}
+        if len(decision.recommendations)>5:raise ValueError('invalid_evidence')
+        details={r['policy']['id']:r for o in observations for r in
+                 (o['result'].get('items',[]) if o['action']['action']=='policy_details' else [o['result']] if o['action']['action']=='policy_detail' else []) if r.get('policy')}
         result=[];seen=set()
         for item in decision.recommendations:
             detail=details.get(item.policy_id);p=detail['policy'] if detail else None
@@ -180,7 +192,20 @@ class PolicyAgent:
     def finish(self,status,recommendations,observations):
         coverage=next((o['result'].get('coverage',o['result']) for o in reversed(observations)
                        if 'coverage' in o['result'] or o['action']['action'] in ('policy_refresh','policy_coverage')),None)
-        if status=='completed' and not recommendations:status='no_verified_candidates'
+        searches=[o for o in observations if o['action']['action']=='policy_search']
+        complete=False
+        if searches and coverage and coverage.get('source_complete') and not coverage.get('stale') and coverage.get('last_attempt',{}).get('status')=='success':
+            latest=searches[-1];args=latest['arguments']
+            pages=[o for o in searches if o['arguments'].get('query')==args.get('query') and o['arguments'].get('scopes')==args.get('scopes')]
+            page_numbers={o['arguments']['page'] for o in pages}
+            searched={p['id'] for o in pages for p in o['result'].get('items',[])}
+            checked={r['policy']['id'] for o in observations for r in
+                (o['result'].get('items',[]) if o['action']['action']=='policy_details' else [o['result']] if o['action']['action']=='policy_detail' else [])
+                if r.get('policy') and r.get('status')=='live'}
+            complete=(latest['result'].get('next_page') is None and 'total' in latest['result']
+                      and page_numbers==set(range(1,args['page']+1)) and len(searched)==latest['result']['total'] and searched<=checked)
+        if status=='completed' and not recommendations:status='no_verified_candidates' if complete else 'search_incomplete'
         return {'status':status,'recommendations':recommendations,'coverage':coverage,'steps':len(observations),
+                'search_complete_within_scope':complete,'search_scope':searches[-1]['arguments'] if searches else None,
                 'mode':self.settings.llm_mode,'human_review_required':True,'allocation_performed':False,
                 'all_policies_known':False,'limitation':LIMITATION}

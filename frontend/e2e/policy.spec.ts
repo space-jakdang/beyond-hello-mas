@@ -9,7 +9,7 @@ test('Supervisor delegates policy research and exposes tool observations and mis
   await expect(page.getByText('실행 경로: supervisor → policy',{exact:true})).toBeVisible();
   const id=await page.getByTestId('run-id').innerText();
   const overview=await (await request.get(`/runs/${id}/overview`)).json();
-  expect(['completed','no_verified_candidates']).toContain(overview.policy.status);
+  expect(overview.policy.status).toBe('search_incomplete');
   expect(overview.policy.allocation_performed).toBe(false);
   expect(overview.traces.some((t:any)=>t.agent==='supervisor' && t.kind==='route' && t.payload.worker==='policy')).toBe(true);
   expect(overview.traces.some((t:any)=>t.agent==='policy' && t.kind==='tool_result')).toBe(true);

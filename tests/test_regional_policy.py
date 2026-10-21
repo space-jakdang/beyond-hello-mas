@@ -13,6 +13,7 @@ def test_gap_delegates_policy_without_promoting_candidates(service,monkeypatch):
         if name=='policy_refresh':return policies.refresh()
         if name=='policy_search':return policies.search(Search(**args))
         if name=='policy_detail':return policies.detail(args['policy_id'])
+        if name=='policy_details':return policies.details(args['policy_ids'])
         pytest.fail(name)
     monkeypatch.setattr(service.policy_agent,'call_tool',tool)
     original=service.regional_policy_node
