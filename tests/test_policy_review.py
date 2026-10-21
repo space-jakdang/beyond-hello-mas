@@ -57,3 +57,20 @@ def test_review_api_rejects_missing_stale_and_insufficient_drafts(service):
         draft=deepcopy(document['draft']);draft['status']='needs_evidence';draft['title']='근거 보완 초안'
         revised=review.act(id,body(document,action='revise',draft=draft))
         assert client.post(f'/runs/{id}/policy-design/review',json=body(revised['document'],expected_revision=1)).status_code==409
+
+
+def test_human_ready_revision_requires_separate_review_and_keeps_sources(service):
+    id,review,document=setup(service)
+    draft=deepcopy(document['draft']);draft['status']='needs_human'
+    held=review.act(id,body(document,action='revise',draft=draft))
+    with pytest.raises(ValueError):review.act(id,body(held['document'],expected_revision=1))
+    draft['status']='draft'
+    ready=review.act(id,body(held['document'],expected_revision=1,action='revise',draft=draft))
+    assert ready['document']['review_status']=='pending'
+    assert ready['history'][0]['document']['draft']['status']=='needs_human'
+    approved=review.act(id,body(ready['document'],expected_revision=2))
+    assert approved['document']['review_status']=='approved'
+    assert approved['document']['draft']['citations']==document['draft']['citations']
+    with service.store.connection() as db:
+        assert db.execute('SELECT COUNT(*) FROM approvals').fetchone()[0]==0
+        assert db.execute('SELECT COUNT(*) FROM linkages').fetchone()[0]==0
