@@ -62,3 +62,22 @@ def test_matching_selection_rejects_unknown_and_duplicate_ids(service):
     for invalid in ([{**item,'evidence_id':'unknown'}],[item,item],[{**item,'resource_ids':[rid,rid]}],[{**item,'resource_ids':['invented']}]):
         with pytest.raises(ValueError):select(Agent(invalid),'r','t',rows,stats)
     assert select(Agent([]),'r','t',rows,stats)[1]['status']=='needs_human'
+
+
+def test_decision_evidence_records_observation_filters_and_actual_choice(service):
+    from tests.test_workflow_agents import run_task
+    run=run_task(service);proposal=service.approval(run.id)['proposal']
+    observations={r['evidence_id']:r for r in proposal['assessment']['segments']}
+    for row in proposal['assignments']:
+        evidence=row['decision_evidence'];original=observations[row['evidence_id']]
+        assert evidence['observation']['value']==original['value']
+        assert evidence['observation']['evidence_id']==row['evidence_id']
+        assert evidence['provisional_needs']==row['needs']
+        presented={c['id'] for c in evidence['presented_candidates']}
+        assert {c['id'] for c in row['recommendations']}<=presented
+        assert evidence['unknown_conditions']==['individual_eligibility','application_acceptance','remaining_capacity']
+        if row['recommendations']:assert evidence['model_reason']
+    with service.store.connection() as db:
+        import json
+        calls=[json.loads(r[0]) for r in db.execute("SELECT body FROM llm_calls WHERE run_id=? AND role='workflow_matching'",(run.id,))]
+    assert calls and calls[0]['input']['choices']  # Actual supplied model context already persisted.

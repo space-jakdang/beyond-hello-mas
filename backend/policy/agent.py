@@ -1,4 +1,5 @@
 """Supervisor-scoped ReAct worker. Tool observations, not private reasoning, are persisted."""
+from backend.tools.indicators import digest
 import asyncio
 import json
 import os
@@ -173,7 +174,7 @@ class PolicyAgent:
                 or not isinstance(actual,str) or normalize(actual)!=normalize(item.value)):raise ValueError('invalid_evidence')
             seen.add(item.policy_id)
             result.append({'policy':p,'evidence':{'field':item.field,'value':actual},'explanation':item.explanation,
-                           'detail_status':detail['status'],'checked_at':detail.get('checked_at'),'cached_at':detail.get('cached_at')})
+                           'evidence_version':digest(p),'detail_status':detail['status'],'checked_at':detail.get('checked_at'),'cached_at':detail.get('cached_at')})
         return result
 
     def finish(self,status,recommendations,observations):
