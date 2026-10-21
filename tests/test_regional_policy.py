@@ -13,6 +13,7 @@ def test_gap_delegates_policy_without_promoting_candidates(service,monkeypatch):
         if name=='policy_refresh':return policies.refresh()
         if name=='policy_search':return policies.search(Search(**args))
         if name=='policy_detail':return policies.detail(args['policy_id'])
+        if name=='policy_details':return policies.details(args['policy_ids'])
         pytest.fail(name)
     monkeypatch.setattr(service.policy_agent,'call_tool',tool)
     original=service.regional_policy_node
@@ -25,7 +26,7 @@ def test_gap_delegates_policy_without_promoting_candidates(service,monkeypatch):
     monkeypatch.setattr(service,'regional_policy_node',original)
     assert service.drive(run.id).status=='awaiting_approval'
     proposal=service.approval(run.id)['proposal'];research=proposal['policy_research']
-    assert research['status']=='completed' and len(research['candidates'])==1
+    assert research['status']=='completed' and len(research['candidates'])==5
     assert not research['eligibility_verified'] and research['remaining_capacity'] is None
     assert all(not a['recommendations'] for a in proposal['assignments'])
     assert counts(service,run.id)[0]==0

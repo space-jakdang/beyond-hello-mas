@@ -33,4 +33,10 @@ def policy_detail(policy_id:str)->dict[str,Any]:
     return service.detail(policy_id)
 
 
+@mcp.tool()
+def policy_details(policy_ids:Annotated[list[str],Field(min_length=1,max_length=5)])->dict[str,Any]:
+    """Check up to five known inventory IDs; each item preserves live/cached/failure status."""
+    return service.details(policy_ids)
+
+
 if __name__=='__main__':mcp.run(transport='stdio')

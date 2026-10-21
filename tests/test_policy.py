@@ -82,7 +82,7 @@ def test_real_mcp_stdio_roundtrip():
             async with ClientSession(*streams) as session:
                 await session.initialize()
                 names={t.name for t in (await session.list_tools()).tools}
-                assert names=={'policy_coverage','policy_refresh','policy_search','policy_detail'}
+                assert names=={'policy_coverage','policy_refresh','policy_search','policy_detail','policy_details'}
                 result=await session.call_tool('policy_search',{'scopes':SCOPES,'per_page':2})
                 assert not result.is_error and result.structured_content['total']==5
                 invalid=await session.call_tool('policy_search',{'scopes':['unsupported']})
@@ -142,3 +142,19 @@ def test_provider_url_rejects_empty_username_with_password():
     from backend.policy.service import policy
     row={**rows()[0],'상세조회URL':'https://:secret@example.com/'}
     assert policy(row,'central')['url'] is None
+
+
+def test_detail_batch_keeps_partial_failures_and_bounds(tmp_path,monkeypatch):
+    import pytest
+    from types import SimpleNamespace
+    service=PolicyService(SimpleNamespace(runtime_dir=tmp_path))
+    calls=[]
+    def detail(id):
+        calls.append(id)
+        return {'status':'live' if id=='a' else 'not_found','policy':{'id':id} if id=='a' else None}
+    monkeypatch.setattr(service,'detail',detail)
+    result=service.details(['a','b'])
+    assert result['status']=='partial' and len(result['items'])==2 and calls==['a','b']
+    for ids in ([],['a','a'],list('abcdef')):
+        with pytest.raises(ValueError):service.details(ids)
+    assert calls==['a','b']

@@ -31,6 +31,7 @@ def graph(tmp_path,monkeypatch):
         if name=='policy_search':return policies.search(Search(**args))
         if name=='policy_coverage':return policies.coverage()
         if name=='policy_detail':return policies.detail(args['policy_id'])
+        if name=='policy_details':return policies.details(args['policy_ids'])
         raise AssertionError(name)
     monkeypatch.setattr(graph.policy_agent,'call_tool',tool)
     return graph
@@ -112,7 +113,7 @@ def test_real_supervisor_to_mcp_missing_credentials():
     try:
         run=graph.start(scenario())
         output=result(graph,run.id)
-        assert output['status']=='no_verified_candidates'
+        assert output['status']=='search_incomplete'
         assert output['coverage']['last_attempt']['reason']=='missing_credentials'
         assert not output['recommendations']
     finally:shutil.rmtree(settings.runtime_dir)
@@ -187,3 +188,35 @@ def test_policy_model_view_fits_budget_and_preserves_exact_detail(graph):
     assert graph.policy_agent.recommendations(decision,observations,task)[0]['policy']['support']==policy['support']
     graph.settings.llm_max_input_bytes=1000
     with pytest.raises(ValueError,match='policy_context_limit'):graph.policy_agent.model_payload(task,observations,1)
+
+
+def test_five_candidate_batch_is_scoped_unique_and_exact(graph):
+    task=PolicyTask(goal='five',scopes=['seoul'])
+    policies=[{'id':str(i),'scope':'seoul','title':f'정책 {i}'} for i in range(5)]
+    search={'action':{'action':'policy_search'},'result':{'items':policies}}
+    decision=PolicyDecision(action='policy_details',query='',page=1,policy_id=None,policy_ids=[p['id'] for p in policies],recommendations=[],reason='check')
+    assert graph.policy_agent.arguments(decision,[search],task)=={'policy_ids':[str(i) for i in range(5)]}
+    for ids in (['outside'],['0','0'],[]):
+        with pytest.raises(ValueError):graph.policy_agent.arguments(decision.model_copy(update={'policy_ids':ids}),[search],task)
+    obs=[{'action':{'action':'policy_details'},'result':{'status':'partial','items':[{'status':'cached' if i==4 else 'live','policy':p} for i,p in enumerate(policies)]}}]
+    finish=decision.model_copy(update={'action':'finish','recommendations':[]})
+    finish=PolicyDecision.model_validate({**finish.model_dump(),'recommendations':[{'policy_id':p['id'],'field':'title','value':p['title'],'explanation':'검토 후보'} for p in policies]})
+    result=graph.policy_agent.recommendations(finish,obs,task)
+    assert len(result)==5 and result[-1]['detail_status']=='cached'
+    payload=graph.policy_agent.model_payload(task,obs,1)
+    assert len(payload['observations'][0]['result']['items'])==5
+    with pytest.raises(ValidationError):PolicyDecision.model_validate({**finish.model_dump(),'recommendations':finish.model_dump()['recommendations']*2})
+
+
+def test_empty_finish_requires_complete_fresh_scoped_search(graph):
+    coverage={'source_complete':True,'stale':False,'last_attempt':{'status':'success'}}
+    search={'action':{'action':'policy_search'},'arguments':{'query':'관계','scopes':['seoul'],'page':1},'result':{'coverage':coverage,'items':[],'total':0,'next_page':None}}
+    output=graph.policy_agent.finish('completed',[],[search])
+    assert output['status']=='no_verified_candidates' and output['search_scope']['query']=='관계'
+    from copy import deepcopy
+    for field,value in [('stale',True),('source_complete',False),('last_attempt',{'status':'failed'})]:
+        broken=deepcopy(search);broken['result']['coverage'][field]=value
+        assert graph.policy_agent.finish('completed',[],[broken])['status']=='search_incomplete'
+    partial=deepcopy(search);partial['result'].update(total=6,next_page=2)
+    assert graph.policy_agent.finish('completed',[],[partial])['status']=='search_incomplete'
+    assert graph.policy_agent.finish('completed',[],[])['status']=='search_incomplete'

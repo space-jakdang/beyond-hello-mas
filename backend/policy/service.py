@@ -145,3 +145,10 @@ class PolicyService:
             return {'status':'live','policy':current,'conditions':conditions['data'][0] if conditions['data'] else None,'checked_at':now(),'limitation':LIMITATION}
         except Exception as exc:
             return {'status':'cached','policy':cached,'conditions':None,'checked_at':None,'cached_at':snapshot['fetched_at'],'error':type(exc).__name__,'limitation':LIMITATION}
+
+    def details(self,policy_ids):
+        if not 1<=len(policy_ids)<=5 or len(set(policy_ids))!=len(policy_ids):
+            raise ValueError('invalid_detail_batch')
+        results=[self.detail(id) for id in policy_ids]
+        return {'status':'live' if all(r['status']=='live' for r in results) else 'partial',
+                'items':results,'requested_ids':policy_ids,'limitation':LIMITATION}
