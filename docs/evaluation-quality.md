@@ -58,7 +58,7 @@ case_id,policy_id,reviewer,value,reason,reviewed_at,provenance,policy_as_of,adju
 ## 대시보드 조회
 
 `/evaluation`에서 평가 자료를 선택한다. 지역·기간·방법론 필터는 기준답 분모에도 적용된다.
-`GET /reports/quality`와 `/reports/quality/{UUID}`는 준비 자료를 다시 검증해 조회하며 검토자 이름·평정 이유·원본 기준답 값은 반환하지 않는다.
+`GET /reports/quality`와 `/reports/quality/{UUID}`는 준비 자료를 다시 검증해 조회하며 검토자 이름·평정 이유는 반환하지 않는다. 준비 현황에는 기준답 값을 포함하지 않으며, 분류 평가 실패 사례에는 비교용 등급을 포함한다.
 `source=sample`은 합성 전용 저장소, `source=current`는 현재 서버의 데이터 모드 저장소를 조회한다.
 `--output-root`로 별도 위치에 저장한 파일은 자동 게시되지 않는다. 손상된 자료는 오류로 표시한다.
 모델 평가가 아직 실행되지 않았으므로 모델 점수나 비교 결과를 표시하지 않는다.
@@ -74,3 +74,16 @@ case_id,policy_id,reviewer,value,reason,reviewed_at,provenance,policy_as_of,adju
 정책 조사 후보에는 조회 시점의 공식 상세 원문 해시가 추가된다. 지역 공통 후보는 동별 배정과 다르다.
 LLM 장부의 `input`은 실제 모델에 전달한 내용이고, 전체 도구 원문과 다를 수 있다.
 설명 근거 평가는 실제 `input`을 사용하며, 원문을 사후에 추가해 정당화하지 않는다.
+## 분류 품질 평가
+
+준비 명령에 `--predictions predictions.json`을 추가하면 고정 입력에 묶인 예측을 가져온다.
+형식은 `dataset_hash`, `model`, `version`, `method`(rules/single/mas), `predictions` 배열이다.
+배열 항목은 `case_id`, `status`(predicted/abstained/failed), `grade`(1~5 또는 null), 선택적 `run_id`다.
+미등록 사례·중복·다른 입력 해시·상태와 등급 불일치는 거부한다. 가져온 모델 이름은 제출자의 메타데이터이며 실행 증명은 아니다.
+
+대시보드는 독립 합의/조정이 끝난 참조등급만 점수에 사용한다. 없는 예측·보류·실패도 재현율 분모에 남는다.
+Macro-F1은 기준이나 예측에 등장한 등급들의 F1 평균이며, MAE는 유효 예측쌍만 사용해 coverage를 병기한다.
+방법론과 실제/합성 입력은 분리하며 기준답 없는 점수는 null이다. 고등급 재현율과 정밀도·검토 대상 비율을 함께 읽는다.
+분류 평가를 가져온 경우 실패 사례의 기준/예측 등급을 공개하지만 검토자 이름·평정 원문은 API로 내보내지 않는다.
+
+`부분 평가`는 전체 5축 중 분류 축을 계산했다는 의미다. 전부 미판정이어도 독립 참조가 있으면 재현율/F1은 0으로 평가하고, MAE와 정밀도의 분모가 0인 경우만 미평가로 표시한다.

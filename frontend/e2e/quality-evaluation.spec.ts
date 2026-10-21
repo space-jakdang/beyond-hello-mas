@@ -35,3 +35,16 @@ test('quality errors and mode changes clear stale readiness',async({page})=>{
  await expect(panel).toContainText('등록된 평가 자료가 없습니다');
  await expect(panel.getByRole('alert')).toHaveCount(0);
 });
+
+test('classification shows errors and preserves abstentions in its denominator',async({page})=>{
+ const classification={model:'test-fixture',method:'rules',version:'1',prediction_hash:'fixture',groups:[{
+  source:'synthetic',methodology:'v1',state:'evaluated',input_cases:4,reference_count:4,missing_labels:0,unknown_labels:0,non_independent_labels:0,valid_predictions:3,missing_predictions:1,
+  macro_f1:.5,priority_precision:.5,priority_recall:.5,priority_support:2,priority_flagged:2,flag_rate:.5,coverage:.75,mae:2/3,
+  confusion:[[1,0,0,0,0,0],[0,0,0,1,0,0],[0,0,0,0,0,0],[0,0,0,0,0,1],[0,0,0,0,1,0]],per_grade:[],errors:[{case_id:'a',neighborhood:'오류예제동',reference:4,predicted:null,status:'abstained',run_id:null}]}]};
+ await page.route('**/reports/quality**',route=>route.fulfill({json:new URL(route.request().url()).pathname.endsWith(id)?{...detail,classification}:[brief]}));
+ await page.goto('/evaluation');const panel=page.getByLabel('동네 등급 분류 품질');
+ await expect(panel).toContainText('독립 참조 4 / 입력 4');await expect(panel).toContainText('미판정 1건은 재현율 분모에 남습니다');
+ await panel.getByText('등급별 정밀도·재현율과 실패 사례',{exact:true}).press('Enter');
+ await expect(panel).toContainText('오류예제동 · 기준 4 → 예측 미판정');
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
