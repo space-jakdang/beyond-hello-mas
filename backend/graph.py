@@ -59,6 +59,8 @@ class GraphService:
         self.scale = ScaleAdapter(store, settings)
         self.person = PersonAdapter(store, settings)
         self.policy_agent = PolicyAgent(store, settings, self.agents)
+        from backend.policy.designer import PolicyDesigner
+        self.policy_designer=PolicyDesigner(store,settings,self.agents,self.policy_agent)
         self.locks = {}
         self.lock_guard = RLock()
         with store.connection() as db:
@@ -353,8 +355,17 @@ class GraphService:
             emit('policy-result','policy','supervisor',{'result_kind':'regional_policy_candidates','result':result})
         self.node_event(state,'policy',result,started)
         proposal['policy_research']={'status':result['status'],'candidates':result.get('recommendations',[]),
+            'search_complete_within_scope':result.get('search_complete_within_scope',False),'search_scope':result.get('search_scope'),
             'gap_count':len(gaps),'task':task,'coverage':result.get('coverage'),'steps':result.get('steps',0),'eligibility_verified':False,'remaining_capacity':None,
             'allocation_performed':False,'human_review_required':True}
+        proposal.pop('snapshot_version',None);proposal['snapshot_version']=digest(proposal)
+        return {'proposal':proposal}
+
+    def policy_design_node(self,state):
+        started=time.monotonic();proposal=dict(state['proposal'])
+        self.regional_emit(state)('design-delegate','supervisor','policy_design',{'goal':'확인된 검색 공백의 유사 사례를 조사하고 현지 적용 초안을 작성하세요.'})
+        proposal['policy_design']=self.policy_designer.run(state['run_id'],state['scenario']['sim_time'],proposal)
+        self.node_event(state,'policy_design',proposal['policy_design'],started)
         proposal.pop('snapshot_version',None);proposal['snapshot_version']=digest(proposal)
         return {'proposal':proposal}
 
@@ -463,7 +474,9 @@ class GraphService:
             builder.add_conditional_edges('classify', lambda s: 'link' if s.get('local_action') else 'workflow_analyze' if s['scenario']['payload'].get('workflow_version') else 'regional_prepare' if s['scenario']['payload'].get('collaboration') is True and s['classification'].get('metadata',{}).get('analysis_version')=='v3' else 'match')
             builder.add_node('regional_policy',self.regional_policy_node)
             builder.add_conditional_edges('match',lambda s:'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and s['proposal'].get('collaboration') and any(a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else 'approval')
-            builder.add_edge('regional_policy','approval')
+            builder.add_node('policy_design',self.policy_design_node)
+            builder.add_conditional_edges('regional_policy',lambda s:'policy_design' if s['proposal'].get('workflow_version') and not s['proposal']['policy_research'].get('candidates') else 'approval')
+            builder.add_edge('policy_design','approval')
             builder.add_conditional_edges('approval', lambda s: 'link' if s['decision']['status'] == 'approved' else 'reject')
             builder.add_edge('link', END)
             builder.add_edge('reject', END)
