@@ -3,6 +3,7 @@ from uuid import UUID
 from typing import Literal
 from fastapi import APIRouter, HTTPException
 from backend.app import config
+from backend.app.quality_reports import quality_detail, quality_list
 
 
 def report_router(settings):
@@ -24,6 +25,15 @@ def report_router(settings):
             except (ValueError,KeyError):
                 continue  # An unfinished or damaged file is never presented as a successful evaluation.
         return sorted(rows,key=lambda r:r['created_at'],reverse=True)[:100]
+
+    @router.get('/reports/quality')
+    def quality_reports(source:Literal['current','sample']='current'):
+        return quality_list(settings, source)
+
+    @router.get('/reports/quality/{report_id}')
+    def quality_report(report_id:UUID, source:Literal['current','sample']='current',
+                       region:str|None=None, period:str|None=None, methodology:str|None=None):
+        return quality_detail(settings, source, report_id, region, period, methodology)
 
     @router.get('/reports/{report_id}')
     def report(report_id:UUID,source:Literal['current','sample']='current'):

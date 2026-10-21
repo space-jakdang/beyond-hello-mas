@@ -1,0 +1,65 @@
+"""Read-only readiness views. Private judgments never leave the evaluation store."""
+import json
+from uuid import UUID
+from fastapi import HTTPException
+from backend.app import config
+from eval.quality_contracts import load_frozen, readiness_report
+
+
+def quality_root(settings, source):
+    mode = 'sample' if source == 'sample' else settings.data_mode
+    return config.ROOT / 'runtime' / 'quality' / mode
+
+
+def quality_detail(settings, source, report_id, region=None, period=None, methodology=None):
+    root = quality_root(settings, source)
+    folder = root / str(report_id)
+    if not folder.is_dir() or folder.resolve().parent != root.resolve():
+        raise HTTPException(404, 'quality report not found')
+    try:
+        paths = [folder / name for name in ('inputs.json', 'labels.json')]
+        if any(p.is_symlink() for p in paths):
+            raise ValueError('symlink not allowed')
+        frozen, labels = [json.loads(p.read_text()) for p in paths]
+        dataset = load_frozen(frozen)
+        if root.name == 'sample' and any(c.source != 'synthetic' for c in dataset.cases):
+            raise ValueError('observed inputs in sample store')
+        report = readiness_report(frozen, labels)
+    except (ValueError, KeyError, TypeError, AttributeError, OSError):
+        raise HTTPException(409, 'quality report incomplete or invalid')
+    cases = [c for c in dataset.cases if (not region or c.region == region)
+        and (not period or c.period == period) and (not methodology or c.methodology == methodology)]
+    ids = {c.id for c in cases}
+    refs = [r for r in report['references'] if r['case_id'] in ids]
+    counts = {state: sum(r['state'] == state for r in refs) for state in ('missing', 'unknown', 'disagreement', 'resolved')}
+    return {'id': str(report_id), 'schema_version': '6', 'dataset': dataset.id, 'version': dataset.version,
+        'dataset_hash': report['dataset_hash'], 'label_hash': report['label_hash'],
+        'data_mode': root.name, 'status': 'not_evaluated', 'metrics': None,
+        'model': None, 'execution_status': 'not_run',
+        'filters': {field: sorted({getattr(c, field) for c in dataset.cases}) for field in ('region', 'period', 'methodology', 'source')},
+        'readiness': {'cases': len(cases), 'reference_items': len(refs), **counts,
+            'independent_resolved': sum(r['independent'] and r['state'] == 'resolved' for r in refs)},
+        'cases': [{'id': c.id, 'region': c.region, 'neighborhood': c.neighborhood, 'period': c.period,
+            'methodology': c.methodology, 'source': c.source,
+            'references': [{k: r[k] for k in ('policy_id', 'state', 'independent', 'review_count', 'adjudicated', 'provenance')}
+                for r in refs if r['case_id'] == c.id]} for c in cases],
+        'limitations': ['기준답 준비 상태입니다. 예측 결과를 평가하지 않았으므로 품질 점수는 미평가입니다.',
+            '합성 입력에 대한 독립 평정도 실제 지역 성능을 입증하지 않습니다.']}
+
+
+def quality_list(settings, source):
+    root = quality_root(settings, source)
+    rows = []
+    for folder in sorted(root.glob('*'), reverse=True):
+        try:
+            report_id = UUID(folder.name)
+        except ValueError:
+            continue
+        try:
+            body = quality_detail(settings, source, report_id)
+            rows.append({k: body[k] for k in ('id', 'dataset', 'version', 'status', 'data_mode', 'readiness')})
+        except HTTPException as error:
+            if error.status_code == 409:
+                rows.append({'id': str(report_id), 'status': 'failed', 'dataset': '손상된 평가 자료', 'version': '',
+                    'data_mode': root.name, 'readiness': None})
+    return rows
