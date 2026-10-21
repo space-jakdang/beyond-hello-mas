@@ -1,7 +1,7 @@
-# 평가 품질 데이터 준비
+# 평가 체계와 데이터 준비
 
 기존 보고서의 규칙·실행 검증과 독립 기준답에 대한 실제 성능은 구분한다.
-현재 이 도구는 **평가 준비 상태**만 계산한다. `/evaluation`에서 5축의 미평가 이유와 기준답 준비 현황을 확인한다. 분류·매칭·RAGAS 점수 계산은 후속 기능이다.
+`/evaluation`에서 기준답 준비 상태와 분류·매칭·RAGAS·전이/협업 비교·정책안 평정을 함께 확인한다. 점수는 필요한 입력과 참조가 준비된 축에 한해 계산하며 미평가 이유를 표시한다.
 기준답이 없어도 실행할 수 있으며 점수는 `null`, 상태는 `not_evaluated`다.
 
 ```sh
@@ -18,7 +18,7 @@ uv run python -m eval.prepare_quality eval/fixtures/quality-synthetic.json
 
 다시 가져올 때 최초 고정 입력을 사용한다. 원본 입력을 수정하면 해시 검증이 실패한다.
 새 데이터는 새 버전으로 만든다. 기존 보고서 schema1–5는 변경하지 않는다.
-새 schema6 준비 파일은 아직 기존 `/reports` 목록에 게시하지 않는다.
+새 schema6 자료는 기존 평가 보고서와 구분하여 `/reports/quality`에서 조회한다.
 
 ```sh
 uv run python -m eval.prepare_quality runtime/quality/sample/ID/inputs.json \
@@ -61,7 +61,7 @@ case_id,policy_id,reviewer,value,reason,reviewed_at,provenance,policy_as_of,adju
 `GET /reports/quality`와 `/reports/quality/{UUID}`는 준비 자료를 다시 검증해 조회하며 검토자 이름·평정 이유는 반환하지 않는다. 준비 현황에는 기준답 값을 포함하지 않으며, 분류 평가 실패 사례에는 비교용 등급을 포함한다.
 `source=sample`은 합성 전용 저장소, `source=current`는 현재 서버의 데이터 모드 저장소를 조회한다.
 `--output-root`로 별도 위치에 저장한 파일은 자동 게시되지 않는다. 손상된 자료는 오류로 표시한다.
-모델 평가가 아직 실행되지 않았으므로 모델 점수나 비교 결과를 표시하지 않는다.
+예측·근거 평가·비교 자료가 없는 축은 점수를 표시하지 않는다. 평가 실행과 입력 동결·작업 이력은 아래 실행 절차를 따른다.
 
 서버가 sample 모드이면 `현재 서버`와 `공개 합성`은 같은 저장소를 조회한다. 새로고침은 선택한 자료가 남아 있는 한 지역·기간·방법론 조건을 유지한다.
 
