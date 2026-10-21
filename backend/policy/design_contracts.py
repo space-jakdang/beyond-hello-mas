@@ -84,8 +84,11 @@ def validate_draft(body,evidence_ids,gap,analogues):
     cited=set()
     for citation in draft.citations:
         source=by_id.get(citation.policy_id)
-        if source is None or source.fields.get(citation.field)!=citation.quote:
+        actual=source.fields.get(citation.field) if source else None
+        normalize=lambda text:text.replace('\r\n','\n').replace('\r','\n')
+        if actual is None or normalize(actual)!=normalize(citation.quote):
             raise ValueError('citation differs from verified policy field')
+        citation.quote=actual
         cited.add(citation.policy_id)
     for adaptation in draft.adaptations:
         if not set(adaptation.source_policy_ids)<=cited:raise ValueError('adaptation needs verified citations')

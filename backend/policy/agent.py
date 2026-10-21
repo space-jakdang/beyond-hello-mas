@@ -91,7 +91,7 @@ class PolicyAgent:
 
     def call_tool(self,tool,args):
         async def invoke():
-            timeout=60+self.settings.policy_timeout_seconds+5 if tool=='policy_refresh' else (10 if tool=='policy_details' else 2)*self.settings.policy_timeout_seconds+10
+            timeout=60+self.settings.policy_timeout_seconds+5 if tool=='policy_refresh' else (10 if tool in ('policy_details','policy_analogues') else 2)*self.settings.policy_timeout_seconds+10
             return await asyncio.wait_for(self.remote(tool,args),timeout)
         try:return asyncio.run(invoke())
         except Exception as exc:return {'status':'error','error':type(exc).__name__}

@@ -2,8 +2,8 @@ import {useEffect, useState} from 'react';
 import {ReactFlow, Background, Controls} from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import {api, Run, Trace, scenarios, statusText} from './api';
-const roles = ['supervisor', 'classify', 'regional_analyst', 'regional_reviewer', 'statistics', 'match', 'approval', 'link', 'policy'];
-const roleNames:Record<string,string>={supervisor:'Supervisor',statistics:'통계 분석',regional_analyst:'지역 분석',regional_reviewer:'근거 검토',match:'자원 매칭'};
+const roles = ['supervisor', 'classify', 'regional_analyst', 'regional_reviewer', 'statistics', 'match', 'approval', 'link', 'policy', 'policy_design'];
+const roleNames:Record<string,string>={supervisor:'Supervisor',policy_design:'정책 설계',statistics:'통계 분석',regional_analyst:'지역 분석',regional_reviewer:'근거 검토',match:'자원 매칭'};
 export function Observatory() {
   const [goal, setGoal] = useState('고립 위험 주민에게 도움이 될 지원 정책을 조사해 주세요.');
   const [policyScopes, setPolicyScopes] = useState(['central','seoul','gangnam','gangwon','chuncheon']);

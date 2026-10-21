@@ -44,3 +44,12 @@ def test_incomplete_search_retains_request_for_evidence():
     draft,gap,sources=fixture();gap.update(state='search_incomplete',complete_within_scope=False)
     draft.update(status='needs_evidence',adaptations=[],citations=[])
     assert validate_draft(draft,['obs'],gap,[])['draft']['status']=='needs_evidence'
+
+
+def test_design_citation_accepts_only_line_ending_equivalence():
+    draft,gap,sources=fixture();actual='주 1회\r\n전화 지원'
+    sources[0]['fields']['support']=actual;draft['citations'][0]['quote']=actual.replace('\r\n','\n')
+    result=validate_draft(draft,['obs'],gap,sources)
+    assert result['draft']['citations'][0]['quote']==actual
+    draft['citations'][0]['quote']='주 2회\n전화 지원'
+    with pytest.raises(ValueError):validate_draft(draft,['obs'],gap,sources)
