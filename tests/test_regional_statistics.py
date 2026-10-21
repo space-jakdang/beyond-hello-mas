@@ -45,3 +45,20 @@ def test_trend_gaps_and_changed_age_bands_do_not_imply_change(service,monkeypatc
     t=trend(service.settings,a)
     assert all(p['change'] is None for s in t['series'] for p in s['points'])
     assert t['input_hash']!=t['output_hash']
+
+
+def test_policy_statistics_separate_scales_missing_and_need_combinations(service):
+    a=deepcopy(assess(service.settings,task()));a['segments']=a['segments'][:4]
+    for i,r in enumerate(a['segments']):
+        r.update(stage=[1,4,5,None][i],value=1 if i<3 else None,components={'economic':.4,'housing':.2} if i in (1,3) else {})
+        r['source_bands']=a['segments'][0]['source_bands'];r['source_period']='same';r['index_name']='v3'
+    result=summary(a)['policy_needs'];cohort=result['cohorts'][0]
+    assert cohort['observed_segments']==3 and cohort['missing_segments']==1 and cohort['priority_share']==pytest.approx(2/3)
+    assert cohort['need_counts']['economic']==1 and any(x['needs']==['economic','housing'] for x in cohort['joint_needs'])
+    assert result['profiles'][0]['priority_midrank']==pytest.approx(1/6)
+    assert result['profiles'][-1]['need_basis']=='insufficient_evidence'
+    assert result['profiles'][-1]['priority_midrank'] is None and result['profiles'][-1]['needs']==[]
+    assert all(p['estimated_people'] is None for p in result['profiles'])
+    a['segments'][1]['source_period']='different'
+    assert len(summary(a)['policy_needs']['cohorts'])==2
+    assert next(p for p in summary(a)['policy_needs']['profiles'] if p['evidence_id']==a['segments'][1]['evidence_id'])['priority_midrank'] is None

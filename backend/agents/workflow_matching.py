@@ -1,4 +1,5 @@
 from pydantic import BaseModel,ConfigDict,Field
+from backend.agents.workflow import model_summary
 
 
 class Selection(BaseModel):
@@ -17,10 +18,10 @@ class MatchingPlan(BaseModel):
 def select(agents,run_id,sim_ts,rows,statistics):
     eligible=[r for r in rows if r['recommendations']]
     if not eligible:return rows,{'status':'needs_human','summary':'근거 또는 필수 조건을 충족하는 자원이 없어 확인이 필요합니다.'}
-    choices=[{'evidence_id':r['evidence_id'],'needs':r['needs'],'stage':r['stage'],
+    choices=[{'evidence_id':r['evidence_id'],'needs':r['needs'],'stage':r['stage'],'statistical_context':{k:v for k,v in (r.get('statistical_context') or {}).items() if k in ('priority_midrank','priority_review','base_stage_stable','need_basis','measured_components')},
         'candidates':[{'id':c['id'],'name':c['name'],'needs':c['needs']} for c in r['recommendations']]} for r in eligible]
     plan=agents.call(run_id,sim_ts,'workflow_matching',{'choices':choices,'statistics':{
-        'status':statistics['status'],'reason':statistics['reason'],'summary':statistics['summary']}}).model_dump()
+        'status':statistics['status'],'reason':statistics['reason'],'summary':model_summary(statistics['summary'])}}).model_dump()
     by_id={r['evidence_id']:r for r in eligible};chosen={}
     for item in plan['selections']:
         eid=item['evidence_id'];ids=item['resource_ids']
