@@ -33,4 +33,11 @@ def policy_detail(policy_id:str)->dict[str,Any]:
     return service.detail(policy_id)
 
 
+@mcp.tool()
+def policy_analogues(local_scope:Scope,query:Annotated[str,Field(min_length=1,max_length=200)],target_group:Annotated[str,Field(min_length=1,max_length=200)])->dict[str,Any]:
+    """Research up to five other-scope official examples. Similarity and local eligibility remain unverified."""
+    from backend.policy.analogues import research,AnalogueRequest
+    return research(service,AnalogueRequest(local_scope=local_scope,query=query,target_group=target_group))
+
+
 if __name__=='__main__':mcp.run(transport='stdio')
