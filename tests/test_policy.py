@@ -82,7 +82,7 @@ def test_real_mcp_stdio_roundtrip():
             async with ClientSession(*streams) as session:
                 await session.initialize()
                 names={t.name for t in (await session.list_tools()).tools}
-                assert names=={'policy_coverage','policy_refresh','policy_search','policy_detail','policy_details'}
+                assert names=={'policy_coverage','policy_refresh','policy_search','policy_detail','policy_details','policy_analogues'}
                 result=await session.call_tool('policy_search',{'scopes':SCOPES,'per_page':2})
                 assert not result.is_error and result.structured_content['total']==5
                 invalid=await session.call_tool('policy_search',{'scopes':['unsupported']})
