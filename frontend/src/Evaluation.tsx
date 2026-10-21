@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import {api} from './api';
+import {QualityEvaluation} from './QualityEvaluation';
 import {WorkflowEvaluationPanel,WorkflowEvaluationData} from './WorkflowEvaluation';
 import {TemporalPanel,CollaborationPanel,Temporal,Paired} from './EvaluationPanels';
 type Brief={id:string;created_at:string;data_mode:string;llm_mode:string;status:string;evaluated_scenarios:number;schema_version?:string};
@@ -19,6 +20,7 @@ export function Evaluation(){
  <p>개인 판정은 후순위입니다. 합성 데이터 결과를 실제 고립 예측 정확도로 해석하지 않습니다.</p>
  <label>평가 자료 <select style={{maxWidth:'100%'}} value={source} onChange={e=>{setSelected('');setSummary(undefined);setReports([]);setSource(e.target.value);}}><option value="sample">공개 합성 평가 (sample/fake)</option><option value="current">현재 서버 데이터·LLM 모드</option></select></label>
  <button onClick={()=>setReload(n=>n+1)}>평가 결과 새로고침</button>{error&&<p role="alert">{error}</p>}
+ <QualityEvaluation key={source} source={source} reload={reload}/><h2>개발 검증과 기존 평가 보고서</h2>
  {!reports.length&&<p>평가 결과가 없습니다. make eval-v2 / make eval-temporal / make eval-collaboration / make eval-workflow로 생성합니다.</p>}
  <label>평가 실행 <select style={{maxWidth:'100%'}} value={selected} onChange={e=>setSelected(e.target.value)}><option value="">선택</option>{reports.map(r=><option key={r.id} value={r.id}>{suites[r.schema_version||'1']||'기타 평가'} · {r.created_at} · {r.id.slice(0,8)}</option>)}</select></label>
  {summary&&<article className="card"><h2>평가 결과 · {suites[summary.schema_version||'1']||summary.status}</h2><p data-testid="suite-id">{summary.id}</p><p>상태 {summary.status} · 데이터 {summary.data_mode} · LLM {summary.llm_mode} · 전체 분모 <strong data-testid="suite-count">{summary.evaluated_scenarios}</strong></p>
