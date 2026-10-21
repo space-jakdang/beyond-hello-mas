@@ -73,3 +73,8 @@ input,select { max-width:100%; } input[type="checkbox"] { accent-color:var(--acc
 .evidence-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px;margin:16px 0}.evidence-cards>section{background:#f4f8f7;padding:20px;border-radius:12px;min-width:0}.evidence-cards h4{margin:0 0 12px}.evidence-cards strong{font-size:1.7rem;font-variant-numeric:tabular-nums}.evidence-cards dl{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:.85rem}.evidence-cards dd{margin:0;text-align:right}
 
 .filter-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:16px 0}.filter-cards button{display:flex;flex-direction:column;align-items:start;padding:16px;gap:8px;background:white;min-width:0}.filter-cards button[aria-pressed=true]{border-color:#087f72;background:#e2f4ed}.filter-cards strong{font-size:1.6rem;font-variant-numeric:tabular-nums}@media(max-width:600px){.filter-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.sex-comparison {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.sex-comparison>section {min-width:0}
+.sex-comparison .map-layout {display:block}
+@media(max-width:800px){.sex-comparison{grid-template-columns:1fr}}
