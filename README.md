@@ -108,3 +108,5 @@ curl -X POST http://127.0.0.1:8000/scenarios/run -H 'Content-Type: application/j
 등급 의미와 욕구 매핑은 교체 가능한 잠정 기준입니다. 개인 진단·실제 배정·기관 도입 성과를 뜻하지 않습니다. [업무 계약](docs/regional-workflow.md), [UI 설계](docs/design/agent-workspace.md), [AI 보조 합성 데이터와 평가](docs/synthetic-datasets.md)를 참고하세요. `make eval-workflow`로 지역 업무의 합성 규칙/자원 조건 검증을 생성하고 `/evaluation`에서 확인할 수 있습니다. 실제 분류 타당성·전문가 적합성·타 지역 일반화·새 업무의 협업 효과는 별도 검증이 필요합니다.
 
 평가 대시보드(`/evaluation`)는 분류·정책 매칭·RAGAS 근거·지역/기간·MAS 비교를 구분합니다. 등록 자료에서 **평가 실행·저장**으로 비용 없는 계산부터 시작하고, 설정된 live 서버에서는 비용 상한 안에서 근거 평가를 추가할 수 있습니다. 실제 기준답이 없는 항목은 미평가로 남습니다. 자료 등록, 독립 평정, 비교 프로토콜과 비용 장부는 [평가 사용법](docs/evaluation-quality.md)을 참고하세요.
+
+배포 준비와 서버리스 전환의 남은 관문은 [배포 문서](docs/deployment.md)를 참고하세요. 현재 Vercel 배포는 검증되지 않았습니다.
