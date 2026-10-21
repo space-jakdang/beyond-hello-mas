@@ -48,3 +48,29 @@ test('source evidence starts with readable cards and raw data is collapsed',asyn
  await page.getByText('원천 기록 자세히 보기',{exact:true}).click();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
+
+test('both sexes preserve source stages, selection, URL and missing rows',async({page,request})=>{
+ const data=await(await request.get('/analysis/groups')).json();
+ const dongs=data.neighborhoods.filter((d:any)=>d.sgg==='11230');
+ const selected=dongs[1];
+ await page.goto('/neighborhoods?sex=all');
+ const male=page.getByRole('region',{name:'남성 분석 패널',exact:true}),female=page.getByRole('region',{name:'여성 분석 패널',exact:true});
+ await expect(male).toBeVisible();await expect(female).toBeVisible();
+ expect(await male.getByRole('img',{name:'T1b R1 주간 비율'}).locator('line').getAttribute('y1')).toBe(await female.getByRole('img',{name:'T1b R1 주간 비율'}).locator('line').getAttribute('y1'));
+ await page.getByRole('region',{name:'남녀 동별 단계 비교'}).getByRole('button',{name:selected.dong_nm,exact:true}).click();
+ for(const [sex,panel] of [['M',male],['F',female]] as const){
+  const row=data.segments.find((r:any)=>r.dong_cd===selected.dong_cd&&r.sex===sex&&r.age_group==='youth'&&r.preferred&&r.ym===data.metadata.selected_week.slice(0,7));
+  await expect(panel.getByTestId('group-detail')).toContainText(`${row.stage}단계`);
+  await expect(panel.getByRole('link',{name:/Supervisor/})).toHaveAttribute('href',new RegExp('sex='+sex));
+ }
+ await page.getByRole('combobox',{name:'성별',exact:true}).selectOption('F');
+ await page.goBack();await expect(male).toBeVisible();await page.reload();await expect(female).toBeVisible();
+ await page.setViewportSize({width:390,height:844});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ data.segments=data.segments.filter((r:any)=>!(r.dong_cd===selected.dong_cd&&r.sex==='F'));
+ await page.route('**/analysis/groups*',route=>route.fulfill({json:data}));await page.reload();
+ await expect(female).toContainText('선택한 동의 성별 자료 없음');await expect(female.getByRole('link',{name:/Supervisor/})).toHaveCount(0);
+ await expect(male.getByTestId('group-detail')).toBeVisible();
+ await page.getByRole('combobox',{name:'지역',exact:true}).selectOption('32010');
+ await expect(male).toContainText('춘천시');await expect(female).toContainText('춘천시');
+});
