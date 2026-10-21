@@ -81,3 +81,19 @@ def test_decision_evidence_records_observation_filters_and_actual_choice(service
         import json
         calls=[json.loads(r[0]) for r in db.execute("SELECT body FROM llm_calls WHERE run_id=? AND role='workflow_matching'",(run.id,))]
     assert calls and calls[0]['input']['choices']  # Actual supplied model context already persisted.
+
+
+def test_statistical_profiles_reach_matching_without_changing_verified_filters(service,monkeypatch):
+    from tests.test_workflow_agents import run_task
+    seen=[];original=service.agents.call
+    def capture(run_id,sim_ts,role,payload):
+        if role=='workflow_matching':
+            seen.append(payload)
+            assert 'profiles' not in payload['statistics']['summary']['policy_needs']
+            assert payload['choices'][0]['statistical_context']['need_basis']=='index_proxy_only'
+        return original(run_id,sim_ts,role,payload)
+    monkeypatch.setattr(service.agents,'call',capture)
+    run=run_task(service);p=service.approval(run.id)['proposal']
+    assert seen
+    profiles={r['evidence_id']:r for r in p['workflow']['statistics']['summary']['policy_needs']['profiles']}
+    assert all(r['decision_evidence']['statistical_context']==profiles[r['evidence_id']] for r in p['assignments'])

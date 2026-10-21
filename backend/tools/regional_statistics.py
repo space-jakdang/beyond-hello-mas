@@ -23,7 +23,7 @@ def summary(assessment):
             'stage_counts':dict(sorted(Counter(str(r['stage']) for r in valid).items())),
             'distributions':distributions,'blocked_evidence_ids':blocked,
             'input_hash':assessment['metadata']['input_hash'],'causal_claim':False,
-            'confidence_interval':None,'cross_region_comparable':False}
+            'confidence_interval':None,'cross_region_comparable':False,'policy_needs':policy_needs(assessment)}
 
 
 def trend(settings,assessment):
@@ -81,3 +81,40 @@ def sensitivity(assessment):
                       'base_stage_stable':len(set(stages))==1 if stages else None})
     return {'tool':'sensitivity','tool_version':'regional-statistics-1','delta':.01,'items':items,
             'interpretation':'index-specific perturbation, not calibrated uncertainty'}
+
+
+def policy_needs(assessment):
+    """Describe selected-area needs; a segment count is not a resident count."""
+    from backend.tools.regional_resources import needs_for, NEEDS
+    groups={}
+    for row in assessment['segments']:
+        key=(row['sgg'],row['sex'],row['age_group'],row['index_name'],row['source_period'],digest(row['source_bands']))
+        groups.setdefault(key,[]).append(row)
+    cohorts=[];profiles=[]
+    stable_by_id={r['evidence_id']:r['base_stage_stable'] for r in sensitivity(assessment)['items']}
+    for key,rows in sorted(groups.items()):
+        valid=[r for r in rows if r['stage'] is not None and r['value'] is not None and isfinite(r['value'])]
+        stages=[r['stage'] for r in valid];n=len(valid);counts=Counter();pairs=Counter();cohort_id=digest(key)
+        for row in rows:
+            observed=row in valid;needs=needs_for(row) if observed else []
+            counts.update(needs)
+            for i,first in enumerate(needs):
+                for second in needs[i+1:]:pairs[(first,second)]+=1
+            components={k:v for k,v in (row.get('components') or {}).items() if k in (*NEEDS,'activity_deficit') and type(v) in (int,float) and isfinite(v)} if observed else {}
+            profiles.append({'evidence_id':row['evidence_id'],'cohort_id':cohort_id,'dong_nm':row['dong_nm'],'comparable_segments':n,
+                'priority_midrank':(sum(s<row['stage'] for s in stages)+.5*sum(s==row['stage'] for s in stages))/n if observed and n>=3 else None,
+                'priority_review':row['stage']>=4 if observed else None,'base_stage_stable':stable_by_id[row['evidence_id']],
+                'needs':needs,'measured_components':components,
+                'need_basis':'observed_components_and_provisional_mapping' if components else 'index_proxy_only' if needs else 'insufficient_evidence',
+                'needed_data':(['요인별 독립 측정'] if not components else [])+['대상 인구 분모','기존 서비스 이용·수용량'],
+                'estimated_people':None})
+        cohorts.append({'cohort_id':cohort_id,'sgg':key[0],'sex':key[1],'age_group':key[2],'index_name':key[3],
+            'source_period':key[4],'total_segments':len(rows),'observed_segments':n,'missing_segments':len(rows)-n,
+            'priority_segments':sum(s>=4 for s in stages),'priority_share':sum(s>=4 for s in stages)/n if n else None,
+            'need_counts':dict(sorted(counts.items())),
+            'joint_needs':[{'needs':list(pair),'segments':count} for pair,count in sorted(pairs.items())]})
+    return {'version':'policy-needs-1','cohorts':cohorts,'profiles':profiles,'population_estimate':None,
+        'limitations':['선택한 동·집단의 기술 통계이며 주민 유병률·개인 판정·인과 원인이 아닙니다.',
+            '상대 위치는 같은 척도·집단·기간의 등급 중간순위이며 위험 확률이 아닙니다. 3개 미만이면 산출하지 않습니다.',
+            '요인별 양의 값→필요 매핑은 잠정 규칙입니다. 지수만 있으면 관계 지원 가설로 제한합니다.',
+            '임계값 민감도는 ±0.01 지수 변형 결과이며 보정된 불확실성이 아닙니다.']}
