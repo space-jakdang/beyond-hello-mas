@@ -32,8 +32,8 @@ def report_router(settings):
 
     @router.get('/reports/quality/{report_id}')
     def quality_report(report_id:UUID, source:Literal['current','sample']='current',
-                       region:str|None=None, period:str|None=None, methodology:str|None=None):
-        return quality_detail(settings, source, report_id, region, period, methodology)
+                       region:str|None=None, period:str|None=None, methodology:str|None=None, observation_source:Literal['observed','synthetic']|None=None):
+        return quality_detail(settings, source, report_id, region, period, methodology, observation_source)
 
     @router.get('/reports/{report_id}')
     def report(report_id:UUID,source:Literal['current','sample']='current'):
