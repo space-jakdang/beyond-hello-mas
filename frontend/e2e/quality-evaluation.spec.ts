@@ -73,3 +73,43 @@ test('method comparison exposes worse MAS and distinguishes synthetic from gener
  const panel=page.getByLabel('지역·기간 및 MAS 비교');await expect(panel).toContainText('합성 견고성');await expect(panel).toContainText('실제 미래 예측 미평가');await expect(panel).toContainText('-25.0%p');await expect(panel).toContainText('새 오류 1');await expect(panel).toContainText('분류 개선 미확인');
  await panel.getByText('비용·지연 — 필터 전 전체 실행',{exact:true}).press('Enter');await expect(panel).toContainText('장부 대조 전');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
+
+
+test('evaluation execution restores history and blocks incompatible comparisons on mobile',async({page})=>{
+ const jobId='00000000-0000-4000-8000-000000000002';let posts=0;
+ const saved={comparison_key:'compatible',judge_model:null,judge_price_version:null,id:jobId,report_id:id,source:'sample',suite:'deterministic',version:'quality-job-1',status:'completed',created_at:'2026-01-01T00:00:00Z',error:null,result:{dataset_hash:'inputs',label_hash:'labels',status:'not_evaluated'}};
+ const incompatible={...saved,id:'00000000-0000-4000-8000-000000000003',result:{...saved.result,label_hash:'different'}};
+ await page.route('**/reports/quality**',async route=>{
+  const u=new URL(route.request().url());let json:unknown;
+  if(u.pathname.endsWith('/preflight'))json={grounding_available:false,grounding_reasons:['독립 참조 미등록'],grounding_max_reservation_usd:null,limitations:['미평가를 성공으로 바꾸지 않습니다.']};
+  else if(u.pathname.endsWith('/jobs')){if(route.request().method()==='POST'){posts++;json=saved;}else json=posts?[saved,incompatible]:[];}
+  else json=u.pathname.endsWith(id)?detail:[brief];
+  await route.fulfill({json});
+ });
+ await page.setViewportSize({width:390,height:844});await page.goto('/evaluation');
+ let panel=page.getByLabel('평가 실행과 저장 이력');await panel.getByRole('button',{name:'평가 실행·저장'}).press('Enter');await expect(panel).toContainText('계산 완료는 품질 통과가 아닙니다');expect(posts).toBe(1);
+ await page.reload();panel=page.getByLabel('평가 실행과 저장 이력');await expect(panel.getByRole('combobox',{name:'저장 실행',exact:true})).toHaveValue(jobId);
+ await panel.getByRole('combobox',{name:'비교 실행',exact:true}).selectOption(incompatible.id);await expect(panel).toContainText('비교 불가');expect(posts).toBe(1);
+ await panel.getByText('저장 결과 펼치기',{exact:true}).press('Enter');await expect(panel).toContainText('기술적 결과');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
+
+test('real evaluation API saves missing-reference results and reuses the job after reload',async({page,request})=>{
+ const {execFileSync}=await import('node:child_process');const {resolve,basename}=await import('node:path');const {rmSync}=await import('node:fs');
+ const folder=execFileSync('uv',['run','python','-m','eval.prepare_quality','eval/fixtures/quality-synthetic.json'],{cwd:'..',encoding:'utf8'}).trim();const reportId=basename(folder);
+ try{
+  await page.goto('/evaluation');await page.getByRole('combobox',{name:'품질 평가 자료',exact:true}).selectOption(reportId);
+  const panel=page.getByLabel('평가 실행과 저장 이력');await panel.getByRole('button',{name:'평가 실행·저장'}).click();
+  await expect(panel).toContainText('계산 완료는 품질 통과가 아닙니다');
+  const history=await request.get(`/reports/quality/${reportId}/jobs?source=sample`);const [saved]=await history.json();
+  expect(saved.status).toBe('completed');expect(saved.result.status).toBe('not_evaluated');expect(saved).not.toHaveProperty('snapshot');
+  const repeated=await request.post(`/reports/quality/${reportId}/jobs?source=sample`,{data:{suite:'deterministic'}});expect((await repeated.json()).id).toBe(saved.id);
+  expect((await request.get(`/quality-jobs/${saved.id}`)).ok()).toBe(true);
+  await page.reload();await page.getByRole('combobox',{name:'품질 평가 자료',exact:true}).selectOption(reportId);await expect(page.getByLabel('평가 실행과 저장 이력')).toContainText(saved.id);
+ }finally{rmSync(resolve('..',folder),{recursive:true});}
+});
+
+test('case evidence links to the existing regional workspace without inventing evidence',async({page})=>{
+ await page.route('**/reports/quality**',route=>{const u=new URL(route.request().url());return route.fulfill({json:u.pathname.endsWith('/evidence')?{run_id:id,rows:[],reason:'해당 관측 근거의 자원 제안 기록이 없습니다.'}:u.pathname.endsWith(id)?detail:[brief]});});
+ await page.goto('/evaluation');await page.getByText('예제동 · 2026-01 · 합성 · 1개 미등록',{exact:true}).press('Enter');await page.getByRole('button',{name:'이 사례의 추천 근거 조회'}).click();
+ await expect(page.getByRole('link',{name:'원래 에이전트 실행 보기 →'})).toHaveAttribute('href',`/workspace?run=${id}`);await expect(page.getByText('해당 관측 근거의 자원 제안 기록이 없습니다.',{exact:true})).toBeVisible();
+});

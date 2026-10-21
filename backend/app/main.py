@@ -16,9 +16,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings()
     store = EventStore(settings.runtime_dir / "events.sqlite3", settings.data_mode)
     service = GraphService(store, settings)
+    from backend.app.quality_jobs import QualityJobs, quality_job_router
+    quality_jobs=QualityJobs(store,settings)
 
     @asynccontextmanager
     async def lifespan(app):
+        quality_jobs.recover()
         recovery = asyncio.create_task(asyncio.to_thread(service.recover))
         yield
         await recovery
@@ -31,6 +34,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.store = store
     app.include_router(event_router(store))
     app.include_router(report_router(settings))
+    app.include_router(quality_job_router(quality_jobs))
     app.include_router(analysis_router(settings))
     app.include_router(policy_router(settings))
 

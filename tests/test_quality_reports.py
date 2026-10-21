@@ -99,3 +99,19 @@ def test_study_report_validates_versions_and_keeps_unfavorable_results(tmp_path,
         assert client.get(url+'&region=absent').json()['study']['groups']==[]
         study['label_hash']='changed';(folder/'study.json').write_text(json.dumps(study))
         assert client.get(url).status_code==409
+
+
+def test_observation_source_filter_rejects_unknown_and_separates_real(tmp_path,monkeypatch):
+    from copy import deepcopy
+    from test_quality_metrics import fixture
+    f,l,p=fixture((1,4),(1,None));data=deepcopy(f['dataset']);data['cases'][1]['source']='observed';f=freeze(data)
+    l['dataset_hash']=f['dataset_hash'];p['dataset_hash']=f['dataset_hash'];monkeypatch.setattr(config,'ROOT',tmp_path)
+    folder=tmp_path/'runtime/quality/local'/str(uuid4());folder.mkdir(parents=True)
+    for name,body in [('inputs',f),('labels',l),('predictions',p)]: (folder/f'{name}.json').write_text(json.dumps(body))
+    app=FastAPI();app.include_router(report_router(config.Settings(_env_file=None,data_mode='local')))
+    with TestClient(app) as client:
+        url=f'/reports/quality/{folder.name}'
+        result=client.get(url+'?observation_source=observed').json()
+        assert len(result['cases'])==1 and result['cases'][0]['source']=='observed'
+        assert result['classification']['groups'][0]['priority_recall']==0
+        assert client.get(url+'?observation_source=pretend').status_code==422
