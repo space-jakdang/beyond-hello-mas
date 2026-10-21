@@ -65,3 +65,20 @@ def test_quality_positive_filter_label_tampering_and_symlinks(tmp_path, monkeypa
         (folder/'labels.json').rename(folder/'saved-labels.json')
         (folder/'labels.json').symlink_to(folder/'saved-labels.json')
         assert client.get(url).status_code==409
+
+
+def test_imported_classification_scores_are_computed_and_filtered(tmp_path,monkeypatch):
+    from test_quality_metrics import fixture
+    frozen,ratings,predictions=fixture((1,2,4,5),(1,4,None,5))
+    monkeypatch.setattr(config,'ROOT',tmp_path)
+    folder=tmp_path/'runtime/quality/sample'/str(uuid4());folder.mkdir(parents=True)
+    for name,body in [('inputs',frozen),('labels',ratings),('predictions',predictions)]:
+        (folder/f'{name}.json').write_text(json.dumps(body))
+    app=FastAPI();app.include_router(report_router(config.Settings(_env_file=None,data_mode='sample',llm_mode='fake')))
+    with TestClient(app) as client:
+        url=f'/reports/quality/{folder.name}'
+        report=client.get(url).json()
+        assert report['classification']['groups'][0]['macro_f1']==.5 and report['status']=='partial'
+        assert client.get(url+'?region=none').json()['classification']['groups']==[]
+        predictions['dataset_hash']='changed';(folder/'predictions.json').write_text(json.dumps(predictions))
+        assert client.get(url).status_code==409

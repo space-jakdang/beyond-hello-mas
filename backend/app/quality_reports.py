@@ -4,6 +4,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from backend.app import config
 from eval.quality_contracts import load_frozen, readiness_report
+from eval.quality_metrics import classification
 
 
 def quality_root(settings, source):
@@ -30,12 +31,21 @@ def quality_detail(settings, source, report_id, region=None, period=None, method
     cases = [c for c in dataset.cases if (not region or c.region == region)
         and (not period or c.period == period) and (not methodology or c.methodology == methodology)]
     ids = {c.id for c in cases}
+    scores = None
+    prediction_path = folder / 'predictions.json'
+    if prediction_path.exists() or prediction_path.is_symlink():
+        try:
+            if prediction_path.is_symlink():raise ValueError('symlink not allowed')
+            scores = classification(frozen, labels, json.loads(prediction_path.read_text()), ids)
+        except (ValueError, KeyError, TypeError, AttributeError, OSError):
+            raise HTTPException(409, 'quality predictions incomplete or invalid')
     refs = [r for r in report['references'] if r['case_id'] in ids]
     counts = {state: sum(r['state'] == state for r in refs) for state in ('missing', 'unknown', 'disagreement', 'resolved')}
     return {'id': str(report_id), 'schema_version': '6', 'dataset': dataset.id, 'version': dataset.version,
         'dataset_hash': report['dataset_hash'], 'label_hash': report['label_hash'],
-        'data_mode': root.name, 'status': 'not_evaluated', 'metrics': None,
-        'model': None, 'execution_status': 'not_run',
+        'data_mode': root.name, 'status': 'partial' if scores and any(g['reference_count'] for g in scores['groups']) else 'not_evaluated', 'metrics': None,
+        'model': scores['model'] if scores else None, 'execution_status': 'predictions_imported' if scores else 'not_run',
+        'classification': scores,
         'filters': {field: sorted({getattr(c, field) for c in dataset.cases}) for field in ('region', 'period', 'methodology', 'source')},
         'readiness': {'cases': len(cases), 'reference_items': len(refs), **counts,
             'independent_resolved': sum(r['independent'] and r['state'] == 'resolved' for r in refs)},
@@ -43,7 +53,7 @@ def quality_detail(settings, source, report_id, region=None, period=None, method
             'methodology': c.methodology, 'source': c.source,
             'references': [{k: r[k] for k in ('policy_id', 'state', 'independent', 'review_count', 'adjudicated', 'provenance')}
                 for r in refs if r['case_id'] == c.id]} for c in cases],
-        'limitations': ['기준답 준비 상태입니다. 예측 결과를 평가하지 않았으므로 품질 점수는 미평가입니다.',
+        'limitations': ['분류 점수는 독립 참조와 예측이 모두 있는 범위만 계산하며 다른 평가 축을 대신하지 않습니다.',
             '합성 입력에 대한 독립 평정도 실제 지역 성능을 입증하지 않습니다.']}
 
 

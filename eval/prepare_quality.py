@@ -30,6 +30,7 @@ def main():
     parser.add_argument('dataset', type=Path)
     parser.add_argument('--labels', type=Path, help='JSON reviewers and judgments bound to dataset_hash')
     parser.add_argument('--judgments', type=Path, help='CSV/JSON judgments replacing labels judgments')
+    parser.add_argument('--predictions', type=Path, help='Frozen-dataset-bound model predictions JSON')
     parser.add_argument('--key', type=Path, help='Private map for blind case IDs in supplied judgments')
     parser.add_argument('--output-root', type=Path, default=None)
     args = parser.parse_args()
@@ -51,7 +52,12 @@ def main():
         imported_key = json.loads(args.key.read_text())
         labels['judgments'] = unblind_judgments(frozen, imported_key, labels['judgments'])
     report = readiness_report(frozen, labels)
+    predicted = None
+    if args.predictions:
+        from eval.quality_metrics import validate_predictions
+        predicted = validate_predictions(frozen, json.loads(args.predictions.read_text())).model_dump()
     extras = [('import-key', imported_key)] if args.key else list(zip(('blind-packet', 'private-key'), blind_packet(frozen)))
+    if predicted is not None:extras.append(('predictions', predicted))
     mode = 'sample' if all(c['source'] == 'synthetic' for c in frozen['dataset']['cases']) else 'local'
     folder = (args.output_root or Path('runtime/quality') / mode) / str(uuid4())
     folder.mkdir(parents=True, exist_ok=False)
