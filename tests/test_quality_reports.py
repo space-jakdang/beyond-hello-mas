@@ -82,3 +82,20 @@ def test_imported_classification_scores_are_computed_and_filtered(tmp_path,monke
         assert client.get(url+'?region=none').json()['classification']['groups']==[]
         predictions['dataset_hash']='changed';(folder/'predictions.json').write_text(json.dumps(predictions))
         assert client.get(url).status_code==409
+
+
+def test_study_report_validates_versions_and_keeps_unfavorable_results(tmp_path,monkeypatch):
+    from test_quality_study import setup
+    frozen,ratings,study=setup();monkeypatch.setattr(config,'ROOT',tmp_path)
+    folder=tmp_path/'runtime/quality/sample'/str(uuid4());folder.mkdir(parents=True)
+    for name,body in [('inputs',frozen),('labels',ratings),('study',study)]:
+        (folder/f'{name}.json').write_text(json.dumps(body))
+    app=FastAPI();app.include_router(report_router(config.Settings(_env_file=None)))
+    with TestClient(app) as client:
+        url=f'/reports/quality/{folder.name}?source=sample'
+        response=client.get(url);assert response.status_code==200
+        assert response.json()['study']['groups'][0]['paired'][0]['grade_accuracy_delta']==-.25
+        assert client.get(url+'&region=sample-region').json()['study']['groups'][0]['paired'][0]['grade_accuracy_delta']==-.25
+        assert client.get(url+'&region=absent').json()['study']['groups']==[]
+        study['label_hash']='changed';(folder/'study.json').write_text(json.dumps(study))
+        assert client.get(url).status_code==409

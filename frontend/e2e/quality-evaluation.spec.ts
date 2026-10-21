@@ -65,3 +65,11 @@ test('grounding distinguishes evaluator failure from zero and exposes cost scope
  await expect(panel).toContainText('0.0%');await expect(panel).toContainText('평가 실패');
  await expect(panel).toContainText('비용 미확인 1회');await expect(panel).toContainText('독립 사람 평정과의 일치도 미검증');
 });
+
+test('method comparison exposes worse MAS and distinguishes synthetic from generalization',async({page})=>{
+ const study={version:'fixture',protocol_hash:'hash',groups:[{source:'synthetic',methodology:'v1',split:'test',region:'샘플지역',period:'2026-01',case_count:4,family_count:3,transfer_scope:'synthetic_robustness',temporal_scope:'not_evaluated',arms:[{method:'mas',failed:1,resource_failed:0,abstained:0,missing:1,classification:{macro_f1:.5,priority_recall:.5}}],paired:[{baseline:'single',challenger:'mas',family_count:3,grade_accuracy_delta:-.25,corrected_cases:0,introduced_errors:1,ranking_family_count:0,ndcg_delta:null}]}],costs:[],limitations:['통계적 유의성 미평가']};
+ await page.route('**/reports/quality**',route=>route.fulfill({json:new URL(route.request().url()).pathname.endsWith(id)?{...detail,study}:[brief]}));
+ await page.setViewportSize({width:390,height:844});await page.goto('/evaluation');
+ const panel=page.getByLabel('지역·기간 및 MAS 비교');await expect(panel).toContainText('합성 견고성');await expect(panel).toContainText('실제 미래 예측 미평가');await expect(panel).toContainText('-25.0%p');await expect(panel).toContainText('새 오류 1');await expect(panel).toContainText('분류 개선 미확인');
+ await panel.getByText('비용·지연 — 필터 전 전체 실행',{exact:true}).press('Enter');await expect(panel).toContainText('장부 대조 전');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});

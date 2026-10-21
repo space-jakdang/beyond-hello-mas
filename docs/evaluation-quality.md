@@ -133,3 +133,15 @@ case_id→문장 JSON으로 제공하면 Context Precision/Recall도 계산한�
 필터를 적용해도 비용은 전체 평가 실행 비용으로 표시한다. 평가자는 같은 모델일 수 있어 편향 검증이 필요하다.
 
 Grounding 결과와 judge 원문 장부도 비공개 평가 자료입니다. 공개 저장소에 포함하지 않습니다. 기본 누적 장부는 같은 runtime의 sample/local 중 존재하는 파일을 합산하며, 다른 위치의 과거 장부는 `--other-ledger`로 모두 지정해야 합니다. 명시한 장부가 없거나 읽을 수 없으면 실행하지 않습니다. 공급자 실패 또는 비용/호출 상한 도달 뒤에는 같은 judge 실행의 추가 유료 호출을 중단하고 나머지 지표도 실패로 보존합니다.
+
+### 지역·시간·방법 비교
+
+같은 폴더의 `study.json`에 `version`, `dataset_hash`, `label_hash`, `development_regions`, 공통 `conditions`, 2–3개 `arms`를 등록합니다. 각 arm은 같은 `conditions`와 기존 형식의 `predictions`, 선택적인 실행별 `telemetry`를 가집니다. 방법은 `rules`, `single`, `mas` 중 중복 없이 사용합니다. 조건은 `model`, `tools_version`, `catalog_hash`, `max_calls`, `max_usd`입니다. 카탈로그 해시는 `digest({case.id: case.policies for case in dataset.cases})`로 계산합니다. 비규칙 arm 모델과 모든 조건이 같아야 하며 서로 다른 방법에 같은 run ID를 재사용할 수 없습니다.
+
+`uv run python -m eval.quality_study runtime/quality/local/<자료 UUID>`로 검증·계산하거나 대시보드에서 조회합니다. 기준답이 없으면 품질 차이는 미평가입니다. 예측 누락·실패는 분류 비교에서 성공으로 처리하지 않습니다. 각 지역·기간·방법론·실제/합성·split별로 계산하고, 같은 원천 계열 안의 사례 차이를 평균한 뒤 계열에 동일 가중치를 줍니다. 추천 NDCG는 두 방법 모두 계산 가능한 사례만 짝지으며 그 계열 수를 표시합니다. 새 오류와 수정된 오류는 사례 수로 별도 표시합니다.
+
+강남·춘천 및 등록된 개발 지역은 외부 일반화로 표시하지 않습니다. 다른 실제 test 지역도 **등록된 미사용 지역 시험**일 뿐 개발 이력의 완전성이 자동 검증되는 것은 아닙니다. `timing`은 case ID별 `input_available_at <= predicted_at < outcome_available_at`의 시간대 포함 시각을 받습니다. 예측은 목표 월 시작 전, 결과 확보는 그 월 끝 이후여야 합니다(월 경계 UTC). 실제 test 사례 전체에 시점 기록이 있어야 사전 예측 시험으로 표시하며 합성 월은 실제 미래로 승격하지 않습니다.
+
+선택적인 telemetry는 `run_id`, `cost_usd` 또는 null, `latency_seconds` 또는 null을 가집니다. 공유 실행을 여러 사례로 복제해도 비용을 다시 더하지 않습니다. 비용·p50/p95는 필터 전 전체 실행 범위이며 가져온 기록임을 표시합니다. 신뢰구간이나 통계적 유의성은 계산하지 않으며 단순한 양의 차이를 입증된 MAS 효과로 부르지 않습니다.
+
+개발 지역 목록이 비어 있으면 새로운 실제 test 지역도 개발 이력 미확인으로 남깁니다. 강남·춘천 보호 규칙은 이미 개발에 사용한 이 프로젝트의 이력을 반영하며, 그 외 지역은 등록된 개발 이력과 대조합니다. 시점 기록 수를 전체 사례 수와 함께 표시합니다.
