@@ -23,3 +23,18 @@
 
 .decision-evidence { overflow-wrap:anywhere; }
 .decision-evidence pre { max-width:100%; overflow:auto; }
+
+.policy-report {overflow-wrap:anywhere}
+.policy-report fieldset {display:grid;gap:12px;margin-top:20px;border:1px solid var(--border,#d8e2e0);border-radius:12px}
+.policy-report label {display:grid;gap:6px}
+.policy-report textarea {min-height:90px;width:100%;box-sizing:border-box}
+.policy-report input {max-width:100%;box-sizing:border-box}
+.policy-report dt {font-weight:600;margin-top:12px}
+.policy-report dd {margin:4px 0 12px}
+@media print {
+ body:has(.policy-report) * {visibility:hidden}
+ body:has(.policy-report) .policy-report,body:has(.policy-report) .policy-report * {visibility:visible}
+ .policy-report {position:absolute;left:0;top:0;width:100%;border:0;box-shadow:none}
+ .policy-report .no-print,.policy-report .no-print * {display:none}
+ .policy-report article {break-inside:avoid}
+}
