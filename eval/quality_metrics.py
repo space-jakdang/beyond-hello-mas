@@ -5,11 +5,29 @@ from eval.quality_contracts import Contract, load_frozen, resolve_labels
 from backend.tools.indicators import digest
 
 
+class ResourcePrediction(Contract):
+    status: Literal['completed','failed']
+    retrieved_ids: list[str]
+    recommended_ids: list[str] = Field(max_length=3)
+    suitability: dict[str, Literal['suitable','conditional','unsuitable','unknown']]
+
+    @model_validator(mode='after')
+    def unique(self):
+        if len(set(self.retrieved_ids))!=len(self.retrieved_ids) or len(set(self.recommended_ids))!=len(self.recommended_ids):
+            raise ValueError('duplicate resource prediction')
+        if not set(self.recommended_ids)<=set(self.retrieved_ids):
+            raise ValueError('recommendations must be retrieved')
+        if self.status=='failed' and (self.recommended_ids or self.suitability):
+            raise ValueError('failed matching cannot carry recommendations or classifications')
+        return self
+
+
 class Prediction(Contract):
     case_id: str = Field(min_length=1)
     grade: int | None = Field(default=None, ge=1, le=5)
     status: Literal['predicted','abstained','failed']
     run_id: str | None = None
+    resources: ResourcePrediction | None = None
 
     @model_validator(mode='after')
     def consistent(self):
@@ -34,6 +52,11 @@ def validate_predictions(frozen, body):
     ids=[p.case_id for p in data.predictions]
     if len(ids)!=len(set(ids)) or not set(ids)<={c.id for c in dataset.cases}:
         raise ValueError('unknown or duplicate prediction case')
+    cases={c.id:c for c in dataset.cases}
+    for row in data.predictions:
+        if row.resources:
+            ids=set(row.resources.retrieved_ids)|set(row.resources.suitability)
+            if not ids<=set(cases[row.case_id].policies):raise ValueError('policy outside frozen candidate universe')
     return data
 
 
