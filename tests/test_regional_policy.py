@@ -67,15 +67,37 @@ def test_workflow_uses_configured_policy_budget_without_changing_legacy(service,
     def research(run_id,sim_ts,payload):
         with service.store.connection() as db:
             calls=db.execute('SELECT COUNT(*) FROM llm_calls WHERE run_id=?',(run_id,)).fetchone()[0]
-        assert payload['max_steps']==(10 if not delegated else 6)-calls
+        assert payload['max_steps']==(10-calls-2 if not delegated else 6-calls)
+        assert len(payload['goal'])<=1000 and '요청 집단' in payload['goal']
         delegated.append(payload)
         return {'status':'no_verified_candidates','recommendations':[],'steps':0}
     monkeypatch.setattr(service.policy_agent,'run',research)
     run=service.start(scenario('monthly',workflow_version='regional-workflow-1',task=task().model_dump(mode='json'),research_gaps=True))
     assert delegated and delegated[0]['max_steps']>3
+    assert '"age_group": "youth"' in delegated[0]['goal'] and '"sex": "M"' in delegated[0]['goal']
+    assert '대상 연령·관할' in delegated[0]['goal']
     assert service.approval(run.id)['proposal']['policy_research']['steps']==0
     assert counts(service,run.id)[0]==0
 
     legacy=service.start(scenario('monthly',ym='2025-09',collaboration=True,research_gaps=True))
     assert len(delegated)==2 and delegated[1]['max_steps']<=6
     assert counts(service,legacy.id)[0]==0
+
+
+@pytest.mark.parametrize('budget',[4,5,6,7,10])
+def test_policy_step_budget_leaves_design_room_only_when_available(service,monkeypatch,budget):
+    from tests.test_regional_task import task
+    import backend.graph as module
+    monkeypatch.setattr(module,'load_catalog',lambda _:[])
+    service.settings.llm_max_calls=budget
+    seen=[]
+    def research(run_id,sim_ts,payload):
+        with service.store.connection() as db:
+            used=db.execute('SELECT COUNT(*) FROM llm_calls WHERE run_id=?',(run_id,)).fetchone()[0]
+        available=budget-used
+        assert payload['max_steps']==(available-2 if available>=5 else available)
+        seen.append(payload)
+        return {'status':'search_incomplete','recommendations':[]}
+    monkeypatch.setattr(service.policy_agent,'run',research)
+    service.start(scenario('monthly',workflow_version='regional-workflow-1',task=task().model_dump(mode='json'),research_gaps=True))
+    assert seen
