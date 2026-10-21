@@ -48,3 +48,12 @@ test('classification shows errors and preserves abstentions in its denominator',
  await expect(panel).toContainText('오류예제동 · 기준 4 → 예측 미판정');
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
+
+test('matching keeps unknown recommendations and missing constraints visible',async({page})=>{
+ const matching={rows:[{case_id:'a',neighborhood:'예제동',source:'synthetic',methodology:'v1',policy_as_of:'2026-01-01',state:'partial',output_status:'completed',candidate_count:4,judged_count:3,reference_coverage:.75,suitability_macro_f1:.5,retrieval_recall:.5,recommendation_recall_at_3:.5,recall_at_3_ceiling:1,precision:null,precision_bounds:[1/3,2/3],conditional_rate:null,ndcg_at_3:null,recommended_count:3,unknown_returned:['unknown'],correct_hold:null,constraint_violations:null,constraint_unchecked_resources:3,constraint_checked:0,constraint_unknown:0,retrieval_misses:['missing'],ranking_misses:[],recommendations:[{id:'unknown',reference:'unknown',title:'미평정 정책',url:'https://example.org/policy'}]}],limitations:['고정 후보 평가']};
+ await page.route('**/reports/quality**',route=>route.fulfill({json:new URL(route.request().url()).pathname.endsWith(id)?{...detail,matching}:[brief]}));
+ await page.goto('/evaluation');const panel=page.getByLabel('자원 매칭 품질');
+ await expect(panel).toContainText('독립 평정 3 / 고정 후보 4');await expect(panel).toContainText('미평정 추천 1건');
+ await panel.getByText('검색 누락·추천 누락·정책 원문',{exact:true}).press('Enter');
+ await expect(panel).toContainText('미평정 정책 · 참조 unknown');await expect(panel.getByRole('link',{name:'정책 원문 ↗'})).toHaveAttribute('href','https://example.org/policy');
+});
