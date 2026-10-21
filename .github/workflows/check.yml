@@ -17,3 +17,4 @@ jobs:
       - run: make install
       - run: npx --prefix frontend playwright install --with-deps chromium
       - run: make check
+      - run: uv run --extra evaluation pytest tests/test_ragas_judge.py tests/test_grounding_contracts.py
