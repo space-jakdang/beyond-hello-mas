@@ -8,6 +8,7 @@ from eval.quality_metrics import classification
 from eval.grounding_contracts import load_grounding
 from eval.quality_matching import matching
 from eval.quality_study import load_study
+from eval.policy_design_quality import load as load_policy_design_quality
 
 
 def quality_root(settings, source):
@@ -41,6 +42,8 @@ def quality_body(folder, mode, report_id, region=None, period=None, methodology=
     scores = None
     grounding = None
     resource_scores = None
+    policy_scores = None
+    design_scores = None
     prediction_path = folder / 'predictions.json'
     if prediction_path.exists() or prediction_path.is_symlink():
         try:
@@ -52,6 +55,13 @@ def quality_body(folder, mode, report_id, region=None, period=None, methodology=
         except (ValueError, KeyError, TypeError, AttributeError, OSError):
             raise HTTPException(409, 'quality predictions incomplete or invalid')
     try:
+        policy_path=folder/'policy-candidates.json'
+        if policy_path.is_symlink():raise ValueError('symlink not allowed')
+        if policy_path.exists():policy_scores=matching(frozen,labels,json.loads(policy_path.read_text()),ids,policy_candidates=True)
+        design_scores=load_policy_design_quality(folder,frozen,ids)
+    except (ValueError,KeyError,TypeError,AttributeError,OSError):
+        raise HTTPException(409,'policy evaluation incomplete or invalid')
+    try:
         study=load_study(folder,frozen,labels,ids)
     except (ValueError, KeyError, TypeError, AttributeError, OSError):
         raise HTTPException(409, 'quality study incomplete or invalid')
@@ -59,9 +69,9 @@ def quality_body(folder, mode, report_id, region=None, period=None, methodology=
     counts = {state: sum(r['state'] == state for r in refs) for state in ('missing', 'unknown', 'disagreement', 'resolved')}
     return {'id': str(report_id), 'schema_version': '6', 'dataset': dataset.id, 'version': dataset.version,
         'dataset_hash': report['dataset_hash'], 'label_hash': report['label_hash'],
-        'data_mode': mode, 'status': 'partial' if (scores and any(g['reference_count'] for g in scores['groups'])) or (resource_scores and any(r['judged_count'] for r in resource_scores['rows'])) or (grounding and grounding['rows']) or (study and any(a['classification']['reference_count'] for g in study['groups'] for a in g['arms'])) else 'not_evaluated', 'metrics': None,
+        'data_mode': mode, 'status': 'partial' if (scores and any(g['reference_count'] for g in scores['groups'])) or (resource_scores and any(r['judged_count'] for r in resource_scores['rows'])) or (policy_scores and any(r['judged_count'] for r in policy_scores['rows'])) or (design_scores and any(m['state'] in ('evaluated','disagreement') for r in design_scores['rows'] for m in r['rubric'].values())) or (grounding and grounding['rows']) or (study and any(a['classification']['reference_count'] for g in study['groups'] for a in g['arms'])) else 'not_evaluated', 'metrics': None,
         'model': scores['model'] if scores else None, 'execution_status': 'predictions_imported' if scores else 'not_run',
-        'classification': scores, 'matching': resource_scores, 'study':study, 'grounding': grounding,
+        'classification': scores, 'matching': resource_scores,'policy_matching':policy_scores,'policy_design':design_scores, 'study':study, 'grounding': grounding,
         'filters': {field: sorted({getattr(c, field) for c in dataset.cases}) for field in ('region', 'period', 'methodology', 'source')},
         'readiness': {'cases': len(cases), 'reference_items': len(refs), **counts,
             'independent_resolved': sum(r['independent'] and r['state'] == 'resolved' for r in refs)},

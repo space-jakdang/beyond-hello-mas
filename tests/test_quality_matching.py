@@ -64,3 +64,13 @@ def test_candidate_classification_does_not_erase_retrieval_failures():
     row=matching(f,l,p)['rows'][0]
     assert row['suitability_macro_f1']==1 and row['retrieval_recall']==.5
     assert row['suitability_class_policy']=='classes_with_reference_or_prediction_support'
+
+
+def test_policy_top5_keeps_catalog_top3_and_denominators_distinct():
+    f,l,p=resource_fixture();r=p['predictions'][0]['resources'];r['retrieved_ids'].append('missing');r['recommended_ids']=list(r['retrieved_ids'])
+    with pytest.raises(ValueError):matching(f,l,p)
+    row=matching(f,l,p,policy_candidates=True)['rows'][0]
+    assert row['cutoff']==5 and row['recommendation_recall_at_5']==1 and row['precision']==.5
+    assert 'recommendation_recall_at_3' not in row
+    r['recommended_ids']=[]
+    assert matching(f,l,p,policy_candidates=True)['rows'][0]['recommendation_recall_at_5']==0

@@ -12,7 +12,7 @@ from backend.tools.indicators import digest
 from backend.app import config
 from backend.app.quality_reports import quality_root, quality_detail, quality_body
 
-VERSION='quality-job-1'
+VERSION='quality-job-2'
 
 
 class JobRequest(BaseModel):
@@ -63,7 +63,7 @@ class QualityJobs:
             with self.store.connection() as db:
                 if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='llm_calls'").fetchone():
                     for run_id in run_ids:
-                        source_calls+=db.execute("SELECT COUNT(*) FROM llm_calls WHERE run_id=? AND status='ok' AND json_extract(body,'$.mode')='live' AND role IN ('workflow_analyst','workflow_matching','policy_decision')",(run_id,)).fetchone()[0]
+                        source_calls+=db.execute("SELECT COUNT(*) FROM llm_calls WHERE run_id=? AND status='ok' AND json_extract(body,'$.mode')='live' AND role IN ('workflow_analyst','workflow_matching','policy_decision','policy_design')",(run_id,)).fetchone()[0]
         if not source_calls:reasons.append('현재 장부에 평가 가능한 실제 모델 입력·응답이 없습니다.')
         reserved=0.0
         ledgers={self.store.path.resolve()}|{(self.store.path.parent.parent/m/'events.sqlite3').resolve() for m in ('sample','local')}
@@ -95,14 +95,14 @@ class QualityJobs:
         if suite=='grounding' and not preflight['grounding_available']:raise HTTPException(409,'; '.join(preflight['grounding_reasons']))
         folder=quality_root(self.settings,source)/str(report_id)
         snapshot={}
-        for name in ('inputs.json','labels.json','predictions.json','study.json'):
+        for name in ('inputs.json','labels.json','predictions.json','study.json','policy-candidates.json','policy-drafts.json','policy-draft-ratings.json'):
             path=folder/name
             if path.is_symlink():raise HTTPException(409,'evaluation input symlink not allowed')
             if path.exists():snapshot[name]=json.loads(path.read_text())
         judge_config={k:getattr(self.settings,k) for k in ('openai_model','llm_max_calls','llm_max_input_bytes','llm_max_output_tokens','llm_budget_usd','llm_run_budget_usd','input_usd_per_million','output_usd_per_million','price_version')} if suite=='grounding' else {}
         study=snapshot.get('study.json')
         comparison_key=digest({'dataset':snapshot['inputs.json']['dataset_hash'],'labels':snapshot['labels.json'],
-            'suite':suite,'version':VERSION,'judge':judge_config,
+            'suite':suite,'version':VERSION,'judge':judge_config,'policy_ratings':snapshot.get('policy-draft-ratings.json'),
             'study_protocol':{k:v for k,v in study.items() if k!='arms'} if study else None})
         key=digest({'version':VERSION,'report_id':str(report_id),'source':source,'snapshot':snapshot,'suite':suite,'judge':judge_config})
         with self.store.connection(write=True) as db:

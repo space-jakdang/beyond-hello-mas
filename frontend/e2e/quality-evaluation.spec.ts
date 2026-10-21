@@ -114,3 +114,10 @@ test('case evidence links to the existing regional workspace without inventing e
  await page.goto('/evaluation');await page.getByText('예제동 · 2026-01 · 합성 · 1개 미등록',{exact:true}).press('Enter');await page.getByRole('button',{name:'이 사례의 추천 근거 조회'}).click();
  await expect(page.getByRole('link',{name:'원래 에이전트 실행 보기 →'})).toHaveAttribute('href',`/workspace?run=${id}`);await expect(page.getByText('해당 관측 근거의 자원 제안 기록이 없습니다.',{exact:true})).toBeVisible();
 });
+
+test('policy design quality keeps independent scores missing and exposes disagreement',async({page})=>{
+ const policy_design={rows:[{case_id:'a',neighborhood:'예제동',source:'synthetic',version:'v1',run_id:null,draft_status:'draft',source_validation:true,independent_reviews:2,field_effectiveness:null,rubric:{grounding:{state:'not_evaluated',mean:null,range:null,independent_count:0},feasibility:{state:'disagreement',mean:null,range:[1,5],independent_count:2}}}],limitations:['첨부 원문 대조는 정책 효과를 입증하지 않습니다.']};
+ await page.route('**/reports/quality**',route=>route.fulfill({json:new URL(route.request().url()).pathname.endsWith(id)?{...detail,policy_design}:[brief]}));
+ await page.goto('/evaluation');const panel=page.getByLabel('정책 설계 품질');await expect(panel).toContainText('실제 정책 효과 미평가');await expect(panel).toContainText('평정 불일치');await expect(panel).toContainText('독립 평정 0명');
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
