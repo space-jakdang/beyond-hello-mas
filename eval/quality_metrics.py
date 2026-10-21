@@ -44,9 +44,21 @@ class Predictions(Contract):
     predictions: list[Prediction]
 
 
-def validate_predictions(frozen, body):
+class PolicyCandidatePrediction(ResourcePrediction):
+    recommended_ids:list[str]=Field(max_length=5)
+
+
+class PolicyPrediction(Prediction):
+    resources:PolicyCandidatePrediction|None=None
+
+
+class PolicyPredictions(Predictions):
+    predictions:list[PolicyPrediction]
+
+
+def validate_predictions(frozen, body, policy_candidates=False):
     dataset=load_frozen(frozen)
-    data=Predictions.model_validate(body)
+    data=(PolicyPredictions if policy_candidates else Predictions).model_validate(body)
     if data.dataset_hash != frozen['dataset_hash']:
         raise ValueError('prediction dataset hash mismatch')
     ids=[p.case_id for p in data.predictions]

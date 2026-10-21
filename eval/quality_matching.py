@@ -5,8 +5,9 @@ from eval.quality_contracts import load_frozen, resolve_labels
 from eval.quality_metrics import validate_predictions, ratio
 
 
-def matching(frozen, labels, predictions, case_ids=None):
-    dataset=load_frozen(frozen);data=validate_predictions(frozen,predictions)
+def matching(frozen, labels, predictions, case_ids=None, policy_candidates=False):
+    dataset=load_frozen(frozen);data=validate_predictions(frozen,predictions,policy_candidates)
+    cutoff=5 if policy_candidates else 3
     if not any(p.resources is not None for p in data.predictions):return None
     refs={(r['case_id'],r['policy_id']):r for r in resolve_labels(frozen,labels)['references'] if r['policy_id'] is not None}
     outputs={p.case_id:p.resources for p in data.predictions};rows=[]
@@ -23,7 +24,7 @@ def matching(frozen, labels, predictions, case_ids=None):
         suitable=sum(truth.get(pid)=='suitable' for pid in recommended)
         conditional=sum(truth.get(pid)=='conditional' for pid in recommended)
         gains={'suitable':2,'conditional':1,'unsuitable':0}
-        ideal=sorted((gains[v] for v in truth.values()),reverse=True)[:3]
+        ideal=sorted((gains[v] for v in truth.values()),reverse=True)[:cutoff]
         idcg=sum(g/log2(i+2) for i,g in enumerate(ideal))
         ndcg=(ratio(sum(gains[truth[pid]]/log2(i+2) for i,pid in enumerate(recommended)),idcg)
               if complete and not unknown_returned else None)
@@ -53,12 +54,12 @@ def matching(frozen, labels, predictions, case_ids=None):
             'suitability_confusion':matrix,'suitability_classes':classes+['unknown_or_missing'],
             'retrieved_count':len(retrieved),'relevant_count':len(relevant),
             'retrieval_recall':ratio(len(set(retrieved)&relevant),len(relevant)),
-            'recommendation_recall_at_3':ratio(len(set(recommended)&relevant),len(relevant)),
-            'recall_at_3_ceiling':ratio(min(3,len(relevant)),len(relevant)),
+            'cutoff':cutoff,f'recommendation_recall_at_{cutoff}':ratio(len(set(recommended)&relevant),len(relevant)),
+            f'recall_at_{cutoff}_ceiling':ratio(min(cutoff,len(relevant)),len(relevant)),
             'precision':ratio(suitable,len(recommended)) if not unknown_returned else None,
             'precision_bounds':[ratio(suitable,len(recommended)),ratio(suitable+len(unknown_returned),len(recommended))],
             'conditional_rate':ratio(conditional,len(recommended)) if not unknown_returned else None,
-            'ndcg_at_3':ndcg,'recommended_count':len(recommended),'unknown_returned':unknown_returned,
+            f'ndcg_at_{cutoff}':ndcg,'recommended_count':len(recommended),'unknown_returned':unknown_returned,
             'correct_hold':not recommended if complete and not relevant and not any(v=='conditional' for v in truth.values()) and output and output.status=='completed' else None,
             'constraint_violations':sum(c['state']=='fail' for c in checks) if checks else None,
             'constraint_unchecked_resources':sum(not case.policies[pid].get('constraint_checks') for pid in recommended),

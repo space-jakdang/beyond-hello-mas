@@ -19,8 +19,8 @@ async def evaluate(folder, store, settings, other_ledgers, references=None, role
     frozen=json.loads((folder/'inputs.json').read_text());dataset=load_frozen(frozen)
     predictions=validate_predictions(frozen,json.loads((folder/'predictions.json').read_text()))
     reference_texts=references or {}
-    roles=roles or ['workflow_analyst','workflow_matching','policy_decision']
-    if not set(roles)<={'workflow_analyst','workflow_matching','policy_decision'}:raise ValueError('invalid source role')
+    roles=roles or ['workflow_analyst','workflow_matching','policy_decision','policy_design']
+    if not set(roles)<={'workflow_analyst','workflow_matching','policy_decision','policy_design'}:raise ValueError('invalid source role')
     if not set(reference_texts)<={c.id for c in dataset.cases} or any(not isinstance(t,str) or not t.strip() for t in reference_texts.values()):
         raise ValueError('invalid grounding reference cases')
     sources=[]
@@ -28,12 +28,12 @@ async def evaluate(folder, store, settings, other_ledgers, references=None, role
         if row.run_id is None:continue
         UUID(row.run_id)
         with store.connection() as db:
-            calls=db.execute("SELECT call_key,body FROM llm_calls WHERE run_id=? AND status='ok' AND role IN ('workflow_analyst','workflow_matching','policy_decision') ORDER BY rowid",(row.run_id,)).fetchall()
+            calls=db.execute("SELECT call_key,body FROM llm_calls WHERE run_id=? AND status='ok' AND role IN ('workflow_analyst','workflow_matching','policy_decision','policy_design') ORDER BY rowid",(row.run_id,)).fetchall()
         for call in calls:
             body=json.loads(call['body'])
             if body.get('role') not in roles:continue
             if body.get('mode')!='live' or 'input' not in body or 'output' not in body:continue
-            if body['role']=='policy_decision' and body['output'].get('action')!='finish':continue
+            if body['role'] in ('policy_decision','policy_design') and body['output'].get('action')!='finish':continue
             sources.append((row.case_id,row.run_id,call['call_key'],body))
     if not sources:raise ValueError('no recorded live model contexts for imported predictions')
     judge=BudgetedJudge(store,settings,other_ledgers)
@@ -76,7 +76,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('folder',type=Path);p.add_argument('--store',type=Path,required=True)
     p.add_argument('--env',type=Path,required=True);p.add_argument('--other-ledger',type=Path,action='append',default=[])
     p.add_argument('--references',type=Path);p.add_argument('--data-mode',choices=['sample','local'],required=True)
-    p.add_argument('--role',choices=['workflow_analyst','workflow_matching','policy_decision'],action='append');args=p.parse_args()
+    p.add_argument('--role',choices=['workflow_analyst','workflow_matching','policy_decision','policy_design'],action='append');args=p.parse_args()
     if not args.store.is_file():p.error('use the existing cumulative ledger, not a new database')
     historical=[args.store.parent.parent / mode / 'events.sqlite3' for mode in ('sample','local')]
     ledgers=list({p.resolve() for p in historical+args.other_ledger if p.exists()}-{args.store.resolve()})

@@ -31,6 +31,9 @@ def main():
     parser.add_argument('--labels', type=Path, help='JSON reviewers and judgments bound to dataset_hash')
     parser.add_argument('--judgments', type=Path, help='CSV/JSON judgments replacing labels judgments')
     parser.add_argument('--predictions', type=Path, help='Frozen-dataset-bound model predictions JSON')
+    parser.add_argument('--policy-candidates',type=Path,help='Separate max5 government-policy predictions')
+    parser.add_argument('--policy-drafts',type=Path,help='Frozen dataset-bound draft reports')
+    parser.add_argument('--policy-draft-ratings',type=Path,help='Independent rubric ratings bound to draft input hash')
     parser.add_argument('--key', type=Path, help='Private map for blind case IDs in supplied judgments')
     parser.add_argument('--output-root', type=Path, default=None)
     args = parser.parse_args()
@@ -58,6 +61,15 @@ def main():
         predicted = validate_predictions(frozen, json.loads(args.predictions.read_text())).model_dump()
     extras = [('import-key', imported_key)] if args.key else list(zip(('blind-packet', 'private-key'), blind_packet(frozen)))
     if predicted is not None:extras.append(('predictions', predicted))
+    if args.policy_candidates:
+        from eval.quality_metrics import validate_predictions
+        extras.append(('policy-candidates',validate_predictions(frozen,json.loads(args.policy_candidates.read_text()),True).model_dump()))
+    if args.policy_draft_ratings and not args.policy_drafts:parser.error('--policy-draft-ratings requires --policy-drafts')
+    if args.policy_drafts:
+        from eval.policy_design_quality import quality
+        drafts=json.loads(args.policy_drafts.read_text());ratings=json.loads(args.policy_draft_ratings.read_text()) if args.policy_draft_ratings else None
+        quality(frozen,drafts,ratings);extras.append(('policy-drafts',drafts))
+        if ratings:extras.append(('policy-draft-ratings',ratings))
     mode = 'sample' if all(c['source'] == 'synthetic' for c in frozen['dataset']['cases']) else 'local'
     folder = (args.output_root or Path('runtime/quality') / mode) / str(uuid4())
     folder.mkdir(parents=True, exist_ok=False)

@@ -158,3 +158,16 @@ Grounding 결과와 judge 원문 장부도 비공개 평가 자료입니다. 공
 이력에서 두 저장 결과를 선택하면 입력·기준답·평가 방식·평가기 버전이 맞는 경우에만 나란히 확인합니다. 서로 다른 실행 조건의 단순 비교는 MAS 효과의 증명이 아닙니다. 사례 상세의 **추천 근거 조회**는 기록된 run ID와 정확한 evidence ID를 대조하여 원래 제안의 근거 카드를 보여줍니다. 기록이 없거나 다른 모드이면 설명을 만들어내지 않습니다.
 
 API: `GET /reports/quality/{id}/preflight`, `POST /reports/quality/{id}/jobs` (`suite: deterministic|grounding`), `GET /reports/quality/{id}/jobs`, `GET /quality-jobs/{id}`. 파일과 원문·개인 평정은 비공개 runtime에 남고 응답에는 공개용 결과만 포함합니다.
+
+## 정부24 후보 5건과 정책 설계 평가
+
+기존 `predictions.json`의 카탈로그 추천은 최대3건 계약을 유지합니다. 별도 `policy-candidates.json`은 같은 예측 형식과 고정 후보 집합을 사용하되 최대5개 고유 ID를 허용합니다. 준비 명령에 `--policy-candidates FILE`을 주면 검증 후 저장합니다. 평가 화면과 저장 작업에서 정부24 정책 후보의 Recall@5·NDCG@5·적합성 분류·미평정 후보·검색 누락을 별도로 보여줍니다. 모집단은 고정 후보 중 독립 평정된 적합 정책입니다. 등록 전체 정책의 재현율로 해석하지 않습니다.
+
+정책안은 `--policy-drafts FILE`로 별도 등록합니다. 형식은 `{dataset_hash, cases:[{case_id,run_id,document}]}`이며 document는 저장된 정책 설계 결과 또는 담당자 수정 버전입니다. 입력·원문·정책안 버전을 대조합니다. 첨부 근거 대조 성공은 실제 정책 효과가 아닙니다.
+
+선택적인 `--policy-draft-ratings FILE`은 `{input_hash,reviewers,ratings}` 형식입니다. `input_hash`는 `eval.policy_design_quality.quality(frozen,inputs)['input_hash']`로 확인합니다. reviewers는 기존 `id/expertise/development_participant` 계약입니다. ratings의 각 행은 `case_id/version/reviewer/reviewed_at(YYYY-MM-DD)/scores/reason`을 담습니다. scores는 `grounding`, `feasibility`, `clarity`, `equity`, `evaluation_plan` 다섯 축 모두에 1–5 정수 또는 null입니다. 1은 중대한 보완, 3은 조건부 수용, 5는 충분한 근거·구체성을 뜻하는 잠정 기준입니다. 평가자는 결과 출처와 개발 방법을 가린 사본으로 독립 평정하고, 문장 유창함만으로 높은 점수를 주지 않습니다.
+
+개발 참여자의 점수는 독립 평정으로 세지 않습니다. 축별 독립 평정이 2명 미만이면 미평가, 2점 이상 차이가 있으면 불일치와 범위를 표시하고 평균을 숨깁니다. 실제 시행 효과는 계속 미평가입니다. 같은 실행의 `policy_design` 최종 모델 응답도 RAGAS의 저장 입력 기준 충실도 평가에 포함되며, 공식 사실성·정책 적합성·사람 평정을 대신하지 않습니다. 평가 작업은 정책 후보·초안·평정을 함께 고정해 재실행 중 변경을 차단합니다.
+
+### 실제 연동 검증의 해석
+정책 API 응답, 정확 인용, 모델 호출 성공과 대상 집단 적합성을 따로 평가합니다. 2026-10-22 로컬 검증에서 정부24 22페이지(10,958건) 갱신, 실제 상세 5건 묶음, 유사사례 4건 조회를 확인했습니다. 실제 지역 업무의 정책 후보에는 청년 업무에 맞지 않는 노인 정책도 포함됐습니다. 따라서 독립 후보 적합성 라벨 없는 Recall/Precision을 성공률로 제시하지 않습니다. 좁은 복합어 검색이 0건인 정책 설계 시험은 참고 근거 부족으로 초안을 보류했으며, 이를 현실의 정책 부재나 보고서 생성 성공으로 세지 않습니다.
