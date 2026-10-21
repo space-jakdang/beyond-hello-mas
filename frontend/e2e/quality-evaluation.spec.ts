@@ -14,7 +14,7 @@ test('quality readiness is distinct from successful execution and works on mobil
  await expect(panel.getByLabel('기준답 준비 현황')).toContainText('독립 참조 등록0');
  await panel.getByRole('combobox',{name:'지역',exact:true}).selectOption('샘플지역');
  await expect(panel.getByLabel('기준답 준비 현황')).toBeVisible();
- await page.getByRole('button',{name:'평가 결과 새로고침'}).click();
+ await Promise.all([page.waitForResponse(r=>r.url().includes(`/reports/quality/${id}?`)&&r.ok()),page.getByRole('button',{name:'평가 결과 새로고침'}).click()]);
  await expect(panel.getByRole('combobox',{name:'지역',exact:true})).toHaveValue('샘플지역');
  await expect(panel.getByLabel('기준답 준비 현황')).toBeVisible();
  await panel.getByText('예제동 · 2026-01 · 합성 · 1개 미등록',{exact:true}).press('Enter');
@@ -87,7 +87,7 @@ test('evaluation execution restores history and blocks incompatible comparisons 
   await route.fulfill({json});
  });
  await page.setViewportSize({width:390,height:844});await page.goto('/evaluation');
- let panel=page.getByLabel('평가 실행과 저장 이력');await panel.getByRole('button',{name:'평가 실행·저장'}).press('Enter');await expect(panel).toContainText('계산 완료는 품질 통과가 아닙니다');expect(posts).toBe(1);
+ let panel=page.getByLabel('평가 실행과 저장 이력');await panel.getByRole('button',{name:'평가 실행·저장'}).press('Enter');await expect(panel).toContainText('계산 완료는 품질 통과가 아닙니다');await expect.poll(()=>posts).toBe(1);
  await page.reload();panel=page.getByLabel('평가 실행과 저장 이력');await expect(panel.getByRole('combobox',{name:'저장 실행',exact:true})).toHaveValue(jobId);
  await panel.getByRole('combobox',{name:'비교 실행',exact:true}).selectOption(incompatible.id);await expect(panel).toContainText('비교 불가');expect(posts).toBe(1);
  await panel.getByText('저장 결과 펼치기',{exact:true}).press('Enter');await expect(panel).toContainText('기술적 결과');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
@@ -100,6 +100,7 @@ test('real evaluation API saves missing-reference results and reuses the job aft
   await page.goto('/evaluation');await page.getByRole('combobox',{name:'품질 평가 자료',exact:true}).selectOption(reportId);
   const panel=page.getByLabel('평가 실행과 저장 이력');await panel.getByRole('button',{name:'평가 실행·저장'}).click();
   await expect(panel).toContainText('계산 완료는 품질 통과가 아닙니다');
+  await expect.poll(async()=>{const r=await request.get(`/reports/quality/${reportId}/jobs?source=sample`);return (await r.json())[0]?.status;},{timeout:20000}).toBe('completed');
   const history=await request.get(`/reports/quality/${reportId}/jobs?source=sample`);const [saved]=await history.json();
   expect(saved.status).toBe('completed');expect(saved.result.status).toBe('not_evaluated');expect(saved).not.toHaveProperty('snapshot');
   const repeated=await request.post(`/reports/quality/${reportId}/jobs?source=sample`,{data:{suite:'deterministic'}});expect((await repeated.json()).id).toBe(saved.id);
