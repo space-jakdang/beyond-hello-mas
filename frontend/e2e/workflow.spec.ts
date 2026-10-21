@@ -14,6 +14,9 @@ test('regional task links agents, immutable results and a fresh revision approva
  await page.getByRole('tab',{name:'통계 근거'}).press('ArrowRight');
  await expect(page.getByRole('tab',{name:'자원 제안'})).toBeFocused();
  await expect(page.getByRole('tabpanel')).toContainText('실제 배정은 하지 않습니다');
+ await page.getByText('추천·제외 근거 확인',{exact:true}).first().press('Enter');
+ await expect(page.locator('.decision-evidence[open]').first()).toContainText('관측 근거');
+ await expect(page.locator('.decision-evidence[open]').first()).toContainText('개인 자격·접수 여부·잔여 정원은 미확인');
  await page.getByLabel('지역',{exact:true}).selectOption('32010');
  await expect(page.locator('.workflow-context')).toContainText('강남구');
  await page.reload();
