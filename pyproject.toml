@@ -15,6 +15,12 @@ dependencies = [
     "mcp>=2.3,<3",
 ]
 
+[project.optional-dependencies]
+evaluation = [
+    "langchain-community==0.4.1",
+    "ragas==0.4.3",
+]
+
 [dependency-groups]
 dev = ["pytest>=8,<10", "httpx>=0.28,<1"]
 

@@ -105,3 +105,31 @@ NDCG@3은 전체 고정 후보가 독립 평정된 경우만 계산하며 적합
 정부24 공통 후보 수 확장과 별개로 이 평가는 동별 자원 추천 top3를 대상으로 한다.
 
 적합성 분류는 전체 고정 후보에 대한 별도 과제이므로 검색되지 않은 후보의 분류도 받을 수 있다. 검색 재현율은 별도로 계산해 검색 누락을 숨기지 않는다. 적합성 Macro-F1은 기준 또는 예측에 등장한 클래스를 평균한다.
+
+## RAGAS 설명 근거 평가
+
+`uv sync --extra evaluation`으로 평가 전용 RAGAS 0.4.3을 설치한다. 호환성 때문에
+langchain-community 0.4.1을 고정한다(0.4.2에서는 RAGAS가 가져오는 vertexai 모듈이 없어짐).
+0.4.3의 지원되는 legacy metric API를 사용하며 RAGAS 1.x 전환은 별도 호환 검증이 필요하다.
+
+```sh
+uv run --extra evaluation python -m eval.run_grounding runtime/quality/local/REPORT_ID \
+  --store /path/to/existing/runtime/local/events.sqlite3 --env /path/to/.env \
+  --data-mode local --role workflow_analyst
+```
+
+예측의 `run_id`로 기존 성공한 live 모델 호출의 실제 `input`/`output`을 가져온다.
+전체 도구 원문을 나중에 추가하지 않는다. 예측 입력과 기준답 준비 자료의 해시를 결과에 연결한다.
+Faithfulness는 실제 모델 입력에 대한 충실도다. 독립 참조 문장을 `--references`의
+case_id→문장 JSON으로 제공하면 Context Precision/Recall도 계산한다. 참조가 없으면 미평가다.
+도구 호출·목표 달성에 대한 독립 참조 경로, 한국어 사람 평정과 judge 일치도는 아직 확보되지 않았다.
+이 점수는 정책 사실성·최신성·분류 정확도나 자원 적합성 점수가 아니다.
+
+평가 호출은 기존 `llm_calls` 장부에서 원자적으로 예약하며 SDK 자동 재시도는 끈다.
+같은 runtime의 sample/local 과거 장부를 합산하고 추가 장부는 `--other-ledger`로 지정한다.
+실행 중인 유료 호출은 하나의 공통 장부를 사용해야 한다. 다른 장부는 과거 기록 합산용이다.
+실패/비용 미확인은 그대로 보존하며 별도 장부로 예산을 초기화하지 않는다.
+`grounding-<judge UUID>.json`은 매번 새 파일로 남고 UI는 최신 파일을 보여준다.
+필터를 적용해도 비용은 전체 평가 실행 비용으로 표시한다. 평가자는 같은 모델일 수 있어 편향 검증이 필요하다.
+
+Grounding 결과와 judge 원문 장부도 비공개 평가 자료입니다. 공개 저장소에 포함하지 않습니다. 기본 누적 장부는 같은 runtime의 sample/local 중 존재하는 파일을 합산하며, 다른 위치의 과거 장부는 `--other-ledger`로 모두 지정해야 합니다. 명시한 장부가 없거나 읽을 수 없으면 실행하지 않습니다. 공급자 실패 또는 비용/호출 상한 도달 뒤에는 같은 judge 실행의 추가 유료 호출을 중단하고 나머지 지표도 실패로 보존합니다.

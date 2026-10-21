@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from backend.app import config
 from eval.quality_contracts import load_frozen, readiness_report
 from eval.quality_metrics import classification
+from eval.grounding_contracts import load_grounding
 from eval.quality_matching import matching
 
 
@@ -33,6 +34,7 @@ def quality_detail(settings, source, report_id, region=None, period=None, method
         and (not period or c.period == period) and (not methodology or c.methodology == methodology)]
     ids = {c.id for c in cases}
     scores = None
+    grounding = None
     resource_scores = None
     prediction_path = folder / 'predictions.json'
     if prediction_path.exists() or prediction_path.is_symlink():
@@ -41,15 +43,16 @@ def quality_detail(settings, source, report_id, region=None, period=None, method
             predictions = json.loads(prediction_path.read_text())
             scores = classification(frozen, labels, predictions, ids)
             resource_scores = matching(frozen, labels, predictions, ids)
+            grounding = load_grounding(folder, frozen, predictions, ids)
         except (ValueError, KeyError, TypeError, AttributeError, OSError):
             raise HTTPException(409, 'quality predictions incomplete or invalid')
     refs = [r for r in report['references'] if r['case_id'] in ids]
     counts = {state: sum(r['state'] == state for r in refs) for state in ('missing', 'unknown', 'disagreement', 'resolved')}
     return {'id': str(report_id), 'schema_version': '6', 'dataset': dataset.id, 'version': dataset.version,
         'dataset_hash': report['dataset_hash'], 'label_hash': report['label_hash'],
-        'data_mode': root.name, 'status': 'partial' if (scores and any(g['reference_count'] for g in scores['groups'])) or (resource_scores and any(r['judged_count'] for r in resource_scores['rows'])) else 'not_evaluated', 'metrics': None,
+        'data_mode': root.name, 'status': 'partial' if (scores and any(g['reference_count'] for g in scores['groups'])) or (resource_scores and any(r['judged_count'] for r in resource_scores['rows'])) or (grounding and grounding['rows']) else 'not_evaluated', 'metrics': None,
         'model': scores['model'] if scores else None, 'execution_status': 'predictions_imported' if scores else 'not_run',
-        'classification': scores, 'matching': resource_scores,
+        'classification': scores, 'matching': resource_scores, 'grounding': grounding,
         'filters': {field: sorted({getattr(c, field) for c in dataset.cases}) for field in ('region', 'period', 'methodology', 'source')},
         'readiness': {'cases': len(cases), 'reference_items': len(refs), **counts,
             'independent_resolved': sum(r['independent'] and r['state'] == 'resolved' for r in refs)},

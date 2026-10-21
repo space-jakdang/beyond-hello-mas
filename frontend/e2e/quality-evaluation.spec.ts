@@ -57,3 +57,11 @@ test('matching keeps unknown recommendations and missing constraints visible',as
  await panel.getByText('검색 누락·추천 누락·정책 원문',{exact:true}).press('Enter');
  await expect(panel).toContainText('미평정 정책 · 참조 unknown');await expect(panel.getByRole('link',{name:'정책 원문 ↗'})).toHaveAttribute('href','https://example.org/policy');
 });
+
+test('grounding distinguishes evaluator failure from zero and exposes cost scope',async({page})=>{
+ const grounding={judge_model:'test-judge',ragas_version:'0.4.3',state:'partial',human_judge_alignment:null,cost_scope:'whole_judge_run_before_filters',cost:{calls:2,reserved_usd:.1,known_usd:.01,unknown_cost_calls:1},rows:[{case_id:'a',role:'workflow_analyst',source_run_id:id,source_call_key:'call',metrics:{faithfulness:{value:0,state:'evaluated'},context_recall:{value:null,state:'failed',error_type:'TimeoutError'}}}],limitations:['분류 정확도가 아닙니다.']};
+ await page.route('**/reports/quality**',route=>route.fulfill({json:new URL(route.request().url()).pathname.endsWith(id)?{...detail,grounding}:[brief]}));
+ await page.goto('/evaluation');const panel=page.getByLabel('RAGAS 근거 평가');
+ await expect(panel).toContainText('0.0%');await expect(panel).toContainText('평가 실패');
+ await expect(panel).toContainText('비용 미확인 1회');await expect(panel).toContainText('독립 사람 평정과의 일치도 미검증');
+});
