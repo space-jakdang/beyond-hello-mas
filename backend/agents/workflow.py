@@ -45,6 +45,11 @@ def model_observations(items):
     return result
 
 
+def model_summary(summary):
+    needs=summary.get('policy_needs')
+    return {**summary,'policy_needs':{k:v for k,v in needs.items() if k!='profiles'}} if needs else summary
+
+
 def methodology(assessment):
     from backend.tools.regional_task import STAGES
     return {'version':assessment['methodology_version'],'stage_meanings':STAGES,
@@ -59,7 +64,7 @@ def methodology(assessment):
 def analyze(agents,run_id,sim_ts,assessment,feedback=None):
     facts=observations(assessment)
     if feedback and feedback.get('statistics'):
-        feedback={**feedback,'statistics':{**feedback['statistics'],'observations':model_observations(feedback['statistics']['observations'])}}
+        feedback={**feedback,'statistics':{**feedback['statistics'],'summary':model_summary(feedback['statistics']['summary']),'observations':model_observations(feedback['statistics']['observations'])}}
     plan=agents.call(run_id,sim_ts,'workflow_analyst',{'facts':facts,'task':assessment['task'],
         'feedback':feedback,'methodology':methodology(assessment),'provisional':True,'period_aggregate':assessment['period_aggregate']}).model_dump()
     allowed={r['evidence_id'] for r in facts}
@@ -77,7 +82,7 @@ def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadli
         for step in range(2):
             if time()>=deadline:raise WorkflowError('deadline')
             decision=agents.call(run_id,sim_ts,'workflow_statistics',{'task':assessment['task'],'plan':plan,
-                'summary':base,'facts':observations(assessment),'methodology':methodology(assessment),'period_aggregate':assessment['period_aggregate'],
+                'summary':model_summary(base),'facts':observations(assessment),'methodology':methodology(assessment),'period_aggregate':assessment['period_aggregate'],
                 'observations':model_observations(retrieved),'step':step,'available_tools':['trend','source_check','sensitivity']}).model_dump()
             if time()>=deadline:raise WorkflowError('deadline')
             blocked=decision['blocked_evidence_ids']

@@ -10,6 +10,9 @@ test('regional task links agents, immutable results and a fresh revision approva
  await page.screenshot({path:'runtime/sample/workflow-desktop.png',fullPage:true});
  await page.getByRole('tab',{name:'통계 근거'}).click();
  await expect(page.getByRole('tabpanel')).toContainText('판정 가능');
+ await expect(page.getByLabel('정책 매칭을 위한 통계')).toContainText('주민 수요 인원이나 고립 유병률이 아닙니다');
+ await page.getByLabel('정책 매칭을 위한 통계').locator('summary').first().click();
+ await expect(page.getByLabel('정책 매칭을 위한 통계')).toContainText('추가 자료');
  await expect(page.getByRole('img',{name:'실제 관측 월의 지수 추이. 수치는 아래 표에 표시됩니다.'})).toBeVisible();
  await page.getByRole('tab',{name:'통계 근거'}).press('ArrowRight');
  await expect(page.getByRole('tab',{name:'자원 제안'})).toBeFocused();
