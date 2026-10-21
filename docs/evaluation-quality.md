@@ -1,0 +1,56 @@
+# 평가 품질 데이터 준비
+
+기존 보고서의 규칙·실행 검증과 독립 기준답에 대한 실제 성능은 구분한다.
+현재 이 도구는 **평가 준비 상태**만 계산한다. 분류·매칭·RAGAS 점수와 대시보드는 후속 기능이다.
+기준답이 없어도 실행할 수 있으며 점수는 `null`, 상태는 `not_evaluated`다.
+
+```sh
+uv run python -m eval.prepare_quality eval/fixtures/quality-synthetic.json
+```
+
+출력된 `runtime/quality/<UUID>/`에는 다섯 파일이 생긴다.
+
+- `inputs.json`: 고정 입력과 SHA-256. 모델 실행에 기준답을 전달하지 않는다.
+- `labels.json`: 데이터 해시에 묶인 검토자·평정 양식. 실제 평정은 비공개로 보관한다.
+- `blind-packet.json`: 사례·개발/시험 ID를 숨긴 입력 평정 자료. 내용에서 지역이 드러날 수 있다.
+- `private-key.json`: 가림 ID와 원래 ID의 매핑. 검토자에게 전달하지 않는다.
+- `readiness.json`: 누락·판단불가·미해결 이견·독립 합의 건수. 모델 성능이 아니다.
+
+다시 가져올 때 최초 고정 입력을 사용한다. 원본 입력을 수정하면 해시 검증이 실패한다.
+새 데이터는 새 버전으로 만든다. 기존 보고서 schema1–5는 변경하지 않는다.
+새 schema6 준비 파일은 아직 기존 `/reports` 목록에 게시하지 않는다.
+
+```sh
+uv run python -m eval.prepare_quality runtime/quality/ID/inputs.json \
+  --labels runtime/quality/ID/labels.json
+```
+
+평정은 `judgments` JSON 배열 또는 CSV로 대체할 수 있다. `--judgments ratings.csv`를
+위 명령에 추가한다. CSV 헤더는 다음과 같다.
+
+```csv
+case_id,policy_id,reviewer,value,reason,reviewed_at,provenance,policy_as_of,adjudication
+```
+
+`policy_id` 빈칸은 동네 등급 평정이며 `value`는 `1`~`5` 또는 `unknown`이다.
+정책 평정은 고정 입력에 있는 정책 ID와 `suitable`, `conditional`, `unsuitable`, `unknown`을 사용한다.
+`adjudication`은 `true` 또는 `false`, 날짜는 ISO 날짜다. `policy_as_of`는 입력 스냅샷과 같아야 한다.
+누락과 명시적 판단불가는 서로 다른 상태다. 전체 정책 후보 범위는 입력의 `policies`로 고정한다.
+
+검토자 양식은 기존 비교 평가와 공유한다: `id`, `expertise`, `development_participant`.
+평정 출처는 `independent_review`, `rule_oracle`, `observed_outcome`, `synthetic_reference`다.
+개발 참여자는 독립 평정으로 등록할 수 없다. 서로 다른 두 독립 검토자의 합의가 있어야
+독립 참조로 집계하며 이견은 제3자 조정 전까지 해소하지 않는다. 원래 평정과 조정 이유를 보존한다.
+독립성이 자동 인증되는 것은 아니므로 전문성과 실제 검토자 정보는 별도 확인해야 한다.
+합성 입력을 사람이 평정해도 실제 지역 성능으로 사용할 수 없다.
+
+`family_id`는 같은 원천에서 만든 월별·집단별 변형을 묶는다. 같은 계열을 개발/교정/시험에
+나누면 거부한다. 계열 정보 자체가 잘못 입력되면 이 검사는 누출을 자동 발견하지 못한다.
+실제 데이터·기준답·평정자는 `runtime/`에 두고 커밋하지 않는다. 공개 fixture는 명시적 합성 예제다.
+
+가림 평정은 `blind-packet.json`의 `blind_id`를 CSV/JSON의 `case_id`에 넣는다.
+가져올 때 `--key runtime/quality/ID/private-key.json`으로 복원한다. 해시가 다른 키나 미등록 ID는 거부한다.
+평정자는 모델 예측이나 기준답을 보지 않고 입력으로 참조를 작성한다. 원래 ID로 직접 평정한 자료도 수용하므로 가림 절차 준수 여부는 운영 기록에 남겨야 한다.
+
+가림키로 가져온 실행은 새 가림 자료를 만들지 않고 사용한 키를 `import-key.json`으로 보존한다.
+독립 평정끼리 이견이 나도 규칙으로 조정하면 최종 독립 참조로 세지 않는다. 조정자까지 독립 평정이어야 한다.

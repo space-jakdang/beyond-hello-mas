@@ -1,0 +1,26 @@
+{
+  "id": "challenge",
+  "version": "1",
+  "cases": [
+    {
+      "id": "dong-1",
+      "family_id": "source-1",
+      "region": "sample-region",
+      "neighborhood": "sample-dong",
+      "cohort": "all",
+      "period": "2026-01",
+      "methodology": "provisional-v1",
+      "split": "test",
+      "source": "synthetic",
+      "policy_as_of": "2026-01-01",
+      "facts": {
+        "isolation_index": 0.4
+      },
+      "policies": {
+        "p1": {
+          "description": "Synthetic social support example"
+        }
+      }
+    }
+  ]
+}
