@@ -9,5 +9,7 @@ test('three alternatives retain separate reviews, edit resets and stale revision
  await panel.getByRole('button',{name:'이 대안 수정·검토'}).nth(1).click();await panel.getByLabel('수정 내용 또는 검토 사유').fill('접근 경로 보완');await panel.getByRole('button',{name:'수정 저장',exact:true}).click();await expect(panel.getByText('검토 대기',{exact:true})).toHaveCount(3);
  await expect(panel.getByText('접근 경로 보완',{exact:false}).first()).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
+ const downloaded=page.waitForEvent('download');await panel.getByRole('button',{name:'PDF 다운로드',exact:true}).click();expect((await downloaded).suggestedFilename()).toMatch(/r2\.pdf$/);
+ const word=page.waitForEvent('download');await panel.getByRole('button',{name:'Word 다운로드',exact:true}).click();expect((await word).suggestedFilename()).toMatch(/r2\.docx$/);
  await page.reload();await expect(panel.getByText('검토 대기',{exact:true})).toHaveCount(3);
 });
