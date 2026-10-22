@@ -102,7 +102,7 @@ def create_batch(service,request):
     prepared=[]
     for month in months:
         scenario=Scenario(id='regional-workflow-future',type='monthly',sim_time=f'{month}-01T09:00:00+09:00',
-            payload={'workflow_version':'regional-workflow-1','research_gaps':True,'future_input_hash':body['input_hash'],
+            payload={'workflow_version':'regional-workflow-1','policy_proposal_version':'three-1','statistics_version':'2','research_gaps':True,'future_input_hash':body['input_hash'],
                      'task':{'future_id':identifier,'sgg':request.sgg,'sex':'M','age_group':'youth','ym':month,'as_of':body['as_of'],
                              'goal':'합성 미래 시나리오를 검토하고 현재 등록 자원과 정책의 조건부 대응 후보를 조사하세요. 실제 예측·미래 가용성·배정으로 주장하지 마세요.'}})
         run=service.new_run(scenario,str(uuid4())).model_copy(update={'status':'pending'})

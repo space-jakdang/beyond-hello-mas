@@ -24,6 +24,9 @@ def fake(role, payload):
         return {'selections':[{'evidence_id':r['evidence_id'],'resource_ids':[c['id'] for c in r['candidates']],
                               'reason':'fake: 관측 욕구 가설과 필수 필터를 통과한 조건부 후보'} for r in payload['choices']],
                 'summary':'fake: 담당자 확인이 필요한 지역 자원 제안입니다.'}
+    if role == 'policy_alternatives':
+        from backend.policy.alternatives import templates
+        return templates(payload)
     if role == 'policy_design':
         from backend.policy.designer import fake_design
         return fake_design(payload)
@@ -124,7 +127,7 @@ class Agents:
                 raise ValueError('LLM call or cost budget exceeded')
             db.execute('INSERT INTO llm_calls VALUES (?,?,?,?,?,?)', (run_id, call_key, role, 'pending', reserve, json.dumps(metadata)))
             self.store._trace(db, run_id, sim_ts, 'llm_call', metadata, 'supervisor' if role == 'route' else
-                              {'analysis': 'classify', 'recommendations': 'match', 'draft': 'link', 'policy_decision': 'policy', 'policy_design':'policy_design', 'regional_analyst':'regional_analyst', 'regional_reviewer':'regional_reviewer', 'regional_worker':'regional_analyst', 'regional_planner':'regional_analyst', 'regional_audit':'regional_reviewer', 'workflow_analyst':'regional_analyst', 'workflow_statistics':'statistics', 'workflow_matching':'match'}[role])
+                              {'analysis': 'classify', 'recommendations': 'match', 'draft': 'link', 'policy_decision': 'policy', 'policy_design':'policy_design','policy_alternatives':'policy_design', 'regional_analyst':'regional_analyst', 'regional_reviewer':'regional_reviewer', 'regional_worker':'regional_analyst', 'regional_planner':'regional_analyst', 'regional_audit':'regional_reviewer', 'workflow_analyst':'regional_analyst', 'workflow_statistics':'statistics', 'workflow_matching':'match'}[role])
         started = time.monotonic()
         tokens_in = tokens_out = 0
         actual = None

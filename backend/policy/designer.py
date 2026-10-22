@@ -37,6 +37,8 @@ class PolicyDesigner:
     def __init__(self,store,settings,agents,policy_agent):
         self.store,self.settings,self.agents,self.policy_agent=store,settings,agents,policy_agent
         with store.connection() as db:
+            db.execute('CREATE TABLE IF NOT EXISTS policy_alternative_research (owner_id TEXT NOT NULL,cache_key TEXT NOT NULL,body TEXT NOT NULL,PRIMARY KEY(owner_id,cache_key))')
+            db.execute('CREATE TABLE IF NOT EXISTS policy_alternative_sets (owner_id TEXT NOT NULL,dong_cd TEXT NOT NULL,body TEXT NOT NULL,PRIMARY KEY(owner_id,dong_cd))')
             db.execute('CREATE TABLE IF NOT EXISTS policy_designs (run_id TEXT PRIMARY KEY REFERENCES runs(id), body TEXT NOT NULL)')
             db.execute('CREATE TABLE IF NOT EXISTS policy_design_observations (run_id TEXT PRIMARY KEY REFERENCES runs(id), body TEXT NOT NULL)')
 
@@ -106,3 +108,7 @@ class PolicyDesigner:
             db.execute('INSERT INTO policy_designs VALUES (?,?)',(run_id,json.dumps(result,ensure_ascii=False)))
             self.store._trace(db,run_id,sim_ts,'agent_message',{'sender':'policy_design','recipient':'supervisor','result_kind':'policy_design','result':result},'policy_design')
         return result
+
+    def propose(self,owner_id,run_id,scope,dongs,proposals):
+        from backend.policy.alternatives import generate
+        return generate(self,owner_id,run_id,scope,dongs,proposals)

@@ -58,3 +58,6 @@ SCHEMAS.update(workflow_analyst=AnalystPlan,workflow_statistics=StatisticsDecisi
 
 from backend.policy.designer import DesignDecision
 SCHEMAS["policy_design"] = DesignDecision
+
+from backend.policy.alternative_contracts import Alternatives
+SCHEMAS['policy_alternatives']=Alternatives

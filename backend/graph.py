@@ -375,6 +375,19 @@ class GraphService:
         proposal.pop('snapshot_version',None);proposal['snapshot_version']=digest(proposal)
         return {'proposal':proposal}
 
+    def policy_alternatives_node(self,state):
+        started=time.monotonic()
+        proposal=dict(state['proposal']);task=proposal['task']
+        dongs=list({r['dong_cd']:{'dong_cd':r['dong_cd'],'dong_nm':r['dong_nm']} for r in proposal['assessment']['segments']}.values())
+        scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],'target_groups':[task['sex']+'/'+task['age_group']],'synthetic_future':bool(task.get('future_id'))}
+        self.regional_emit(state)('alternatives-delegate','supervisor','policy_design',{'goal':'기존 후보 유무와 무관하게 동별 정책 대안 세 개를 작성하세요.','scope':scope})
+        result=self.policy_designer.propose(state['run_id'],state['run_id'],scope,dongs,[proposal])
+        proposal['policy_alternatives']={'owner_id':state['run_id'],'dong_count':len(result),'alternatives_per_dong':3}
+        self.regional_emit(state)('alternatives-result','policy_design','supervisor',{'dong_count':len(result),'alternatives_per_dong':3,'template_sets':sum(r['generation_mode']=='template_fallback' for r in result)})
+        self.node_event(state,'policy_design',{'status':'needs_evidence','dong_count':len(result)},started)
+        proposal.pop('snapshot_version',None);proposal['snapshot_version']=digest(proposal)
+        return {'proposal':proposal}
+
     def policy_design_node(self,state):
         started=time.monotonic();proposal=dict(state['proposal'])
         self.regional_emit(state)('design-delegate','supervisor','policy_design',{'goal':'확인된 검색 공백의 유사 사례를 조사하고 현지 적용 초안을 작성하세요.'})
@@ -474,7 +487,12 @@ class GraphService:
             builder.add_node('workflow_match',self.workflow_match)
             builder.add_edge('workflow_statistics','workflow_match')
             builder.add_edge('workflow_match','workflow_proposal')
-            builder.add_conditional_edges('workflow_proposal',lambda s:'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and any(a.get('catalog_filter_performed') and a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else 'approval')
+            def after_research(s):
+                if s['scenario']['payload'].get('policy_proposal_version')=='three-1':return 'policy_alternatives'
+                return 'approval'
+            builder.add_node('policy_alternatives',self.policy_alternatives_node)
+            builder.add_edge('policy_alternatives','approval')
+            builder.add_conditional_edges('workflow_proposal',lambda s:'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and any(a.get('catalog_filter_performed') and a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else after_research(s))
             builder.add_node('regional_prepare',self.regional_prepare)
             builder.add_node('regional_analyst',lambda s:self.regional_step(s,'analyze'))
             builder.add_node('regional_reviewer',lambda s:self.regional_step(s,'review'))
@@ -489,7 +507,7 @@ class GraphService:
             builder.add_node('regional_policy',self.regional_policy_node)
             builder.add_conditional_edges('match',lambda s:'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and s['proposal'].get('collaboration') and any(a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else 'approval')
             builder.add_node('policy_design',self.policy_design_node)
-            builder.add_conditional_edges('regional_policy',lambda s:'policy_design' if s['proposal'].get('workflow_version') and not s['proposal']['policy_research'].get('candidates') else 'approval')
+            builder.add_conditional_edges('regional_policy',lambda s:'policy_alternatives' if s['scenario']['payload'].get('policy_proposal_version')=='three-1' else 'approval' if s['scenario']['payload'].get('policy_proposal_version')=='batch-child' else 'policy_design' if s['proposal'].get('workflow_version') and not s['proposal']['policy_research'].get('candidates') else 'approval')
             builder.add_edge('policy_design','approval')
             builder.add_conditional_edges('approval', lambda s: 'link' if s['decision']['status'] == 'approved' else 'reject')
             builder.add_edge('link', END)
@@ -547,6 +565,10 @@ class GraphService:
                     self.update_run(db, run_id, status='failed', error=type(exc).__name__, ended_at=utcnow())
                     scenario = json.loads(db.execute('SELECT scenario FROM workflows WHERE run_id=?', (run_id,)).fetchone()[0])
                     self.store._trace(db, run_id, scenario['sim_time'], 'error', {'type': type(exc).__name__, 'message': 'run failed; see typed tool/agent error'})
+                try:
+                    from backend.policy.alternatives import failed_run
+                    failed_run(self,run_id,scenario)
+                except Exception:pass  # Preserve the original failure when source/DB recovery is unavailable.
                 raise
         return self.store.get_run(run_id)
 
@@ -556,7 +578,7 @@ class GraphService:
             from backend.tools.regional_task import task_from
             if scenario.type != 'monthly':raise ValueError('regional task requires monthly scenario')
             task_from(scenario.payload)
-            scenario=scenario.model_copy(update={'payload':{**scenario.payload,'statistics_version':'2'}})
+            scenario=scenario.model_copy(update={'payload':{'policy_proposal_version':'three-1',**scenario.payload,'statistics_version':'2'}})
         if 'person' in scenario.payload:
             person = PersonCase.model_validate(scenario.payload['person'])
             if person.reply_to:
