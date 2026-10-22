@@ -32,6 +32,9 @@ def trend(settings,assessment):
         from backend.future import scenario_rows
         from backend.tools.regional_task import RegionalTask
         rows,_,_=scenario_rows(settings,RegionalTask.model_validate(task))
+    elif assessment.get('source_observations') is not None:
+        from backend.app.contracts import SegmentV3
+        rows=[SegmentV3.model_validate(r) for r in assessment['source_observations']]
     else:
         rows,_=load_segments(settings)
     ids={(r['dong_cd'],r['sex'],r['age_group'],r['index_name']) for r in assessment['segments']}

@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 
 test('regional task links agents, immutable results and a fresh revision approval',async({page})=>{
- await page.goto('/workspace');
+ await page.goto('/workspace?sex=M&age=youth');
  await page.getByRole('button',{name:'Supervisor에게 업무 지시'}).click();
  await expect(page.getByTestId('workflow-status')).toContainText('승인 대기',{timeout:20000});
  const original=page.url();
@@ -36,7 +36,7 @@ test('regional task links agents, immutable results and a fresh revision approva
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  await expect(page.getByLabel('합성 동 격자',{exact:true})).toBeVisible();
  await page.screenshot({path:'runtime/sample/workflow-mobile-result.png',fullPage:true});
- await expect(page.getByRole('link',{name:'이전 제안 보기'})).toHaveAttribute('href',new URL(original).pathname+new URL(original).search);
+ await expect(page.getByRole('link',{name:'이전 제안 보기'})).toHaveAttribute('href','/workspace?run='+new URL(original).searchParams.get('run'));
 });
 
 test('regional workspace has responsive navigation and an explicit empty state',async({page})=>{
@@ -110,5 +110,21 @@ test('policy evidence cards remain tentative and responsive',async({page,request
  await page.getByRole('tab',{name:'자원 제안'}).click();
  await expect(page.getByLabel('추가 정책 조사 후보')).toContainText('확정 배정에 포함되지 않습니다');
  await expect(page.getByRole('link',{name:'공식 정책 원문 ↗'})).toHaveAttribute('href','https://www.gov.kr/');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
+
+
+test('all cohort batch survives reload and opens a single cohort result',async({page})=>{
+ await page.goto('/workspace');
+ await expect(page.getByLabel('성별',{exact:true})).toHaveValue('all');
+ await expect(page.getByLabel('집단',{exact:true})).toHaveValue('all');
+ await page.getByRole('button',{name:'Supervisor에게 업무 지시'}).click();
+ const batch=page.getByRole('region',{name:'전체 집단 업무',exact:true});
+ await expect(batch).toContainText('8 / 8집단',{timeout:60000});
+ const first=page.url();await page.reload();await expect(batch.locator('tbody tr')).toHaveCount(8);
+ await page.getByRole('button',{name:'Supervisor에게 업무 지시'}).click();await expect(page).toHaveURL(first);
+ await batch.getByRole('button',{name:'집단 결과 보기'}).first().click();
+ await expect(page.getByTestId('workflow-status')).toContainText('승인 대기');
+ await page.setViewportSize({width:390,height:844});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
