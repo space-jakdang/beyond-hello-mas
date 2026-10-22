@@ -34,6 +34,7 @@ def candidates(assessment,statistics,resources):
     rows=[]
     blocked=set(statistics.get('blocked_evidence_ids',[]))
     profiles={p['evidence_id']:p for p in statistics.get('summary',{}).get('policy_needs',{}).get('profiles',[])}
+    insights={i['evidence_id']:i for i in statistics.get('summary',{}).get('insights',{}).get('items',[])}
     for row in assessment['segments']:
         base={k:row[k] for k in ('evidence_id','dong_cd','dong_nm','sgg','sex','age_group','stage','source_bands')}
         needs=needs_for(row);ages=source_ages(row['source_bands'])
@@ -49,7 +50,7 @@ def candidates(assessment,statistics,resources):
             if not result['recommendations']:reason='no_eligible_catalog_candidates'
         evidence={'version':'resource-decision-1', 'observation':{k:row.get(k) for k in
                     ('evidence_id','index_name','value','source_period','components','source_bands')},
-                  'mapping_version':'regional-needs-1','provisional_needs':needs,'statistical_context':profiles.get(row['evidence_id']),
+                  'mapping_version':'regional-needs-1','provisional_needs':needs,'statistical_context':({**profiles.get(row['evidence_id'],{}),'insight':insights.get(row['evidence_id'])}),
                   'filter_request':request.model_dump(mode='json') if filtered else None,
                   'catalog_metadata':result.get('metadata'),
                   'presented_candidates':[{'id':c['id'],'name':c['name'],'needs':c['needs'],
@@ -58,7 +59,7 @@ def candidates(assessment,statistics,resources):
                   'unknown_conditions':['individual_eligibility','application_acceptance','remaining_capacity'],
                   'model_reason':None}
         rows.append({**base,**result,'decision_evidence':evidence,'needs':needs,'age_range':ages,'reason':reason,
-                     'statistical_context':profiles.get(row['evidence_id']),'catalog_filter_performed':filtered,'status':'candidate' if result['recommendations'] else 'needs_human',
+                     'statistical_context':({**profiles.get(row['evidence_id'],{}),'insight':insights.get(row['evidence_id'])}),'catalog_filter_performed':filtered,'status':'candidate' if result['recommendations'] else 'needs_human',
                      'mapping_version':'regional-needs-1','provisional':True,'remaining_capacity':None,
                      'allocation_performed':False,'as_of':assessment['task']['as_of']})
     return rows

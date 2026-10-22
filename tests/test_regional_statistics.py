@@ -27,7 +27,7 @@ def test_trend_uses_only_observed_past_months(service):
 
 
 def test_source_and_base_rule_sensitivity(service):
-    a=assess(service.settings,task());a['segments']=a['segments'][:1]
+    a=assess(service.settings,task());a['segments']=a['segments'][:1];a.pop('source_observations',None)  # Exercise legacy source loading.
     a['segments'][0].update(index_name='S1',value=.291,stage=2)
     s=run_tool('sensitivity',service.settings,a)['items'][0]
     assert s['stages']==[2,2,1] and s['base_stage_stable'] is False
@@ -38,7 +38,7 @@ def test_source_and_base_rule_sensitivity(service):
 def test_trend_gaps_and_changed_age_bands_do_not_imply_change(service,monkeypatch):
     import backend.tools.regional_statistics as module
     from backend.tools.segments_v3 import load_segments
-    a=assess(service.settings,task());a['segments']=a['segments'][:1]
+    a=assess(service.settings,task());a['segments']=a['segments'][:1];a.pop('source_observations',None)  # Exercise legacy source loading.
     rows,source=load_segments(service.settings)
     selected=[r for r in rows if r.dong_cd==a['segments'][0]['dong_cd'] and r.sex=='M' and r.age_group=='youth' and r.ym in ('2025-07','2025-09')]
     monkeypatch.setattr(module,'load_segments',lambda settings:(selected,source))

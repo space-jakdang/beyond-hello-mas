@@ -11,6 +11,7 @@ def test_statistics_tool_observation_enters_review_and_approval(service):
     run=run_task(service)
     assert run.status=='awaiting_approval'
     p=service.approval(run.id)['proposal']
+    assert p['assessment']['metadata']['statistics_version']=='2'
     assert p['workflow']['statistics']['status']=='reviewed'
     assert p['workflow']['statistics']['observations'][0]['tool']=='trend'
     assert p['snapshot_version'] and counts(service,run.id)[0]==0

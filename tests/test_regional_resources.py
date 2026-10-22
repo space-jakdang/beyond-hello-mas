@@ -96,4 +96,4 @@ def test_statistical_profiles_reach_matching_without_changing_verified_filters(s
     run=run_task(service);p=service.approval(run.id)['proposal']
     assert seen
     profiles={r['evidence_id']:r for r in p['workflow']['statistics']['summary']['policy_needs']['profiles']}
-    assert all(r['decision_evidence']['statistical_context']==profiles[r['evidence_id']] for r in p['assignments'])
+    assert all({k:v for k,v in r['decision_evidence']['statistical_context'].items() if k!='insight'}==profiles[r['evidence_id']] for r in p['assignments'])
