@@ -33,3 +33,6 @@ dev = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.vercel.scripts]
+build = "npm --prefix frontend ci && npm --prefix frontend run build"

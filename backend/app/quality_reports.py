@@ -13,7 +13,7 @@ from eval.policy_design_quality import load as load_policy_design_quality
 
 def quality_root(settings, source):
     mode = 'sample' if source == 'sample' else settings.data_mode
-    return config.ROOT / 'runtime' / 'quality' / mode
+    return settings.runtime_root / 'quality' / mode
 
 
 def quality_detail(settings, source, report_id, region=None, period=None, methodology=None, observation_source=None):

@@ -19,7 +19,7 @@
 
 ## 설정과 호출
 
-`.env.example`을 참고해 비공개 `.env`에 `GOV24_SERVICE_KEY`를 설정한다. OpenAI 키와 다른 키이며 정부24 해당 데이터의 활용 신청이 필요하다. 인코딩된 키와 디코딩된 키를 모두 받는다. [공식 인증 안내](https://www.data.go.kr/images/biz/swagger-guide/multi_swagger_guide.pdf)에 따라 `Authorization: Infuser …` 헤더로 전송하며 URL에 키를 넣지 않고 리다이렉트를 거부한다. 키가 없어도 서버는 시작되며 `missing_credentials`를 반환한다. 키를 프론트엔드나 MCP 인자에 넣지 않는다.
+`.env.example`을 참고해 비공개 `.env` 또는 배포 환경변수에 `GOV24_API_KEY`를 설정한다. 기존 배포의 `GOV24_SERVICE_KEY`도 호환된다. OpenAI 키와 다른 키이며 정부24 해당 데이터의 활용 신청이 필요하다. 인코딩된 키와 디코딩된 키를 모두 받는다. [공식 인증 안내](https://www.data.go.kr/images/biz/swagger-guide/multi_swagger_guide.pdf)에 따라 `Authorization: Infuser …` 헤더로 전송하며 URL에 키를 넣지 않고 리다이렉트를 거부한다. 키가 없어도 서버는 시작되며 `missing_credentials`를 반환한다. 키를 프론트엔드나 MCP 인자에 넣지 않는다.
 
 ```sh
 uv run python -m backend.policy.server
