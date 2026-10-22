@@ -205,7 +205,15 @@ class PolicyAgent:
             complete=(latest['result'].get('next_page') is None and 'total' in latest['result']
                       and page_numbers==set(range(1,args['page']+1)) and len(searched)==latest['result']['total'] and searched<=checked)
         if status=='completed' and not recommendations:status='no_verified_candidates' if complete else 'search_incomplete'
-        return {'status':status,'recommendations':recommendations,'coverage':coverage,'steps':len(observations),
+        searched_ids={p['id'] for o in searches for p in o['result'].get('items',[])}
+        details={r['policy']['id']:r for o in observations for r in
+                 (o['result'].get('items',[]) if o['action']['action']=='policy_details' else [o['result']] if o['action']['action']=='policy_detail' else []) if r.get('policy') and r['policy']['id'] in searched_ids}
+        selected_ids={r['policy']['id'] for r in recommendations}
+        funnel={'retrieved':len(searched_ids),'details_checked':len(details),'selected':len(selected_ids),
+                'display_target':3,'shortfall':max(0,3-len(selected_ids)),
+                'not_selected':[{'policy_id':identifier,'title':detail['policy'].get('title',identifier),'reason':'not_selected_by_agent','detail_status':detail['status']} for identifier,detail in sorted(details.items()) if identifier not in selected_ids],
+                'reason':'enough_candidates' if len(selected_ids)>=3 else 'fewer_relevant_verified_candidates' if complete and status=='completed' else 'search_incomplete' if status=='completed' else status}
+        return {'candidate_funnel':funnel,'status':status,'recommendations':recommendations,'coverage':coverage,'steps':len(observations),
                 'search_complete_within_scope':complete,'search_scope':searches[-1]['arguments'] if searches else None,
                 'mode':self.settings.llm_mode,'human_review_required':True,'allocation_performed':False,
                 'all_policies_known':False,'limitation':LIMITATION}
