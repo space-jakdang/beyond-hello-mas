@@ -99,6 +99,12 @@ def model_context(context):
     view['analyses']=[{**a,'summary':str(a.get('summary',''))[:300]} for a in context['analyses']]
     view['statistics']=[{k:v for k,v in row.items() if k in ('evidence_id','comparison','measured_need_signals')} for row in context['statistics']]
     view['sources']=[{k:v for k,v in source.items() if k!='url'} | {'evidence':{**source['evidence'],'value':source['evidence']['value'][:400]}} for source in context['sources']]
+    if context.get('reference_version')=='short-1':
+        identifiers={fact['evidence_id']:f'E{i+1}' for i,fact in enumerate(context['facts'])}
+        for collection in ('facts','statistics','matching'):
+            for row in view[collection]:
+                if row.get('evidence_id') in identifiers:row['evidence_id']=identifiers[row['evidence_id']]
+        view['reference_note']='Use the short E1, E2 identifiers exactly. They refer only to this dong and the labelled target group.'
     view['source_view_note']='Policy quote previews may be truncated. Cite IDs; server attaches the original quote.'
     return view
 
@@ -113,6 +119,7 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
         if saved:
             results.append(json.loads(saved[0]));continue
         context=deepcopy(contexts[dong['dong_cd']]) if contexts else context_for(dong,scope,proposals)
+        context['reference_version']='short-1'
         if not contexts and any(r['value'] is not None for r in context['facts']):context=research(designer,owner_id,run_id,context)
         reason=None;mode='llm' if designer.settings.llm_mode=='live' else 'fixture';item_modes={}
         if not any(r['value'] is not None and r['stage'] is not None for r in context['facts']):
@@ -120,6 +127,9 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
         else:
             try:
                 candidate=designer.agents.call(run_id,scope['ym']+'-01T09:00:00+09:00','policy_alternatives',model_context(context)).model_dump()
+                aliases={f'E{i+1}':fact['evidence_id'] for i,fact in enumerate(context['facts'])}
+                for item in candidate['alternatives']:
+                    item['problem_evidence_ids']=[aliases.get(identifier,identifier) for identifier in item['problem_evidence_ids']]
                 output=templates(context);used=set()
                 for i,item in enumerate(output['alternatives']):
                     options=[a for a in candidate['alternatives'] if a['strategy']==item['strategy']]
