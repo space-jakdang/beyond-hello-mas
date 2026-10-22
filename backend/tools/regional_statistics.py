@@ -8,6 +8,7 @@ from backend.tools.segments_v3 import load_segments
 
 def summary(assessment):
     from backend.tools.statistical_sources import readiness
+    from backend.tools.policy_insights import insights
     rows=assessment['segments']
     valid=[r for r in rows if r['value'] is not None and isfinite(r['value']) and r['stage'] is not None]
     groups={}
@@ -23,7 +24,7 @@ def summary(assessment):
             'missing':len(blocked),'missing_rate':len(blocked)/len(rows) if rows else None,
             'stage_counts':dict(sorted(Counter(str(r['stage']) for r in valid).items())),
             'distributions':distributions,'blocked_evidence_ids':blocked,
-            'input_hash':assessment['metadata']['input_hash'],'causal_claim':False,'data_readiness':readiness(assessment),
+            'input_hash':assessment['metadata']['input_hash'],'causal_claim':False,'data_readiness':readiness(assessment),'insights':insights(assessment),
             'confidence_interval':None,'cross_region_comparable':False,'policy_needs':policy_needs(assessment)}
 
 
@@ -72,6 +73,9 @@ def run_tool(name,settings,assessment):
     if name=='trend':return trend(settings,assessment)
     if name=='source_check':return source_check(assessment)
     if name=='sensitivity':return sensitivity(assessment)
+    if name=='policy_insights':
+        from backend.tools.policy_insights import insights
+        return {'tool':'policy_insights',**insights(assessment)}
     raise ValueError('unsupported statistics tool')
 
 

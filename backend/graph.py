@@ -117,6 +117,7 @@ class GraphService:
             with self.store.connection() as db:
                 frozen=db.execute('SELECT assessment FROM regional_batch_children WHERE run_id=?',(state['run_id'],)).fetchone()
             result=json.loads(frozen[0]) if frozen else assess(self.settings,task_from(scenario.payload))
+            if scenario.payload.get('statistics_version')=='2':result['metadata']['statistics_version']='2'
             self.node_event(state, 'classify', result, started)
             return {'classification':result}
         elif scenario.type == 'admin' or 'person' in scenario.payload:
@@ -555,6 +556,7 @@ class GraphService:
             from backend.tools.regional_task import task_from
             if scenario.type != 'monthly':raise ValueError('regional task requires monthly scenario')
             task_from(scenario.payload)
+            scenario=scenario.model_copy(update={'payload':{**scenario.payload,'statistics_version':'2'}})
         if 'person' in scenario.payload:
             person = PersonCase.model_validate(scenario.payload['person'])
             if person.reply_to:

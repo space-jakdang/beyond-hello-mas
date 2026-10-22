@@ -126,12 +126,13 @@ def test_statistics_model_view_preserves_ids_and_saved_sources(service):
     before=copy.deepcopy(tools);view=model_observations(tools)
     assert tools==before
     assert len(json.dumps(view))<len(json.dumps(tools))
-    for original,compact in zip(tools[0]['items'],view[0]['items']):
+    for original,values in zip(tools[0]['items'],view[0]['items']):
+        compact=dict(zip(view[0]['item_columns'],values))
         assert compact['evidence_id']==original['evidence_id']
         assert view[0]['sources'][compact['source_index']]==original['source_file']
         assert compact['status']==original['status']
     for original,compact in zip(tools[1]['series'],view[1]['series']):
-        assert [(p['ym'],p['value'],p['change']) for p in original['points']]==[(p['ym'],p['value'],p['change']) for p in compact['points']]
+        assert [(p['ym'],p['value'],p['change']) for p in original['points']]==[tuple(p) for p in compact['points']]
 
 
 def test_concurrent_execution_uses_shared_run_locks(service,monkeypatch):
