@@ -73,9 +73,8 @@ def create(service,request):
                 body['children'].append({'sex':sex,'age_group':age,'run_id':None,'status':'no_observation'});continue
             assessment=assess(service.settings,single,source_data=(rows,source))
             assessment['catalog_snapshot']=catalog
-            assessment['source_observations']=[r.model_dump(mode='json') for r in region if r.sex==sex and r.age_group==age]
             scenario=Scenario(id='regional-workflow-batch',type='monthly',sim_time=f'{task.ym}-01T09:00:00+09:00',
-                              payload={'workflow_version':'regional-workflow-1','research_gaps':True,'task':single.model_dump(mode='json')})
+                              payload={'statistics_version':'2','workflow_version':'regional-workflow-1','research_gaps':True,'task':single.model_dump(mode='json')})
             run=service.new_run(scenario,str(uuid4())).model_copy(update={'status':'pending'})
             prepared.append((run,scenario,assessment))
             body['children'].append({'sex':sex,'age_group':age,'run_id':run.id})
