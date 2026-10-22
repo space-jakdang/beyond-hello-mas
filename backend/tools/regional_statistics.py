@@ -7,6 +7,7 @@ from backend.tools.segments_v3 import load_segments
 
 
 def summary(assessment):
+    from backend.tools.statistical_sources import readiness
     rows=assessment['segments']
     valid=[r for r in rows if r['value'] is not None and isfinite(r['value']) and r['stage'] is not None]
     groups={}
@@ -22,7 +23,7 @@ def summary(assessment):
             'missing':len(blocked),'missing_rate':len(blocked)/len(rows) if rows else None,
             'stage_counts':dict(sorted(Counter(str(r['stage']) for r in valid).items())),
             'distributions':distributions,'blocked_evidence_ids':blocked,
-            'input_hash':assessment['metadata']['input_hash'],'causal_claim':False,
+            'input_hash':assessment['metadata']['input_hash'],'causal_claim':False,'data_readiness':readiness(assessment),
             'confidence_interval':None,'cross_region_comparable':False,'policy_needs':policy_needs(assessment)}
 
 

@@ -53,7 +53,7 @@ def evaluate(dataset,classifier=classify):
             replays.append(output==repeated)
             row={**output['segments'][0],'evidence_id':case['id']};predicted=row['stage']
             task={'sgg':row['sgg'],'ym':row['ym'],'as_of':row['ym']+'-28'}
-            assessment={'segments':[row],'task':task,'metadata':{'input_hash':digest(case['segment'])}}
+            assessment={'data_mode':'sample','segments':[row],'task':task,'metadata':{'input_hash':digest(case['segment'])}}
             stats=summary(assessment);stats['status']='reviewed'
             valid=base.model_copy(update={'id':'eligible','jurisdiction':['KR'],'age_min':0,'age_max':120,'needs':['relationship'],
                 'eligibility':'unrestricted','eligibility_tags':[],'collected_at':datetime(2024,1,1,tzinfo=timezone.utc),
