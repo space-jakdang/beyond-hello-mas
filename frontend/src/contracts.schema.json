@@ -930,7 +930,8 @@
           "awaiting_approval",
           "completed",
           "rejected",
-          "failed"
+          "failed",
+          "cancelled"
         ],
         "title": "Status",
         "type": "string"

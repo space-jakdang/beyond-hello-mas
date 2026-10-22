@@ -55,6 +55,8 @@ def crisis_evidence(payload):
 class GraphService:
     def __init__(self, store, settings):
         self.store, self.settings = store, settings
+        from backend.regional_batch import initialize
+        initialize(store)
         self.agents = Agents(store, settings)
         self.scale = ScaleAdapter(store, settings)
         self.person = PersonAdapter(store, settings)
@@ -112,7 +114,9 @@ class GraphService:
         scenario = Scenario.model_validate(state['scenario'])
         if scenario.payload.get('workflow_version'):
             from backend.tools.regional_task import assess, task_from
-            result=assess(self.settings,task_from(scenario.payload))
+            with self.store.connection() as db:
+                frozen=db.execute('SELECT assessment FROM regional_batch_children WHERE run_id=?',(state['run_id'],)).fetchone()
+            result=json.loads(frozen[0]) if frozen else assess(self.settings,task_from(scenario.payload))
             self.node_event(state, 'classify', result, started)
             return {'classification':result}
         elif scenario.type == 'admin' or 'person' in scenario.payload:
@@ -217,7 +221,10 @@ class GraphService:
                      if t['kind']=='agent_message' and t['payload'].get('result_kind')=='workflow_candidates'),None)
         try:
             if time.time()>=state['workflow_deadline']:raise ValueError('deadline')
-            rows=cached if cached is not None else candidates(state['classification'],workflow['statistics'],load_catalog(self.settings.catalog_path))
+            from backend.app.contracts import Resource
+            frozen=state['classification'].get('catalog_snapshot')
+            resources=[Resource.model_validate(r) for r in frozen] if frozen is not None else load_catalog(self.settings.catalog_path)
+            rows=cached if cached is not None else candidates(state['classification'],workflow['statistics'],resources)
             self.regional_emit(state)('workflow-candidates','statistics','match',{'result_kind':'workflow_candidates','candidates':rows})
             rows,matching=select(self.agents,state['run_id'],state['scenario']['sim_time'],rows,workflow['statistics'])
             if time.time()>=state['workflow_deadline']:raise ValueError('deadline')
@@ -511,6 +518,7 @@ class GraphService:
         config = {'configurable': {'thread_id': run_id}}
         with self.lock(run_id), self.graph() as graph, tracing_context(enabled=False):
             run=self.store.get_run(run_id)
+            if run.status=='cancelled':return run
             if run.scenario_id=='regional-workflow-future' and run.status=='failed':return run
             if run.status=='pending':
                 with self.store.connection(write=True) as db:self.update_run(db,run_id,status='running')
@@ -610,9 +618,15 @@ class GraphService:
 
     def recover(self):
         with self.store.connection() as db:
-            ids = [r[0] for r in db.execute('SELECT run_id FROM workflows ORDER BY rowid')]
+            ids = [r[0] for r in db.execute('SELECT run_id FROM workflows WHERE run_id NOT IN (SELECT run_id FROM regional_batch_children) ORDER BY rowid')]
+            batches=[r[0] for r in db.execute('SELECT id FROM regional_batches ORDER BY rowid')]
         for run_id in ids:
             try:
                 self.drive(run_id)
             except Exception:
                 pass  # Failure is persisted by drive; other runs must still recover.
+
+        from backend.regional_batch import execute
+        for identifier in batches:
+            try:execute(self,identifier)
+            except Exception:pass  # Keep other batches recoverable when a stored mode differs.

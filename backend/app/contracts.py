@@ -242,7 +242,7 @@ class Run(Contract):
     id: Nonempty
     scenario_id: Nonempty
     thread_id: Nonempty
-    status: Literal["pending", "running", "awaiting_approval", "completed", "rejected", "failed"]
+    status: Literal["pending", "running", "awaiting_approval", "completed", "rejected", "failed", "cancelled"]
     data_mode: Literal["sample", "local"]
     llm_mode: Literal["fake", "live"]
     input_version: Nonempty
