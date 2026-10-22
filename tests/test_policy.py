@@ -11,6 +11,14 @@ from backend.app.config import Settings, ROOT
 from backend.policy.service import PolicyService, Search, SCOPES, jurisdiction
 
 
+@pytest.mark.parametrize('name', ['GOV24_API_KEY', 'GOV24_SERVICE_KEY'])
+def test_gov24_key_environment_aliases(monkeypatch,name):
+    monkeypatch.delenv('GOV24_API_KEY', raising=False)
+    monkeypatch.delenv('GOV24_SERVICE_KEY', raising=False)
+    monkeypatch.setenv(name, 'test-secret')
+    assert Settings(_env_file=None).gov24_service_key.get_secret_value() == 'test-secret'
+
+
 def rows():
     return [{'서비스ID':str(i),'서비스명':f'합성 정책 {i}','소관기관명':agency,'소관기관유형':kind,'지원대상':'합성 조건',
              '상세조회URL':'https://www.gov.kr/fixture'} for i,(agency,kind) in enumerate([

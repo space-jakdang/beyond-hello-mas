@@ -155,5 +155,5 @@ make dev
 | [정책 도구](docs/policy-tools.md) / [정책 설계](docs/policy-design.md) | 정부24·MCP·조건부 보고서·검토 계약 |
 | [평가 체계](docs/evaluation-quality.md) / [평가 기록](docs/evaluation.md) | 분류·매칭·RAGAS·독립 평정과 한계 |
 | [미래 시나리오](docs/future-simulation.md) | 합성 월 생성과 업무 일괄 실행 |
-| [개발 안내](docs/development.md) / [배포 관문](docs/deployment.md) | 실행·테스트·공개 파일 검사·배포 조건 |
+| [개발 안내](docs/development.md) / [배포 관문](docs/deployment.md) / [Vercel 설정](docs/vercel-deployment.md) | 실행·테스트·공개 파일 검사·배포 조건·Vercel 환경변수 |
 | [데이터 정책](docs/data-policy.md) / [데이터 계약](docs/contracts.md) | 실제 자료 반입, 원천별 범위, 공개·비공개 분리 |

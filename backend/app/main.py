@@ -2,7 +2,7 @@ import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from backend.app.config import Settings
+from backend.app.config import ROOT, Settings
 from backend.events import EventStore
 from backend.graph import GraphService
 from backend.app.graph_routes import graph_router
@@ -41,6 +41,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(quality_job_router(quality_jobs))
     app.include_router(analysis_router(settings))
     app.include_router(policy_router(settings))
+    app.frontend("/", directory=ROOT / "frontend" / "dist", fallback="index.html", check_dir=False)
 
     @app.get("/health")
     def health():

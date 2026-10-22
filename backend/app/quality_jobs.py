@@ -125,7 +125,7 @@ class QualityJobs:
         phase='inputs'
         try:
             mode='sample' if body['source']=='sample' else self.settings.data_mode
-            folder=config.ROOT/'runtime/quality-jobs'/mode/identifier;folder.mkdir(parents=True,exist_ok=False)
+            folder=self.settings.runtime_root/'quality-jobs'/mode/identifier;folder.mkdir(parents=True,exist_ok=False)
             for name,data in body['snapshot'].items():
                 with (folder/name).open('x') as file:file.write(json.dumps(data,ensure_ascii=False))
             # Validate frozen inputs before any paid call, including changes during registration.

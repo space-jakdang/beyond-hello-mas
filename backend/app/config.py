@@ -1,8 +1,9 @@
 from pathlib import Path
 from uuid import UUID
 from typing import Literal
+import os
 
-from pydantic import Field, SecretStr, model_validator, field_validator
+from pydantic import AliasChoices, Field, SecretStr, model_validator, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -12,7 +13,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore", allow_inf_nan=False)
     data_mode: Literal["sample", "local"] = "sample"
     llm_mode: Literal["fake", "live"] = "fake"
-    gov24_service_key: SecretStr | None = None
+    gov24_service_key: SecretStr | None = Field(
+        default=None, validation_alias=AliasChoices("GOV24_API_KEY", "GOV24_SERVICE_KEY")
+    )
     policy_timeout_seconds: float = Field(default=10,gt=0,le=30)
     policy_max_pages: int = Field(default=30,ge=1,le=100)
     evaluation_id: UUID | None = None
@@ -53,8 +56,13 @@ class Settings(BaseSettings):
         return ROOT / "data" / self.data_mode
 
     @property
+    def runtime_root(self) -> Path:
+        # shortcut: per-instance temporary storage for Vercel previews; replace with shared persistence before multi-instance use.
+        return Path("/tmp/beyond-hello-mas/runtime") if os.getenv("VERCEL") == "1" else ROOT / "runtime"
+
+    @property
     def runtime_dir(self) -> Path:
-        root = ROOT / "runtime" / self.data_mode
+        root = self.runtime_root / self.data_mode
         return root / "evaluations" / str(self.evaluation_id) if self.evaluation_id else root
 
     @property
