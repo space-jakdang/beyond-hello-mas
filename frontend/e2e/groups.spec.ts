@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 
 test('eight-group filters, weekly replay, map and URL stay linked on mobile',async({page,request})=>{
-  await page.goto('/neighborhoods');
+  await page.goto('/neighborhoods?sex=M&age=youth&card_age=20s&week=2025-12-08');
   await expect(page.getByTestId('group-selected')).toBeVisible();
   await page.getByRole('combobox',{name:'성별',exact:true}).selectOption('F');
   await page.getByRole('combobox',{name:'연령집단',exact:true}).selectOption('prime');
@@ -31,7 +31,7 @@ test('Seoul and within-Gangnam comparison use their own stage rows',async({page,
   const ranks=data.segments.filter((r:any)=>r.index_name==='G_seoul').map((r:any)=>({...r,index_name:'G_gangnam_rank',stage:1,preferred:true}));
   data.segments=data.segments.map((r:any)=>r.index_name==='G_seoul'?{...r,preferred:false,stage:5}:r).concat(ranks);
   await page.route('**/analysis/groups*',route=>route.fulfill({json:data}));
-  await page.goto('/neighborhoods?age=elderly');
+  await page.goto('/neighborhoods?sex=M&age=elderly&card_age=20s&week=2025-12-08');
   await expect(page.getByTestId('group-selected')).toContainText('1단계');
   await page.getByRole('combobox',{name:'단계 기준',exact:true}).selectOption('seoul');
   await expect(page.getByTestId('group-selected')).toContainText('5단계');
@@ -40,7 +40,7 @@ test('Seoul and within-Gangnam comparison use their own stage rows',async({page,
 
 
 test('source evidence starts with readable cards and raw data is collapsed',async({page})=>{
- await page.setViewportSize({width:390,height:844});await page.goto('/neighborhoods');
+ await page.setViewportSize({width:390,height:844});await page.goto('/neighborhoods?sex=M&age=youth&card_age=20s&week=2025-12-08');
  await expect(page.getByLabel('T1b 요약')).toContainText('직전 8관측주 기준선');
  await expect(page.getByTestId('group-detail').locator('pre')).toBeHidden();
  await page.getByText('원천 기록 자세히 보기',{exact:true}).click();
@@ -53,7 +53,7 @@ test('both sexes preserve source stages, selection, URL and missing rows',async(
  const data=await(await request.get('/analysis/groups')).json();
  const dongs=data.neighborhoods.filter((d:any)=>d.sgg==='11230');
  const selected=dongs[1];
- await page.goto('/neighborhoods?sex=all');
+ await page.goto('/neighborhoods?sex=all&age=youth&card_age=20s&week=2025-12-08');
  const male=page.getByRole('region',{name:'남성 분석 패널',exact:true}),female=page.getByRole('region',{name:'여성 분석 패널',exact:true});
  await expect(male).toBeVisible();await expect(female).toBeVisible();
  expect(await male.getByRole('img',{name:'T1b R1 주간 비율'}).locator('line').getAttribute('y1')).toBe(await female.getByRole('img',{name:'T1b R1 주간 비율'}).locator('line').getAttribute('y1'));
@@ -73,4 +73,21 @@ test('both sexes preserve source stages, selection, URL and missing rows',async(
  await expect(male.getByTestId('group-detail')).toBeVisible();
  await page.getByRole('combobox',{name:'지역',exact:true}).selectOption('32010');
  await expect(male).toContainText('춘천시');await expect(female).toContainText('춘천시');
+});
+
+
+test('all four filters default to all and preserve independent cohorts',async({page,request})=>{
+ await page.goto('/neighborhoods');
+ const source=await(await request.get('/analysis/groups?week=all&card_age=all')).json();
+ const month=source.months.at(-1),dong=source.neighborhoods.find((d:any)=>d.sgg==='11230');
+ const rows=source.segments.filter((r:any)=>r.dong_cd===dong.dong_cd&&r.preferred&&r.ym===month);
+ await expect(page.getByRole('region',{name:'전체 집단 요약'}).locator('tbody tr').first()).toContainText(`${rows.filter((r:any)=>r.stage>=4).length} / ${rows.filter((r:any)=>r.stage!==null).length}`);
+ for(const name of ['성별','연령집단','신호 주','카드 연령'])await expect(page.getByRole('combobox',{name,exact:true})).toHaveValue('all');
+ await expect(page.getByRole('region',{name:'집단별 원천 단계'}).locator('tbody tr')).toHaveCount(8);
+ await page.getByRole('combobox',{name:'성별',exact:true}).selectOption('F');
+ await expect(page.getByRole('region',{name:'집단별 원천 단계'}).locator('tbody tr')).toHaveCount(4);
+ await page.goBack();await page.reload();
+ await expect(page.getByRole('region',{name:'집단별 원천 단계'}).locator('tbody tr')).toHaveCount(8);
+ await page.setViewportSize({width:390,height:844});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
