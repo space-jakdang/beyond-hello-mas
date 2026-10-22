@@ -91,3 +91,29 @@ test('all four filters default to all and preserve independent cohorts',async({p
  await page.setViewportSize({width:390,height:844});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
+
+test('cohort matrix preserves 4/8 source cells, missing data and keyboard drilldown',async({page,request})=>{
+ const data=await(await request.get('/analysis/groups?week=all&card_age=all')).json();
+ const dong=data.neighborhoods.find((d:any)=>d.sgg==='11230'),month=data.months.at(-1);
+ data.segments=data.segments.filter((r:any)=>!(r.dong_cd===dong.dong_cd&&r.sex==='F'&&r.age_group==='elderly'));
+ await page.route('**/analysis/groups*',route=>route.fulfill({json:data}));
+ await page.goto('/neighborhoods?sex=all&age=all');
+ const matrix=page.getByRole('table',{name:'동별 성별 × 연령집단 단계'});
+ await expect(matrix.getByRole('columnheader')).toHaveCount(9);
+ for(const sex of ['M','F'])for(const [age,name] of Object.entries({youth:'청년',midlife:'중년',prime:'장년',elderly:'노년'})){
+  const r=data.segments.find((r:any)=>r.dong_cd===dong.dong_cd&&r.sex===sex&&r.age_group===age&&r.preferred&&(r.ym===null||r.ym===month));
+  await expect(matrix.getByRole('button',{name:new RegExp(`${dong.dong_nm} ${sex==='M'?'남성':'여성'} ${name} .* 상세 보기`)})).toHaveText(!r?'자료 없음':r.stage===null?'미평가':`${r.stage}단계`);
+ }
+ const details=page.getByRole('region',{name:'집단별 원천 단계',exact:true});
+ await expect(details.locator('tbody tr')).toHaveCount(8);await expect(details).toContainText('자료 없음');
+ await page.getByRole('combobox',{name:'성별',exact:true}).selectOption('M');
+ await expect(matrix.getByRole('columnheader')).toHaveCount(5);
+ const cell=matrix.getByRole('button',{name:new RegExp(`${dong.dong_nm} 남성 청년 .* 상세 보기`)});
+ await cell.focus();await page.keyboard.press('Enter');
+ await expect(page.getByRole('combobox',{name:'연령집단',exact:true})).toHaveValue('youth');
+ await expect(page.getByTestId('group-detail')).toBeVisible();
+ await page.goBack();await expect(matrix.getByRole('columnheader')).toHaveCount(5);
+ await page.goBack();await page.reload();await expect(matrix.getByRole('columnheader')).toHaveCount(9);
+ await page.setViewportSize({width:390,height:844});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});
