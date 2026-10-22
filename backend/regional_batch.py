@@ -61,7 +61,7 @@ def create(service,request):
     dongs={r.dong_cd:r.dong_nm for r in region}
     if not dongs or task.dong_cd and task.dong_cd not in dongs:raise ValueError('unknown region or dong')
     body={'id':identifier,'intent':intent,'data_mode':service.settings.data_mode,'llm_mode':service.settings.llm_mode,
-          'task':task.model_dump(mode='json'),'source':source,'children':[],'cancelled':False,
+          'task':task.model_dump(mode='json'),'source':source,'children':[],'cancelled':False,'policy_proposal_version':'three-1',
           'dongs':[{'dong_cd':k,'dong_nm':v} for k,v in sorted(dongs.items()) if not task.dong_cd or k==task.dong_cd]}
     prepared=[]
     catalog=[r.model_dump(mode="json") for r in load_catalog(service.settings.catalog_path)]
@@ -74,7 +74,7 @@ def create(service,request):
             assessment=assess(service.settings,single,source_data=(rows,source))
             assessment['catalog_snapshot']=catalog
             scenario=Scenario(id='regional-workflow-batch',type='monthly',sim_time=f'{task.ym}-01T09:00:00+09:00',
-                              payload={'statistics_version':'2','workflow_version':'regional-workflow-1','research_gaps':True,'task':single.model_dump(mode='json')})
+                              payload={'statistics_version':'2','workflow_version':'regional-workflow-1','research_gaps':True,'policy_proposal_version':'batch-child','task':single.model_dump(mode='json')})
             run=service.new_run(scenario,str(uuid4())).model_copy(update={'status':'pending'})
             prepared.append((run,scenario,assessment))
             body['children'].append({'sex':sex,'age_group':age,'run_id':run.id})
@@ -97,8 +97,8 @@ def create(service,request):
 def public(service,body):
     children=[{**c,'status':service.store.get_run(c['run_id']).status if c['run_id'] else 'no_observation'} for c in body['children']]
     pending=sum(c['status'] in ('pending','running') for c in children)
-    return {**body,'children':children,'status':('cancelling' if any(c['status']=='running' for c in children) else 'cancelled') if body['cancelled'] else 'running' if pending else 'completed_with_gaps' if any(c['status'] in ('failed','no_observation') for c in children) else 'completed',
-            'finished':len(children)-pending,'total':len(children)}
+    return {**body,'children':children,'status':('cancelling' if any(c['status']=='running' for c in children) else 'cancelled') if body['cancelled'] else 'running' if pending or body.get('policy_proposal_version') and not body.get('policy_proposals') else 'completed_with_fallback' if body.get('policy_proposals',{}).get('fallback_count') else 'completed_with_gaps' if any(c['status'] in ('failed','no_observation') for c in children) else 'completed',
+            'finished':len(children)-pending,'total':len(children),'failed_count':sum(c['status']=='failed' for c in children),'no_observation_count':sum(c['status']=='no_observation' for c in children)}
 
 
 def execute(service,identifier):
@@ -109,6 +109,8 @@ def execute(service,identifier):
             if child['run_id'] and service.store.get_run(child['run_id']).status in ('pending','running'):
                 try:service.execute(child['run_id'])
                 except Exception:pass  # Graph persists the failure; continue the other cohorts.
+        from backend.policy.alternatives import complete_batch
+        if body.get('policy_proposal_version'):complete_batch(service,body)
 
 
 def router(service):

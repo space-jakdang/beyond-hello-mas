@@ -77,7 +77,7 @@ def test_supervisor_adds_separate_design_report_before_approval(service,monkeypa
     monkeypatch.setattr(service.policy_agent,'run',lambda *args:{'status':'no_verified_candidates','recommendations':[],
         'search_complete_within_scope':True,'search_scope':{'scopes':['gangnam'],'query':'관계','page':1},'coverage':{'fetched_at':'2026-10-22T00:00:00Z'}})
     monkeypatch.setattr(service.policy_agent,'call_tool',lambda *args:evidence())
-    run=service.start(scenario('monthly',workflow_version='regional-workflow-1',task=task().model_dump(mode='json'),research_gaps=True))
+    run=service.start(scenario('monthly',workflow_version='regional-workflow-1',policy_proposal_version='legacy',task=task().model_dump(mode='json'),research_gaps=True))
     p=service.approval(run.id)['proposal']
     assert run.status=='awaiting_approval' and p['policy_design']['status']=='draft'
     assert all(not a['recommendations'] for a in p['assignments'])
