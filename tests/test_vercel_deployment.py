@@ -24,3 +24,11 @@ def test_frontend_routes_fall_back_to_index(tmp_path, monkeypatch):
         assert client.get("/", headers=browser).text == "<main>demo</main>"
         assert client.get("/workspace", headers=browser).text == "<main>demo</main>"
         assert client.get("/health").json()["status"] == "ok"
+
+
+def test_api_404_works_before_frontend_build(tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "ROOT", tmp_path)
+    app = main.create_app(Settings(_env_file=None, llm_mode="fake"))
+
+    with TestClient(app) as client:
+        assert client.get("/not-an-api-route").status_code == 404
