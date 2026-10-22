@@ -38,13 +38,13 @@ def task_from(payload):
     return RegionalTask.model_validate(payload.get('task', {}))
 
 
-def assess(settings, task):
+def assess(settings, task, source_data=None):
     future=None
     if task.future_id:
         from backend.future import scenario_rows
         rows,source,future=scenario_rows(settings,task)
     else:
-        rows, source = load_segments(settings)
+        rows, source = source_data if source_data is not None else load_segments(settings)
     selected = [r for r in rows if r.preferred and r.sgg == task.sgg and r.sex == task.sex
                 and r.age_group == task.age_group and r.ym in (None, task.ym)
                 and (task.dong_cd is None or r.dong_cd == task.dong_cd)]

@@ -115,6 +115,10 @@ class Agents:
             count = db.execute('SELECT COUNT(*) FROM llm_calls WHERE run_id=?', (run_id,)).fetchone()[0]
             cumulative_spent = db.execute('SELECT COALESCE(SUM(reserve_usd),0) FROM llm_calls').fetchone()[0]
             run_spent = db.execute('SELECT COALESCE(SUM(reserve_usd),0) FROM llm_calls WHERE run_id=?', (run_id,)).fetchone()[0]
+            batch_table=db.execute("SELECT 1 FROM sqlite_master WHERE name='regional_batch_children'").fetchone()
+            parent=db.execute('SELECT batch_id FROM regional_batch_children WHERE run_id=?',(run_id,)).fetchone() if batch_table else None
+            if parent:
+                run_spent=db.execute('SELECT COALESCE(SUM(reserve_usd),0) FROM llm_calls WHERE run_id IN (SELECT run_id FROM regional_batch_children WHERE batch_id=?)',(parent[0],)).fetchone()[0]
             over_run_budget = self.settings.llm_run_budget_usd is not None and run_spent + reserve > self.settings.llm_run_budget_usd
             if count >= self.settings.llm_max_calls or (reserve and (cumulative_spent + reserve > self.settings.llm_budget_usd or over_run_budget)):
                 raise ValueError('LLM call or cost budget exceeded')

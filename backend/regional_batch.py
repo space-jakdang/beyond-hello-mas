@@ -1,0 +1,150 @@
+"""Frozen, idempotent batches of existing single-cohort regional workflows."""
+import json
+import time
+from uuid import UUID, uuid4
+from datetime import date
+from typing import Literal
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from pydantic import BaseModel, ConfigDict
+from backend.app.contracts import Scenario
+from backend.tools.regional_task import RegionalTask, assess
+from backend.tools.segments_v3 import load_segments
+from backend.tools.indicators import digest
+from backend.tools.catalog import load_catalog
+from backend.events import utcnow
+
+class BatchConflict(ValueError):
+    pass
+
+
+class BatchRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    request_id:UUID
+    task:dict
+    sex:Literal['all','M','F']='all'
+    age_group:Literal['all','youth','midlife','prime','elderly']='all'
+    week:date | Literal['all']='all'
+    card_age:Literal['all','20s','30s']='all'
+
+
+def initialize(store):
+    with store.connection() as db:
+        db.executescript('''
+        CREATE TABLE IF NOT EXISTS regional_batches (id TEXT PRIMARY KEY, body TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS regional_batch_children (
+            run_id TEXT PRIMARY KEY REFERENCES runs(id), batch_id TEXT NOT NULL REFERENCES regional_batches(id),
+            assessment TEXT NOT NULL);
+        ''')
+
+
+def read(service,identifier):
+    with service.store.connection() as db:
+        row=db.execute('SELECT body FROM regional_batches WHERE id=?',(str(identifier),)).fetchone()
+    if not row:raise KeyError(identifier)
+    body=json.loads(row[0])
+    if body['data_mode']!=service.settings.data_mode or body['llm_mode']!=service.settings.llm_mode:
+        raise BatchConflict('restore original data and model mode')
+    return body
+
+
+def create(service,request):
+    identifier=str(request.request_id);intent=request.model_dump(mode='json',exclude={'request_id'})
+    try:
+        existing=read(service,identifier)
+        if existing['intent']!=intent:raise BatchConflict('request id used for a different selection')
+        return existing
+    except KeyError:pass
+    task=RegionalTask.model_validate({**request.task,'sex':'M','age_group':'youth'})
+    if task.future_id:raise ValueError('use future workflow for synthetic inputs')
+    rows,source=load_segments(service.settings)
+    region=[r for r in rows if r.sgg==task.sgg]
+    dongs={r.dong_cd:r.dong_nm for r in region}
+    if not dongs or task.dong_cd and task.dong_cd not in dongs:raise ValueError('unknown region or dong')
+    body={'id':identifier,'intent':intent,'data_mode':service.settings.data_mode,'llm_mode':service.settings.llm_mode,
+          'task':task.model_dump(mode='json'),'source':source,'children':[],'cancelled':False,
+          'dongs':[{'dong_cd':k,'dong_nm':v} for k,v in sorted(dongs.items()) if not task.dong_cd or k==task.dong_cd]}
+    prepared=[]
+    catalog=[r.model_dump(mode="json") for r in load_catalog(service.settings.catalog_path)]
+    for sex in (['M','F'] if request.sex=='all' else [request.sex]):
+        for age in (['youth','midlife','prime','elderly'] if request.age_group=='all' else [request.age_group]):
+            single=task.model_copy(update={'sex':sex,'age_group':age})
+            available=[r for r in region if r.preferred and r.sex==sex and r.age_group==age and r.ym in (None,task.ym) and (not task.dong_cd or r.dong_cd==task.dong_cd)]
+            if not available:
+                body['children'].append({'sex':sex,'age_group':age,'run_id':None,'status':'no_observation'});continue
+            assessment=assess(service.settings,single,source_data=(rows,source))
+            assessment['catalog_snapshot']=catalog
+            assessment['source_observations']=[r.model_dump(mode='json') for r in region if r.sex==sex and r.age_group==age]
+            scenario=Scenario(id='regional-workflow-batch',type='monthly',sim_time=f'{task.ym}-01T09:00:00+09:00',
+                              payload={'workflow_version':'regional-workflow-1','research_gaps':True,'task':single.model_dump(mode='json')})
+            run=service.new_run(scenario,str(uuid4())).model_copy(update={'status':'pending'})
+            prepared.append((run,scenario,assessment))
+            body['children'].append({'sex':sex,'age_group':age,'run_id':run.id})
+    body['input_hash']=digest([a for _,_,a in prepared])
+    with service.store.connection(write=True) as db:
+        previous=db.execute('SELECT body FROM regional_batches WHERE id=?',(identifier,)).fetchone()
+        if previous:
+            result=json.loads(previous[0])
+            if result['intent']!=intent:raise BatchConflict('request conflict')
+            return result
+        db.execute('INSERT INTO regional_batches VALUES (?,?)',(identifier,json.dumps(body,ensure_ascii=False)))
+        for run,scenario,assessment in prepared:
+            db.execute('INSERT INTO runs VALUES (?,?)',(run.id,run.model_dump_json()))
+            db.execute('INSERT INTO run_clocks VALUES (?,?,?)',(run.id,service.store.clock_id,time.monotonic()))
+            db.execute('INSERT INTO workflows VALUES (?,?)',(run.id,scenario.model_dump_json()))
+            db.execute('INSERT INTO regional_batch_children VALUES (?,?,?)',(run.id,identifier,json.dumps(assessment,ensure_ascii=False)))
+    return body
+
+
+def public(service,body):
+    children=[{**c,'status':service.store.get_run(c['run_id']).status if c['run_id'] else 'no_observation'} for c in body['children']]
+    pending=sum(c['status'] in ('pending','running') for c in children)
+    return {**body,'children':children,'status':('cancelling' if any(c['status']=='running' for c in children) else 'cancelled') if body['cancelled'] else 'running' if pending else 'completed_with_gaps' if any(c['status'] in ('failed','no_observation') for c in children) else 'completed',
+            'finished':len(children)-pending,'total':len(children)}
+
+
+def execute(service,identifier):
+    with service.lock('batch:'+str(identifier)):
+        body=read(service,identifier)
+        for child in body['children']:
+            if read(service,identifier)['cancelled']:break
+            if child['run_id'] and service.store.get_run(child['run_id']).status in ('pending','running'):
+                try:service.execute(child['run_id'])
+                except Exception:pass  # Graph persists the failure; continue the other cohorts.
+
+
+def router(service):
+    result=APIRouter(prefix='/regional/batches')
+    @result.post('',status_code=202)
+    def start(request:BatchRequest,background:BackgroundTasks):
+        try:
+            with service.lock('batch:'+str(request.request_id)):body=create(service,request)
+        except BatchConflict:raise HTTPException(409,'요청 키가 다른 선택에 사용되었거나 실행 모드가 다릅니다.')
+        except (ValueError,OSError):raise HTTPException(422,'집단 범위·자료·요청 키를 확인하세요.')
+        background.add_task(execute,service,body['id']);return public(service,body)
+    @result.get('/{identifier}')
+    def get(identifier:UUID):
+        try:return public(service,read(service,identifier))
+        except KeyError:raise HTTPException(404,'업무 없음')
+        except ValueError:raise HTTPException(409,'원래 실행 모드를 복원하세요.')
+    @result.post('/{identifier}/resume',status_code=202)
+    def resume(identifier:UUID,background:BackgroundTasks):
+        try:body=read(service,identifier)
+        except KeyError:raise HTTPException(404,'업무 없음')
+        except ValueError:raise HTTPException(409,'원래 실행 모드를 복원하세요.')
+        if body['cancelled']:raise HTTPException(409,'취소된 업무는 새 요청으로 실행하세요.')
+        background.add_task(execute,service,str(identifier));return public(service,body)
+    @result.post('/{identifier}/cancel')
+    def cancel(identifier:UUID):
+        try:read(service,identifier)
+        except KeyError:raise HTTPException(404,'업무 없음')
+        except ValueError:raise HTTPException(409,'원래 실행 모드를 복원하세요.')
+        with service.store.connection(write=True) as db:
+            row=db.execute('SELECT body FROM regional_batches WHERE id=?',(str(identifier),)).fetchone()
+            body=json.loads(row[0]);body['cancelled']=True
+            for child in body['children']:
+                if child['run_id']:
+                    run=db.execute('SELECT body FROM runs WHERE id=?',(child['run_id'],)).fetchone()
+                    if json.loads(run[0])['status']=='pending':service.update_run(db,child['run_id'],status='cancelled',ended_at=utcnow())
+            db.execute('UPDATE regional_batches SET body=? WHERE id=?',(json.dumps(body,ensure_ascii=False),str(identifier)))
+        return public(service,body)
+    return result
