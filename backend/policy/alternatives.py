@@ -103,7 +103,7 @@ def model_context(context):
     return view
 
 
-def generate(designer,owner_id,run_id,scope,dongs,proposals):
+def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
     results=[]
     for dong in sorted(dongs,key=lambda d:d['dong_cd']):
         with designer.store.connection() as db:
@@ -112,8 +112,8 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals):
             saved=db.execute('SELECT body FROM policy_alternative_sets WHERE owner_id=? AND dong_cd=?',(owner_id,dong['dong_cd'])).fetchone()
         if saved:
             results.append(json.loads(saved[0]));continue
-        context=context_for(dong,scope,proposals)
-        if any(r['value'] is not None for r in context['facts']):context=research(designer,owner_id,run_id,context)
+        context=deepcopy(contexts[dong['dong_cd']]) if contexts else context_for(dong,scope,proposals)
+        if not contexts and any(r['value'] is not None for r in context['facts']):context=research(designer,owner_id,run_id,context)
         reason=None;mode='llm' if designer.settings.llm_mode=='live' else 'fixture';item_modes={}
         if not any(r['value'] is not None and r['stage'] is not None for r in context['facts']):
             output=templates(context);mode='template_fallback';reason='regional_evidence_unavailable'
