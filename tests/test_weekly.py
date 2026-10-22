@@ -68,3 +68,25 @@ def test_ratio_and_baseline_corruption_is_rejected():
     for key in ('ratio','baseline'):
         rows=synthetic();rows[8]['metrics']['R1'][key]+=.001
         with pytest.raises(ValueError,match='ratio|baseline'):audit(rows)
+
+
+def test_all_selections_keep_base_stages_and_all_weekly_sources():
+    from backend.tools.region_stage import classify
+    from backend.tools.segments_v3 import load_segments
+    settings=Settings(_env_file=None,llm_mode='fake')
+    base=classify(load_segments(settings)[0])
+    for week,age in [('all','20s'),('2025-09-08','all'),('all','all')]:
+        result=group_analysis(settings,week,age)
+        assert [r['stage'] for r in result['segments']]==[r['stage'] for r in base['segments']]
+        assert [r['stage'] for r in result['dongs']]==[r['stage'] for r in base['dongs']]
+        assert not result['metadata']['card_signals_applied']
+        assert not any(r.get('weekly') for r in result['segments'])
+        assert {r['age_band'] for r in result['weekly']['rows']}=={'20s','30s'}
+        assert len(result['weekly']['weeks'])==23
+
+
+def test_combined_selection_rejects_unknown_week_and_age():
+    settings=Settings(_env_file=None,llm_mode='fake')
+    for week,age in [('invalid','all'),('all','40s')]:
+        with pytest.raises(ValueError,match='unknown weekly selection'):
+            group_analysis(settings,week,age)

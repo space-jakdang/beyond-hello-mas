@@ -7,7 +7,7 @@ export const colors=['#b8c3c0','#d7e9ed','#96c9cf','#eac767','#df884d','#b84446'
 const regionName=(code:string)=>code==='11230'?'강남구':code==='32010'?'춘천시':code;
 const stageName=(stage:number|null)=>stage===null?'결측':`${stage}단계`;
 
-export function MapView({data,dongs,segments,selected,onSelect}:{data:Pick<Analysis,'geometry'|'geography'>;dongs:Dong[];segments:Pick<Segment,'dong_cd'|'stage'>[];selected:string;onSelect:(id:string)=>void}){
+export function MapView({data,dongs,segments,selected,onSelect,summaries}:{summaries?:Record<string,{label:string;color:string}>;data:Pick<Analysis,'geometry'|'geography'>;dongs:Dong[];segments:Pick<Segment,'dong_cd'|'stage'>[];selected:string;onSelect:(id:string)=>void}){
   const [zoom,setZoom]=useState(1);
   const features=data.geometry.features.filter(f=>dongs.some(d=>d.dong_cd===f.properties.dong_cd));
   const polygons=(g:Geometry)=>g.type==='Polygon'?[g.coordinates]:g.coordinates;
@@ -29,7 +29,7 @@ export function MapView({data,dongs,segments,selected,onSelect}:{data:Pick<Analy
         const area=(r:number[][])=>Math.abs(r.reduce((sum,p,i)=>{const q=r[(i+1)%r.length];return sum+p[0]*q[1]-q[0]*p[1];},0));
         const ring=rings.reduce((a,b)=>area(a)>=area(b)?a:b);
         const center=project([(Math.min(...ring.map(p=>p[0]))+Math.max(...ring.map(p=>p[0])))/2,(Math.min(...ring.map(p=>p[1]))+Math.max(...ring.map(p=>p[1])))/2]);
-        return <g key={code}><path d={path} fill={colors[stage??0]} fillRule="evenodd" stroke={selected===code?'#142f36':'#fff'} strokeWidth={selected===code?3:1} vectorEffect="non-scaling-stroke" tabIndex={0} role="button" aria-label={`${f.properties.dong_nm} ${stageName(stage)}`} aria-pressed={selected===code} onClick={()=>onSelect(code)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(code);}}}><title>{f.properties.dong_nm} · {stageName(stage)}</title></path>{geographic&&<text className="map-label" x={center[0]} y={center[1]} textAnchor="middle">{f.properties.dong_nm}</text>}</g>;
+        return <g key={code}><path d={path} fill={summaries?.[code]?.color??colors[stage??0]} fillRule="evenodd" stroke={selected===code?'#142f36':'#fff'} strokeWidth={selected===code?3:1} vectorEffect="non-scaling-stroke" tabIndex={0} role="button" aria-label={`${f.properties.dong_nm} ${summaries?.[code]?.label??stageName(stage)}`} aria-pressed={selected===code} onClick={()=>onSelect(code)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(code);}}}><title>{f.properties.dong_nm} · {summaries?.[code]?.label??stageName(stage)}</title></path>{geographic&&<text className="map-label" x={center[0]} y={center[1]} textAnchor="middle">{f.properties.dong_nm}</text>}</g>;
       })}
     </svg></div></>;
 }
