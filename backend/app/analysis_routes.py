@@ -17,4 +17,16 @@ def analysis_router(settings):
         try:return group_analysis(settings,week.isoformat() if isinstance(week,date) else week,card_age)
         except (OSError,ValueError,KeyError,TypeError):
             raise HTTPException(503,'집단 분석 입력이 없거나 유효하지 않습니다. v3 자료 반입을 확인하세요.')
+    @router.get('/analysis/statistical-sources')
+    def statistical_sources():
+        from backend.tools.statistical_sources import readiness
+        from backend.tools.segments_v3 import load_segments
+        from backend.tools.region_stage import classify
+        try:
+            rows,source=load_segments(settings)
+            assessment=classify([r for r in rows if r.preferred])
+            assessment['data_mode']=settings.data_mode
+            return readiness(assessment)
+        except (OSError,ValueError,KeyError,TypeError):
+            raise HTTPException(503,'통계 원천 자료를 확인할 수 없습니다.')
     return router

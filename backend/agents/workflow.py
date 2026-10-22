@@ -46,6 +46,10 @@ def model_observations(items):
 
 
 def model_summary(summary):
+    summary=dict(summary)
+    if 'data_readiness' in summary:
+        source=summary['data_readiness']
+        summary['data_readiness']={**source,'cohorts':[{k:v for k,v in c.items() if k not in ('population_context','source_files')} for c in source['cohorts']]}
     needs=summary.get('policy_needs')
     return {**summary,'policy_needs':{k:v for k,v in needs.items() if k!='profiles'}} if needs else summary
 
