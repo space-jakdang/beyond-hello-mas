@@ -1,0 +1,1441 @@
+{
+  "schema_version": "2",
+  "id": "1d0b569d-1db3-49c7-ab67-03513938bc80",
+  "created_at": "2026-10-18T15:29:21.713321+00:00",
+  "data_mode": "sample",
+  "llm_mode": "fake",
+  "status": "executed_protocol",
+  "evaluated_scenarios": 60,
+  "metrics": {
+    "question_routing": {
+      "numerator": 10,
+      "denominator": 10,
+      "value": 1.0
+    },
+    "path_accuracy": {
+      "numerator": 60,
+      "denominator": 60,
+      "value": 1.0
+    },
+    "protocol_stage_accuracy": {
+      "numerator": 24,
+      "denominator": 24,
+      "value": 1.0
+    },
+    "clinical_person_stage_accuracy": {
+      "numerator": 0,
+      "denominator": 0,
+      "value": null
+    },
+    "llm_response_extraction_accuracy": {
+      "numerator": 0,
+      "denominator": 0,
+      "value": null
+    },
+    "youth_regional_rule_agreement": {
+      "numerator": 564,
+      "denominator": 564,
+      "value": 1.0
+    },
+    "provided_stage_preservation": {
+      "numerator": 1692,
+      "denominator": 1692,
+      "value": 1.0
+    },
+    "regional_rule_agreement": {
+      "numerator": 2256,
+      "denominator": 2256,
+      "value": 1.0
+    },
+    "regional_cardinality_errors": 0,
+    "high_stage_handoff": {
+      "numerator": 8,
+      "denominator": 8,
+      "value": 1.0
+    },
+    "fixed_phrase_crisis_recall": {
+      "numerator": 6,
+      "denominator": 6,
+      "value": 1.0
+    },
+    "fixed_phrase_false_positive": {
+      "numerator": 0,
+      "denominator": 2,
+      "value": 0.0
+    },
+    "outside_catalog_recommendations": 0,
+    "intervention_suitability_review": {
+      "numerator": 0,
+      "denominator": 0,
+      "value": null
+    },
+    "cost": {
+      "known_usd": 0,
+      "basis": "fake only; no provider calls"
+    },
+    "execution_latency": {
+      "p50_ms": 322.0879579967004,
+      "p95_ms": 354.97337500419235,
+      "definition": "in-process execution including MCP; not browser receipt latency"
+    }
+  },
+  "results": [
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S1-7",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": "6af8b0c07242c5f090903a4904814b4013ef7953c88fb10690bdc7bd9f769d88",
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03",
+        "synthetic-04",
+        "synthetic-05",
+        "synthetic-06",
+        "synthetic-07"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S1-8",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": "603610180fd7fdff69fef1f7042cf17f7a935942a6c150e2fe5195abf9edff87",
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03",
+        "synthetic-04",
+        "synthetic-05",
+        "synthetic-06",
+        "synthetic-07"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S1-9",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": "a921bbd5199b574e0c7de73d684e9209bcdfd66dd8c27dd84d1a026a2ed6a0f9",
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03",
+        "synthetic-04",
+        "synthetic-05",
+        "synthetic-06",
+        "synthetic-07"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S1-10",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": "83a4bfd660eb31330ca496780cfc614f0d87943e8c9ad2c5cdf53bebe4d49cd9",
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03",
+        "synthetic-04",
+        "synthetic-05",
+        "synthetic-06",
+        "synthetic-07"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S1-11",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": "0a144b1cb4c2627baf8d56a61e6f926a9f6d66da61537605341fbd158171fe1f",
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03",
+        "synthetic-04",
+        "synthetic-05",
+        "synthetic-06",
+        "synthetic-07"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S1-12",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": "f90bc57b9ad54b05ee41413c46ed71c12c9037d5085b6407aa4500115f31d864",
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03",
+        "synthetic-04",
+        "synthetic-05",
+        "synthetic-06",
+        "synthetic-07"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-youth-1",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 1,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-youth-2",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 2,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-youth-3",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 3,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-youth-4",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 4,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": true,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-youth-5",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 5,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": true,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-youth-care",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 2,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-youth-0",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-youth-1",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-youth-2",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-midlife-1",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 1,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-midlife-2",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 2,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-midlife-3",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 3,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": true,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-midlife-4",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 4,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": true,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-midlife-5",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 5,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": true,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-midlife-care",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 2,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-midlife-0",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-midlife-1",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-midlife-2",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-prime-1",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 1,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-prime-2",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 2,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-prime-3",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 3,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": true,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-prime-4",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 4,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": true,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-prime-5",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 5,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": true,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-prime-care",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 2,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-prime-0",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-prime-1",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-prime-2",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-elderly-1",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 1,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-elderly-2",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 2,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-elderly-3",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 3,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-elderly-4",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 4,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": true,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-elderly-5",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 5,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": true,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S2-elderly-care",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": 2,
+      "protocol_stage_correct": true,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": [
+        "synthetic-01",
+        "synthetic-02",
+        "synthetic-03"
+      ]
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-elderly-0",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-elderly-1",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S5-elderly-2",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S3-0",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": true,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S3-1",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": true,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S3-2",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": true,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S3-3",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": true,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S3-4",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": true,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S3-5",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": true,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S3-6",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": null,
+      "route_correct": null,
+      "scenario_id": "S3-7",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": "history",
+      "route_correct": true,
+      "scenario_id": "S4-0",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": "history",
+      "route_correct": true,
+      "scenario_id": "S4-1",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": "classify",
+      "route_correct": true,
+      "scenario_id": "S4-2",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": "classify",
+      "route_correct": true,
+      "scenario_id": "S4-3",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": "match",
+      "route_correct": true,
+      "scenario_id": "S4-4",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": "match",
+      "route_correct": true,
+      "scenario_id": "S4-5",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": "human",
+      "route_correct": true,
+      "scenario_id": "S4-6",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": "human",
+      "route_correct": true,
+      "scenario_id": "S4-7",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": "link",
+      "route_correct": true,
+      "scenario_id": "S4-8",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    },
+    {
+      "route": "link",
+      "route_correct": true,
+      "scenario_id": "S4-9",
+      "status": "completed",
+      "error": null,
+      "path": [
+        "supervisor",
+        "classify",
+        "match",
+        "approval",
+        "link"
+      ],
+      "path_correct": true,
+      "receipt_ms": null,
+      "protocol_stage": null,
+      "protocol_stage_correct": null,
+      "regional_stage_hash": null,
+      "handoff": false,
+      "crisis": false,
+      "recommendations": []
+    }
+  ],
+  "stage_reproducibility": {
+    "repetitions": 2,
+    "identical": true,
+    "hashes": [
+      "90a87edd6b5372b5266bb4ccdf9db455bd3e19bc6886b30c3159169b6dbb4cae",
+      "90a87edd6b5372b5266bb4ccdf9db455bd3e19bc6886b30c3159169b6dbb4cae"
+    ]
+  },
+  "uncompleted": [],
+  "metadata": {
+    "suite": "synthetic-protocol-2",
+    "input_hash": "cf3e60cb531a34520f725c95b7ae922be9cf5070b2fd67865256a190a9188ea5",
+    "label_hash": "fad9f5af43913016cf072c61bf6fad378ea2e3f083e0fc3086ddabea86281307",
+    "git_commit": "4402b2949458f19103385e8211e6573adff4ae15",
+    "path_definition": "ordered node_end trace events; question output is tool_result and route is evaluated separately",
+    "oracle": "independent regional decision table",
+    "result_hash": "90a87edd6b5372b5266bb4ccdf9db455bd3e19bc6886b30c3159169b6dbb4cae",
+    "code_hash": "4b37b042aaa1ef41025cf5bcb31820a3cb96dcc3a89c7e1a1473d2b4838fdbc5",
+    "code_dirty": false
+  },
+  "limitations": [
+    "개인 단계는 합성 MCP 계약 fixture이며 실제 판정 정확도가 아닙니다.",
+    "비청년 지역 단계는 제공 단계 보존, 청년은 별도 결정표 일치 검사입니다.",
+    "새 문항·실제 MCP v0.2·LLM 응답 추출 미검증.",
+    "고정 위기 표현 6양성/2음성 결과이며 일반 자연어 탐지 성능이 아닙니다.",
+    "자격·개입 적합성 전문가 검수 및 브라우저 수신 지연은 미평가."
+  ]
+}

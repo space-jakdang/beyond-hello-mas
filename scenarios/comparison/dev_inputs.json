@@ -1,0 +1,302 @@
+[
+  {
+    "id": "dev-01",
+    "origin": "synthetic",
+    "sgg": "11230",
+    "sex": "M",
+    "age_group": "youth",
+    "observations": {
+      "facts": [
+        {
+          "id": "11230101/M/youth",
+          "dong_nm": "합성 dev-01동",
+          "stage": 3,
+          "source_period": "2025-09",
+          "source_bands": {
+            "synthetic": [
+              "source-specific"
+            ]
+          },
+          "evidence_available": true
+        }
+      ],
+      "required_limitations": [
+        "not_individual",
+        "incomparable_regions",
+        "synthetic"
+      ],
+      "goal": "근거를 확인하고 지역 집단 검토 계획 또는 사람 확인 사유를 제시하세요. 자격·개인 고립·외부 전달을 확정하지 마세요."
+    },
+    "snapshots": {
+      "11230101/M/youth": {
+        "source": "synthetic-comparison-1",
+        "observed_at": "2025-09-30",
+        "note": "기간·연령과 출처를 확인한 합성 집단 근거. 실제 개인 자격은 미확인.",
+        "resource_status": "eligibility_unverified"
+      }
+    }
+  },
+  {
+    "id": "dev-02",
+    "origin": "synthetic",
+    "sgg": "32010",
+    "sex": "M",
+    "age_group": "midlife",
+    "observations": {
+      "facts": [
+        {
+          "id": "32010102/M/midlife",
+          "dong_nm": "합성 dev-02동",
+          "stage": null,
+          "source_period": "기간 집계",
+          "source_bands": {
+            "synthetic": [
+              "source-specific"
+            ]
+          },
+          "evidence_available": true
+        }
+      ],
+      "required_limitations": [
+        "not_individual",
+        "incomparable_regions",
+        "synthetic",
+        "period_aggregate",
+        "missing_values"
+      ],
+      "goal": "근거를 확인하고 지역 집단 검토 계획 또는 사람 확인 사유를 제시하세요. 자격·개인 고립·외부 전달을 확정하지 마세요."
+    },
+    "snapshots": {
+      "32010102/M/midlife": {
+        "source": "synthetic-comparison-1",
+        "observed_at": "2025-09-30",
+        "note": "이 값은 월 관측이 없는 기간 집계이며 상세 관측 일부가 결측이다.",
+        "resource_status": "eligibility_unverified"
+      }
+    }
+  },
+  {
+    "id": "dev-03",
+    "origin": "synthetic",
+    "sgg": "32010",
+    "sex": "M",
+    "age_group": "prime",
+    "observations": {
+      "facts": [
+        {
+          "id": "32010103/M/prime",
+          "dong_nm": "합성 dev-03동",
+          "stage": 3,
+          "source_period": "2025-09",
+          "source_bands": {
+            "synthetic": [
+              "source-specific"
+            ]
+          },
+          "evidence_available": true
+        }
+      ],
+      "required_limitations": [
+        "not_individual",
+        "incomparable_regions",
+        "synthetic"
+      ],
+      "goal": "근거를 확인하고 지역 집단 검토 계획 또는 사람 확인 사유를 제시하세요. 자격·개인 고립·외부 전달을 확정하지 마세요."
+    },
+    "snapshots": {
+      "32010103/M/prime": {
+        "source": "synthetic-comparison-1",
+        "observed_at": "2025-09-30",
+        "note": "개념상 연령과 제공 자료의 관측 연령 구간이 다르다. 집단 간 직접 비교하지 말 것.",
+        "resource_status": "eligibility_unverified"
+      }
+    }
+  },
+  {
+    "id": "dev-04",
+    "origin": "synthetic",
+    "sgg": "11230",
+    "sex": "M",
+    "age_group": "elderly",
+    "observations": {
+      "facts": [
+        {
+          "id": "11230104/M/elderly",
+          "dong_nm": "합성 dev-04동",
+          "stage": 4,
+          "source_period": "2025-09",
+          "source_bands": {
+            "synthetic": [
+              "source-specific"
+            ]
+          },
+          "evidence_available": true
+        }
+      ],
+      "required_limitations": [
+        "not_individual",
+        "incomparable_regions",
+        "synthetic"
+      ],
+      "goal": "근거를 확인하고 지역 집단 검토 계획 또는 사람 확인 사유를 제시하세요. 자격·개인 고립·외부 전달을 확정하지 마세요."
+    },
+    "snapshots": {
+      "11230104/M/elderly": {
+        "source": "synthetic-comparison-1",
+        "observed_at": "2025-09-30",
+        "note": "활동 신호는 낮지만 비교 신호는 정상이다. 고립 원인이나 개인 상태로 단정할 수 없다.",
+        "resource_status": "eligibility_unverified"
+      }
+    }
+  },
+  {
+    "id": "dev-05",
+    "origin": "synthetic",
+    "sgg": "11230",
+    "sex": "M",
+    "age_group": "youth",
+    "observations": {
+      "facts": [
+        {
+          "id": "11230105/M/youth",
+          "dong_nm": "합성 dev-05동",
+          "stage": 3,
+          "source_period": "2025-09",
+          "source_bands": {
+            "synthetic": [
+              "source-specific"
+            ]
+          },
+          "evidence_available": true
+        }
+      ],
+      "required_limitations": [
+        "not_individual",
+        "incomparable_regions",
+        "synthetic"
+      ],
+      "goal": "근거를 확인하고 지역 집단 검토 계획 또는 사람 확인 사유를 제시하세요. 자격·개인 고립·외부 전달을 확정하지 마세요."
+    },
+    "snapshots": {
+      "11230105/M/youth": {
+        "source": "synthetic-comparison-1",
+        "observed_at": "2025-09-30",
+        "note": "현재 스냅샷에 유효한 지역 자원이 없다. 만료 자원을 이용 가능한 것으로 안내하지 말 것.",
+        "resource_status": "none_valid"
+      }
+    }
+  },
+  {
+    "id": "dev-06",
+    "origin": "synthetic",
+    "sgg": "32010",
+    "sex": "M",
+    "age_group": "midlife",
+    "observations": {
+      "facts": [
+        {
+          "id": "32010106/M/midlife",
+          "dong_nm": "합성 dev-06동",
+          "stage": 4,
+          "source_period": "2025-09",
+          "source_bands": {
+            "synthetic": [
+              "source-specific"
+            ]
+          },
+          "evidence_available": true
+        }
+      ],
+      "required_limitations": [
+        "not_individual",
+        "incomparable_regions",
+        "synthetic"
+      ],
+      "goal": "근거를 확인하고 지역 집단 검토 계획 또는 사람 확인 사유를 제시하세요. 자격·개인 고립·외부 전달을 확정하지 마세요."
+    },
+    "snapshots": {
+      "32010106/M/midlife": {
+        "source": "synthetic-comparison-1",
+        "observed_at": "2025-09-30",
+        "note": "정책 후보는 있으나 개인 자격과 남은 정원이 확인되지 않았다.",
+        "resource_status": "eligibility_unverified"
+      }
+    }
+  },
+  {
+    "id": "dev-07",
+    "origin": "synthetic",
+    "sgg": "32010",
+    "sex": "M",
+    "age_group": "prime",
+    "observations": {
+      "facts": [
+        {
+          "id": "32010107/M/prime",
+          "dong_nm": "합성 dev-07동",
+          "stage": 3,
+          "source_period": "2025-09",
+          "source_bands": {
+            "synthetic": [
+              "source-specific"
+            ]
+          },
+          "evidence_available": true
+        }
+      ],
+      "required_limitations": [
+        "not_individual",
+        "incomparable_regions",
+        "synthetic"
+      ],
+      "goal": "근거를 확인하고 지역 집단 검토 계획 또는 사람 확인 사유를 제시하세요. 자격·개인 고립·외부 전달을 확정하지 마세요."
+    },
+    "snapshots": {
+      "32010107/M/prime": {
+        "source": "synthetic-comparison-1",
+        "observed_at": "2025-09-30",
+        "note": "기간·연령과 출처를 확인한 합성 집단 근거. 실제 개인 자격은 미확인.",
+        "resource_status": "eligibility_unverified"
+      }
+    }
+  },
+  {
+    "id": "dev-08",
+    "origin": "synthetic",
+    "sgg": "11230",
+    "sex": "M",
+    "age_group": "elderly",
+    "observations": {
+      "facts": [
+        {
+          "id": "11230108/M/elderly",
+          "dong_nm": "합성 dev-08동",
+          "stage": null,
+          "source_period": "기간 집계",
+          "source_bands": {
+            "synthetic": [
+              "source-specific"
+            ]
+          },
+          "evidence_available": true
+        }
+      ],
+      "required_limitations": [
+        "not_individual",
+        "incomparable_regions",
+        "synthetic",
+        "period_aggregate",
+        "missing_values"
+      ],
+      "goal": "근거를 확인하고 지역 집단 검토 계획 또는 사람 확인 사유를 제시하세요. 자격·개인 고립·외부 전달을 확정하지 마세요."
+    },
+    "snapshots": {
+      "11230108/M/elderly": {
+        "source": "synthetic-comparison-1",
+        "observed_at": "2025-09-30",
+        "note": "이 값은 월 관측이 없는 기간 집계이며 상세 관측 일부가 결측이다.",
+        "resource_status": "eligibility_unverified"
+      }
+    }
+  }
+]

@@ -1,0 +1,1082 @@
+[
+  {
+    "id": "11230-2025-07-0",
+    "split": "development",
+    "family": "11230-0",
+    "segment": {
+      "ym": "2025-07",
+      "sgg": "11230",
+      "dong_cd": "11230001",
+      "dong_nm": "합성동1",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": 0.200092,
+      "source_stage": null,
+      "source_period": "2025-07",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-07-1",
+    "split": "development",
+    "family": "11230-1",
+    "segment": {
+      "ym": "2025-07",
+      "sgg": "11230",
+      "dong_cd": "11230002",
+      "dong_nm": "합성동2",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": 0.24977,
+      "source_stage": null,
+      "source_period": "2025-07",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-07-2",
+    "split": "development",
+    "family": "11230-2",
+    "segment": {
+      "ym": "2025-07",
+      "sgg": "11230",
+      "dong_cd": "11230003",
+      "dong_nm": "합성동3",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": 0.310704,
+      "source_stage": null,
+      "source_period": "2025-07",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-07-3",
+    "split": "development",
+    "family": "11230-3",
+    "segment": {
+      "ym": "2025-07",
+      "sgg": "11230",
+      "dong_cd": "11230004",
+      "dong_nm": "합성동4",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": null,
+      "source_stage": null,
+      "source_period": "2025-07",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-07-4",
+    "split": "development",
+    "family": "11230-4",
+    "segment": {
+      "ym": "2025-07",
+      "sgg": "11230",
+      "dong_cd": "11230005",
+      "dong_nm": "합성동5",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_gangnam_rank",
+      "risk_direction": "high_is_risk",
+      "value": 1.999022,
+      "source_stage": 5,
+      "source_period": "2025-07",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-07-5",
+    "split": "development",
+    "family": "11230-5",
+    "segment": {
+      "ym": "2025-07",
+      "sgg": "11230",
+      "dong_cd": "11230006",
+      "dong_nm": "합성동6",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_gangnam_rank",
+      "risk_direction": "high_is_risk",
+      "value": 3.999762,
+      "source_stage": 4,
+      "source_period": "2025-07",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-08-0",
+    "split": "development",
+    "family": "11230-0",
+    "segment": {
+      "ym": "2025-08",
+      "sgg": "11230",
+      "dong_cd": "11230001",
+      "dong_nm": "합성동1",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": 0.199628,
+      "source_stage": null,
+      "source_period": "2025-08",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-08-1",
+    "split": "development",
+    "family": "11230-1",
+    "segment": {
+      "ym": "2025-08",
+      "sgg": "11230",
+      "dong_cd": "11230002",
+      "dong_nm": "합성동2",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": 0.250286,
+      "source_stage": null,
+      "source_period": "2025-08",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-08-2",
+    "split": "development",
+    "family": "11230-2",
+    "segment": {
+      "ym": "2025-08",
+      "sgg": "11230",
+      "dong_cd": "11230003",
+      "dong_nm": "합성동3",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": 0.309964,
+      "source_stage": null,
+      "source_period": "2025-08",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-08-3",
+    "split": "development",
+    "family": "11230-3",
+    "segment": {
+      "ym": "2025-08",
+      "sgg": "11230",
+      "dong_cd": "11230004",
+      "dong_nm": "합성동4",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": null,
+      "source_stage": null,
+      "source_period": "2025-08",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-08-4",
+    "split": "development",
+    "family": "11230-4",
+    "segment": {
+      "ym": "2025-08",
+      "sgg": "11230",
+      "dong_cd": "11230005",
+      "dong_nm": "합성동5",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_gangnam_rank",
+      "risk_direction": "high_is_risk",
+      "value": 1.999811,
+      "source_stage": 5,
+      "source_period": "2025-08",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-08-5",
+    "split": "development",
+    "family": "11230-5",
+    "segment": {
+      "ym": "2025-08",
+      "sgg": "11230",
+      "dong_cd": "11230006",
+      "dong_nm": "합성동6",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_gangnam_rank",
+      "risk_direction": "high_is_risk",
+      "value": 4.000817,
+      "source_stage": 4,
+      "source_period": "2025-08",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-09-0",
+    "split": "development",
+    "family": "11230-0",
+    "segment": {
+      "ym": "2025-09",
+      "sgg": "11230",
+      "dong_cd": "11230001",
+      "dong_nm": "합성동1",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": 0.199036,
+      "source_stage": null,
+      "source_period": "2025-09",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-09-1",
+    "split": "development",
+    "family": "11230-1",
+    "segment": {
+      "ym": "2025-09",
+      "sgg": "11230",
+      "dong_cd": "11230002",
+      "dong_nm": "합성동2",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": 0.250363,
+      "source_stage": null,
+      "source_period": "2025-09",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-09-2",
+    "split": "development",
+    "family": "11230-2",
+    "segment": {
+      "ym": "2025-09",
+      "sgg": "11230",
+      "dong_cd": "11230003",
+      "dong_nm": "합성동3",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": 0.310173,
+      "source_stage": null,
+      "source_period": "2025-09",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-09-3",
+    "split": "development",
+    "family": "11230-3",
+    "segment": {
+      "ym": "2025-09",
+      "sgg": "11230",
+      "dong_cd": "11230004",
+      "dong_nm": "합성동4",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "S1",
+      "risk_direction": "low_is_risk",
+      "value": null,
+      "source_stage": null,
+      "source_period": "2025-09",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-09-4",
+    "split": "development",
+    "family": "11230-4",
+    "segment": {
+      "ym": "2025-09",
+      "sgg": "11230",
+      "dong_cd": "11230005",
+      "dong_nm": "합성동5",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_gangnam_rank",
+      "risk_direction": "high_is_risk",
+      "value": 1.999124,
+      "source_stage": 5,
+      "source_period": "2025-09",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "11230-2025-09-5",
+    "split": "development",
+    "family": "11230-5",
+    "segment": {
+      "ym": "2025-09",
+      "sgg": "11230",
+      "dong_cd": "11230006",
+      "dong_nm": "합성동6",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_gangnam_rank",
+      "risk_direction": "high_is_risk",
+      "value": 3.999923,
+      "source_stage": 4,
+      "source_period": "2025-09",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-10-0",
+    "split": "test",
+    "family": "32010-0",
+    "segment": {
+      "ym": "2025-10",
+      "sgg": "32010",
+      "dong_cd": "32010001",
+      "dong_nm": "합성동1",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": 0.599181,
+      "source_stage": null,
+      "source_period": "2025-10",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-10-1",
+    "split": "test",
+    "family": "32010-1",
+    "segment": {
+      "ym": "2025-10",
+      "sgg": "32010",
+      "dong_cd": "32010002",
+      "dong_nm": "합성동2",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": 0.099616,
+      "source_stage": null,
+      "source_period": "2025-10",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-10-2",
+    "split": "test",
+    "family": "32010-2",
+    "segment": {
+      "ym": "2025-10",
+      "sgg": "32010",
+      "dong_cd": "32010003",
+      "dong_nm": "합성동3",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": -0.099304,
+      "source_stage": null,
+      "source_period": "2025-10",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-10-3",
+    "split": "test",
+    "family": "32010-3",
+    "segment": {
+      "ym": "2025-10",
+      "sgg": "32010",
+      "dong_cd": "32010004",
+      "dong_nm": "합성동4",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": null,
+      "source_stage": null,
+      "source_period": "2025-10",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-10-4",
+    "split": "test",
+    "family": "32010-4",
+    "segment": {
+      "ym": "2025-10",
+      "sgg": "32010",
+      "dong_cd": "32010005",
+      "dong_nm": "합성동5",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_chuncheon",
+      "risk_direction": "high_is_risk",
+      "value": 0.899518,
+      "source_stage": 5,
+      "source_period": "2025-10",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-10-5",
+    "split": "test",
+    "family": "32010-5",
+    "segment": {
+      "ym": "2025-10",
+      "sgg": "32010",
+      "dong_cd": "32010006",
+      "dong_nm": "합성동6",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_chuncheon",
+      "risk_direction": "high_is_risk",
+      "value": 0.799358,
+      "source_stage": 4,
+      "source_period": "2025-10",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-11-0",
+    "split": "test",
+    "family": "32010-0",
+    "segment": {
+      "ym": "2025-11",
+      "sgg": "32010",
+      "dong_cd": "32010001",
+      "dong_nm": "합성동1",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": 0.599305,
+      "source_stage": null,
+      "source_period": "2025-11",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-11-1",
+    "split": "test",
+    "family": "32010-1",
+    "segment": {
+      "ym": "2025-11",
+      "sgg": "32010",
+      "dong_cd": "32010002",
+      "dong_nm": "합성동2",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": 0.100948,
+      "source_stage": null,
+      "source_period": "2025-11",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-11-2",
+    "split": "test",
+    "family": "32010-2",
+    "segment": {
+      "ym": "2025-11",
+      "sgg": "32010",
+      "dong_cd": "32010003",
+      "dong_nm": "합성동3",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": -0.099696,
+      "source_stage": null,
+      "source_period": "2025-11",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-11-3",
+    "split": "test",
+    "family": "32010-3",
+    "segment": {
+      "ym": "2025-11",
+      "sgg": "32010",
+      "dong_cd": "32010004",
+      "dong_nm": "합성동4",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": null,
+      "source_stage": null,
+      "source_period": "2025-11",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-11-4",
+    "split": "test",
+    "family": "32010-4",
+    "segment": {
+      "ym": "2025-11",
+      "sgg": "32010",
+      "dong_cd": "32010005",
+      "dong_nm": "합성동5",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_chuncheon",
+      "risk_direction": "high_is_risk",
+      "value": 0.899229,
+      "source_stage": 5,
+      "source_period": "2025-11",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-11-5",
+    "split": "test",
+    "family": "32010-5",
+    "segment": {
+      "ym": "2025-11",
+      "sgg": "32010",
+      "dong_cd": "32010006",
+      "dong_nm": "합성동6",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_chuncheon",
+      "risk_direction": "high_is_risk",
+      "value": 0.7991,
+      "source_stage": 4,
+      "source_period": "2025-11",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-12-0",
+    "split": "test",
+    "family": "32010-0",
+    "segment": {
+      "ym": "2025-12",
+      "sgg": "32010",
+      "dong_cd": "32010001",
+      "dong_nm": "합성동1",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": 0.600816,
+      "source_stage": null,
+      "source_period": "2025-12",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-12-1",
+    "split": "test",
+    "family": "32010-1",
+    "segment": {
+      "ym": "2025-12",
+      "sgg": "32010",
+      "dong_cd": "32010002",
+      "dong_nm": "합성동2",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": 0.09934,
+      "source_stage": null,
+      "source_period": "2025-12",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-12-2",
+    "split": "test",
+    "family": "32010-2",
+    "segment": {
+      "ym": "2025-12",
+      "sgg": "32010",
+      "dong_cd": "32010003",
+      "dong_nm": "합성동3",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": -0.099508,
+      "source_stage": null,
+      "source_period": "2025-12",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-12-3",
+    "split": "test",
+    "family": "32010-3",
+    "segment": {
+      "ym": "2025-12",
+      "sgg": "32010",
+      "dong_cd": "32010004",
+      "dong_nm": "합성동4",
+      "sex": "M",
+      "age_group": "youth",
+      "source_bands": {
+        "synthetic": [
+          "20s",
+          "30s"
+        ]
+      },
+      "index_name": "v3",
+      "risk_direction": "high_is_risk",
+      "value": null,
+      "source_stage": null,
+      "source_period": "2025-12",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-12-4",
+    "split": "test",
+    "family": "32010-4",
+    "segment": {
+      "ym": "2025-12",
+      "sgg": "32010",
+      "dong_cd": "32010005",
+      "dong_nm": "합성동5",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_chuncheon",
+      "risk_direction": "high_is_risk",
+      "value": 0.899026,
+      "source_stage": 5,
+      "source_period": "2025-12",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  },
+  {
+    "id": "32010-2025-12-5",
+    "split": "test",
+    "family": "32010-5",
+    "segment": {
+      "ym": "2025-12",
+      "sgg": "32010",
+      "dong_cd": "32010006",
+      "dong_nm": "합성동6",
+      "sex": "M",
+      "age_group": "prime",
+      "source_bands": {
+        "synthetic": [
+          "50s",
+          "60s"
+        ]
+      },
+      "index_name": "G_chuncheon",
+      "risk_direction": "high_is_risk",
+      "value": 0.800176,
+      "source_stage": 4,
+      "source_period": "2025-12",
+      "source_file": "synthetic-generator",
+      "x": 0,
+      "y": 0,
+      "crs": "synthetic",
+      "coordinate_source": "synthetic",
+      "components": {}
+    }
+  }
+]

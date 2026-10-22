@@ -1,0 +1,1275 @@
+{
+  "source": "Seohee delivery MANIFEST.csv and MAS README, 2026-10-18",
+  "files": [
+    {
+      "path": "01_결과데이터/all_age_card_groups.csv",
+      "sha256": "39ee73d50aa1a14af97bfb242c6df8949bd89c18f2e4df399481b312c1edaa22",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "01_결과데이터/all_age_telecom_dong_4groups.csv",
+      "sha256": "a01b3eaecb512e26b8abbf52844b9ba0532493649ef4b91f4b25474c0196f4a4",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/all_age_telecom_groups.csv",
+      "sha256": "7721b0ba676254a7a7957d9d274501dc3ade1f42c47a295bba266e7365f5feca",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/all_age_truth.csv",
+      "sha256": "b8adba0e8cd9091ba74217d9ee2bda9bcd3f791f37149727852303b5709c9aeb",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/area_more_dong.csv",
+      "sha256": "aa877754d36f06992bd9f15e134569c80a6651eb99071ed06e46e34703cce59e",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/card_youth_patterns.csv",
+      "sha256": "9457e759378f08f1af08a66d84b9b798a63e53455a78e1150b972868e69dff9b",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "01_결과데이터/chuncheon_age40s_202512.csv",
+      "sha256": "5500e33f52fae7bf243a64aef29b87409dbefd95e780a89818970773882b87cf",
+      "permission": "공개 가능 (출처 표기)"
+    },
+    {
+      "path": "01_결과데이터/chuncheon_emd_base.csv",
+      "sha256": "b0db0f4f69eea157d2aaaf1ccaa49671f8223e830aa5e64d17eca6a4ad3127f0",
+      "permission": "공개 가능 (출처 표기)"
+    },
+    {
+      "path": "01_결과데이터/chuncheon_youth_risk_conditions.csv",
+      "sha256": "6cff70d205b4edd648e0b3867963d6de33c7e82030920dde05108f28b09a9530",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/chuncheon_youth_risk_v2.csv",
+      "sha256": "87c50ba244c4215872740b09a9198e45c412a9f484d4fd6d96cfb3ff9b75e086",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/chuncheon_youth_risk_v3.csv",
+      "sha256": "91862da913eefd2cb8b6091ff76cc36463fb339103cf2f64a38c901af99e061a",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/d1_apps_dong.csv",
+      "sha256": "f67bf0db6590daf062f6944ecfacade42819b2f8544bf8f679652e5f74f40e89",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/d2_mobility_dong.csv",
+      "sha256": "8f659a3d046ea58271c781bdf6d572d283d367713e0ecc5f227ff3a9084e6a88",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "01_결과데이터/elderly_dong_index_seoul_v2.csv",
+      "sha256": "36c6e4853eac8ea39e2730ddc140f02e0f501a95a6d8785bc0edea825304bb62",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/gangnam_telecom_2025.csv",
+      "sha256": "c0652fbb5f4bb83b3596ec58ac42bc6682840102cc86b87cd27d81cc20a1dbac",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/gangnam_within_rank.csv",
+      "sha256": "b4edebf0c5ef9e0f31da72a1f0abaddabe8e598aa2ac2fa795fb400a84f384c1",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/gangnam_youth_isolation_202512.csv",
+      "sha256": "3571a115a78f1fc6189c38850bd32dbb7083c7a68b120c8204926cc9ca71704b",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/generation_visibility_gap.csv",
+      "sha256": "4c83dd118cefa57720851e6b0689d206b5f095e12153ab5d06e59061df5badc3",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "01_결과데이터/group_dong_index_chuncheon.csv",
+      "sha256": "51301889afe8ea1685caf62badda325d6dbaa4f42ece7a13b0b1a738e747d462",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "01_결과데이터/group_dong_index_seoul.csv",
+      "sha256": "754a93a134abc159fd7c239d06b30801b95a595a4f44281a57d31987303d9ae2",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/isolation_workbench.html",
+      "sha256": "fe67d866c0fe467ade89e3bbbdf3a469b7b2f5a244651840f59f2cab02080669",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/koweps_youth_loneliness_by_condition.csv",
+      "sha256": "e49fb73bed43a45a33ce1ea6cfa5e8e8ac012964ab5bb81e303d9df075fb613c",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/p_public_chuncheon.csv",
+      "sha256": "7ea90f6679c2dac5272b28c67b3abce4de74470a69c0b47d353e3887e4656e5c",
+      "permission": "공개 가능 (출처 표기)"
+    },
+    {
+      "path": "01_결과데이터/p_public_seoul_dong.csv",
+      "sha256": "03ae59f93f01ef8d67a29c899953489a072b77e04ef7e6745dba274da2dbfd6b",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/r1_social.csv",
+      "sha256": "95d3ebe38322e65fb9ec0a9caec3397e3d41c0c9b06e7f3a9bdb0c5fa9300bb8",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "01_결과데이터/seoul_dong_arrears.csv",
+      "sha256": "44bcfe8eff9d09008f9f477ed305af6b15a36c97b6d8a5d30a0fd1dbd8a59b45",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/seoul_youth_isolation_adjusted.csv",
+      "sha256": "6d8e3869438202e2b1eb2e07a7e8deb3edabb05c6a6005fdd20c048ee93cd550",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/seoul_youth_isolation_index_202512.csv",
+      "sha256": "29fcbabc78edec4cbffee42f34007e4f2bc229b4a63bd32ac5e18b20de73f499",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "01_결과데이터/social_integration_youth_loneliness_trend.csv",
+      "sha256": "ea27499ecc7cfd1bbfc7262d36eac52d26e51da21bf78004e736e3189ca28ac4",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/stage_ladder.csv",
+      "sha256": "a5c53024af9ba6fb094006473415150ff60fe84d220fd8cf64e09fe62d2df897",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/t1_evening_weekend.csv",
+      "sha256": "90b663a3867c37bd512ef45b1a667f796e888dbe8f8f9d97029e4f0d95b8a04a",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "01_결과데이터/t2_holiday.csv",
+      "sha256": "dd131634e8178926d4c4eb3b5ffd0f0429ffd7bff0628ff4b4c7ff58c575b3e2",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "01_결과데이터/variable_mapping.csv",
+      "sha256": "4bc7a01b2011d4da14700a781ea9ab7b3a329ea371f66587b2dd42a663429df8",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/welfare_resources.csv",
+      "sha256": "8a01dc070e0612f18cf382a3c6e16555d0844d09e5e335d4de57abb41da0ef79",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/youth_activity_deficit.csv",
+      "sha256": "193117de14a46621bc94188f0f8619f6a772b0989a358d3e4c922b006c98cce6",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "01_결과데이터/youth_survey2024_isolation_by_condition.csv",
+      "sha256": "01f11d4ec134509965efad978622b8d53f51fec1a9f8fd0ba6c6fb6046f845b3",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "01_결과데이터/장년_dong_index_seoul_v2.csv",
+      "sha256": "eebccd4c12ed9bdfc30cc7e9a3624dd9dbdb9c60fb72bbecdc293badfe7b5bea",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/activity_deficit_report.txt",
+      "sha256": "fb2e965d14af8a09ade620ad1df7788007a994a7140021d64a87ea95463757a4",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/activity_report.txt",
+      "sha256": "e1b90f637ffb2e01687381ba7c70c9b2beb0cdf2bc26411d17fdf3594c8da88c",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/adjust_report.txt",
+      "sha256": "a486b4f190b60e6b8577e498f5c4069d8af3d7dab1c6bde93c5ab666295e8cb2",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/all_age_group_validation.csv",
+      "sha256": "8e0496d25f3dc85e03a843c08ac23603447cc4f824f04b4fce1efb70b3371949",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/all_age_report.txt",
+      "sha256": "288555026ada0ccff7f7664c1b25057260a450a50d910c133e44c40d8dba26a4",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/all_age_run.log",
+      "sha256": "12e5cb1d6521d6a9f0369978cca6ec93c52582896608bf12882764ae21a0c6e4",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/area_more_report.txt",
+      "sha256": "53728fbff227232186ea313d944605ece068ead8c00d9e849052176f1f40e5a6",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/arrears_report.txt",
+      "sha256": "e3591c1f0260de6e780b476eed7391545da160031ff160a5bd3c1954f29a03ef",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/bridge_report.txt",
+      "sha256": "4c4c734fc88d0b3fb1b789ab81279b37183ee5555e4e30dc6dd43357cfb6e968",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/c8_card_alarm_oos.csv",
+      "sha256": "2d7667e7123bd490b3d17bdce764c37a0bfac8c62500c95ed8dd676724ecbbde",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/card_layout.txt",
+      "sha256": "e60fabc7fc902321fe5288c7a2257f2747b6a8e5226d9ba060d2f81a40093de9",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/card_report.txt",
+      "sha256": "1a00d8c04d2ce9d9206faf7b622dc3110741f1d54419f305a42fd71960e70d07",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/card_time.txt",
+      "sha256": "0156fb7fc97a5dd8f54308ee1d957466891619bd151ee36271a4d29e2aa1e534",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/cc_v2_report.txt",
+      "sha256": "2f85af068ac5663ef74343bcb8392a6b1c617e4420141cec0d3f6161029d1b4c",
+      "permission": "공개 가능 (출처 표기)"
+    },
+    {
+      "path": "02_분석리포트/cc_v3_report.txt",
+      "sha256": "db487bae9649f85874ad72f1b3beab41f12701e998d5d3077fe46c6a92547be4",
+      "permission": "공개 가능 (출처 표기)"
+    },
+    {
+      "path": "02_분석리포트/chuncheon_age_202609.txt",
+      "sha256": "20462b85a54377bdfc34a0331011683c4649d2b94a4ec9cf2d3495afd259dc09",
+      "permission": "공개 가능 (출처 표기)"
+    },
+    {
+      "path": "02_분석리포트/chuncheon_age_gen_202512.txt",
+      "sha256": "65b0a98ce8dbc40d1414aa8344f9038ac8f9d1ccbbd9275d99fc6858fbc77c97",
+      "permission": "공개 가능 (출처 표기)"
+    },
+    {
+      "path": "02_분석리포트/chuncheon_risk_regression_DO_NOT_USE.csv",
+      "sha256": "fda6663aa21bc84c1eff77f82587820d056697f88fd3339299465415446ee021",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/d1_apps_report.txt",
+      "sha256": "d92025890264b46961dd39475bac0417fc7df04df5a54ad9268fe819a9f5fe29",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/d2_mobility_report.txt",
+      "sha256": "46cf680d008dd46b75f056dc2eda343c5bf514af8803593c2a202c45d703bacf",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/data_profile.txt",
+      "sha256": "18f875c3c670ead13f64ff0f793786191d4ce6a38356b3753ebc5f416cc4a9c0",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/elderly_dong_report.txt",
+      "sha256": "56c029c916a59707241a6f5c61315af16f9fd0cb8ec90ff3cdc5f96c9c8344fe",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/final_report.txt",
+      "sha256": "0db0e551de5468120c22fa80bef94730a36dfd7fe8554dfe52a8be11d759cedd",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/foreign_report.txt",
+      "sha256": "f2372a83e1b2130fcfffa157cab54b832deb4cc22ed348dde589c871ae67ba74",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/gen_gap_report.txt",
+      "sha256": "8bb408553efe8614bfda1648e14688b3eaf840956702f44c69ef0dba080ce81e",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/gn_codes.txt",
+      "sha256": "9910553098e33270732dee23281d92479e6b40930c38e4708b423d7f852b2647",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/group_dong_index_chuncheon_report.txt",
+      "sha256": "6168a5c9f1d95ab90c91addb924f3951661b3d6c15d4dd58c2a0c458d9a901f1",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/group_dong_index_report.txt",
+      "sha256": "770559db5dc89034cb0e71b7d8d766ce28443513ee6d72196bbb65992fc5f492",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/gu_outcomes.csv",
+      "sha256": "81494da39b4e100fb913cac2aa030f007e6d9f855aca7442d9ad6aea41bfeb52",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/hypotheses_report.txt",
+      "sha256": "aff8a4013327f6ec131182acae47ee7c626cb305b47a9e0679707cfcb64e4def",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/indicator_screen.txt",
+      "sha256": "fa52f695bf6fcd7fd387012b48e8bc97db8ce876127ad7a9b1d87d3bc9aa323c",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/koweps_dist.txt",
+      "sha256": "fe75ad8a245ed47e4c4be228dd563de6ce69c19714d3c495526bfce2acb8394a",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/koweps_labels.txt",
+      "sha256": "27b8ed8544015a4db44a7fa4cc7b519fe7d5f394c3fefa35bd4586ac3a68527c",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/koweps_model_report.txt",
+      "sha256": "38b2434424d517c48a0541be8eab9e629a6fa85265fae2fdf27e38a4f2a75734",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/koweps_vars.txt",
+      "sha256": "9ca4d03ab9a9f3f2f0a680000e0fc1576891890b999152edc42e1ed82b195ea2",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/kw_fe_report.txt",
+      "sha256": "71af3a1b92487468c64f6d41943ff302ce875ea18263cdd7e95ce09a29060983",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/lit_indicators_report.txt",
+      "sha256": "ab41525a60397654af18cfc2ae3b6631bf4a3905d5919bcbd958a543b5c220ee",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/more_indicators_report.csv",
+      "sha256": "86e8f2b849a7576ad667545125a98b7bb1112bbda59930fea9629d46f8cb313b",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/more_indicators_report.txt",
+      "sha256": "044a7ab99058e1b959ac585f026269c6e1122e72a945a3b6416705190c4e446c",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/p_public_report.txt",
+      "sha256": "b3c61c7ef155aec267e2d6f7236f56633eed57fe7fcf08a5b51db80bdb56c0ae",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/peek2.txt",
+      "sha256": "2f293d27e25d4115ee5f3e9ef7e15e0392e8f4dc264e0c0a5045bd3a2c548558",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/peek3.txt",
+      "sha256": "765646f448c0747e77c3925b7e352950d2ab31581fa78251d64919d299a9b209",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/peek4.txt",
+      "sha256": "e87626656b82ef12b8c65f79cc11c25f403e0a212b891b940fb576c86138301e",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/peek5.txt",
+      "sha256": "6d0d586d1d4d89816b7c1e872e716d9386adf0ba5e347fa4c2543bc8b72fcc56",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/peek6.txt",
+      "sha256": "9fb0b1dcd2ebe011a07275c0d53bd1ec29e75bc111ccc4043663570c479cf230",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/r1_report.txt",
+      "sha256": "9f2084eec5e38173534c2489c69a4760fce24e0780393e3448c8db5c691c39b9",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/resid_report.txt",
+      "sha256": "09f80f696dc3df26253653301080372a6748f7c3ea9efd7d77b506b0b9a52973",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/review_fixes_report.txt",
+      "sha256": "5abc6a799b5fe60c7b0d6bdf1c257d73d64dfe306706fa510d6bb61039801e8a",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/risk_report.txt",
+      "sha256": "790006d834f1d907909a7aba97c0e752c78cbb5f0e9d88abb4e369dbd846b7ba",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/rule_quit_report.txt",
+      "sha256": "e97a46552d75de5ca4ed196ce4405ab21ef85f462ebde10878f7aed7458ba4a2",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/season_report.txt",
+      "sha256": "9a8507390ea11acae4b3c365672f3bf910c9d9745a4a7b9efa40563b98e28163",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/seoul_dong_2025.csv",
+      "sha256": "4bb3b079be6ca064355a97f5c9e49f9c7b49752ab81f50fa9537b36e85894f4d",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/sk_agg_log.txt",
+      "sha256": "094cb8626c36dcbde7c3e795faeca15cd064c0b92eda2311badc198998fc6391",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/sk_dong_indicators.csv",
+      "sha256": "35b06c0105e7bc9c1f14042b5e8381c3035162268f28c4e858e1f0fc17382d96",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/sk_dong_month.csv",
+      "sha256": "1947212fc05c4e9d36a6ef4e9751f8015b2c5cc14ce2d662ec7c56a95d680547",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/sk_indicator_candidates.csv",
+      "sha256": "dc29362622ad8c32fcd2d6aec58b21081fd3f2c0bf9a166af83febaa65cd4d5d",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/sk_indicator_candidates_tests.csv",
+      "sha256": "70331667f4de9fe3e9a056ba76860f41c342aa2018b7cc06dfec9fe76bfd73b9",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/sk_layout.txt",
+      "sha256": "e7176ed4c2c67b113ce8f823840262b1ff8564f718df73f047cf35930412f3f9",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/stage_ladder.txt",
+      "sha256": "2d2bcc3a6a0713270959f1d0b4c79b5d65dc1dc9f347ee2b596e29a81c1ac4af",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/survey_layouts.txt",
+      "sha256": "587f84e827a327df39ddaf3ce695ca946505769008426a61f14fd08ca68dea11",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/t1_report.txt",
+      "sha256": "09806ee80bf9cd010b15af44db12157800586d2f201b9d7ab1354a84c3b6aed4",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/t2_report.txt",
+      "sha256": "f84160c99f63ae000fabac82f390578ca7651c0d7c69aaff29440245b20b8dd2",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/thresholds_report.txt",
+      "sha256": "eefb409fd612bcdfb790bae7e95b90364362cf0e527d4aeaceb02e13ff15b13b",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/tmp_hours.txt",
+      "sha256": "c376f45ce44087037ebdb45570ebe95ac7a0cdf95d1470f812cc303c8cf94671",
+      "permission": "제공 데이터 규정 확인 후"
+    },
+    {
+      "path": "02_분석리포트/trend_report.txt",
+      "sha256": "f5b66423743a799c79a340e7f25026ec5b00d9a51d8d585cca39d466b7b722cd",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/weights_report.txt",
+      "sha256": "2c40494d778be1f824acfd6199cd765887d352b939b04ad587519a3863880fce",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/weights_report_dimw.json",
+      "sha256": "6d6fd565dd8cfc221c8259dca3bdebda2bd6ec29d6675d88808bca3438f1c8b0",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/youth_xls.txt",
+      "sha256": "e7f9a4d382abf95dc0e4df0d25688dbc987fce0786b49538cc7f78b5ca11d9ea",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/ys2024_model_report.txt",
+      "sha256": "10c448e0b5523ef6c09ce871b40b712de2be913fbbeb511dec1bbd1987227c48",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/ys2024_questionnaire.txt",
+      "sha256": "123e43ed9154e1e882357098ee1749abd5498d27c59201e1c8208e69a885a45a",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/ys2024_vars.txt",
+      "sha256": "852549ef104c89791d5fa52718d5efaadee009bc2524f67aa77b978178c4cf4b",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/장년_dong_report.txt",
+      "sha256": "ac62a9bfb1f353013f80ab001dcba1037cf6ab7e70145a46c17977c89a3232a7",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "02_분석리포트/모델/cv_results.csv",
+      "sha256": "7b3b44691f713af8d52b70a243d2809e5da006d200f75df86b28e4bc85fe1845",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/external_validation.csv",
+      "sha256": "acdf457ec2f84d8065d379f54e21e77e95c46600b1032d2390e9e676bc11e79f",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/final_model_B.json",
+      "sha256": "ecdd49730544ef42163be4a4e9ec3395f0c992587218c8ab953e4f00c2b8609d",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/model_figures.png",
+      "sha256": "0b92341fe3cad286c100383cb531205d2555bd6c58e6a89d5ce9f75602afa25a",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/model_report.txt",
+      "sha256": "afee1c4fc4713bf9fe52ab558cd57afb5bb7a00964e74458f4368ba70690fd67",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/odds_ratios_A.csv",
+      "sha256": "e81ad944bab9615f1ab8e8009967c449c9b6d4ded4d71c5c3a759dbfebc93751",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/odds_ratios_B.csv",
+      "sha256": "0187fbab45e1eb24e315f629cd12dda8decef11745a468d62cb64924fe97f080",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/priority_groups.csv",
+      "sha256": "6d99c2cd0e7d3db98f38d04f44aad23d5358d75a59066355ec1199ec7e9f79a9",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/risk_grades.csv",
+      "sha256": "985d63a422af266465d8b4f4a16fab2da5087121d59abee9abdf635d314f0714",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/scorecard.csv",
+      "sha256": "c6c9fb595503286b9ba047dad84e1c50dbf5f8f0feaea47824279396d3edb3c6",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/simple_scorecard.csv",
+      "sha256": "23d11f09de20c6800bd8d0888f17221c0000bec14df67975611810d460b562ca",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델/simple_scorecard_bands.csv",
+      "sha256": "d3f325b92d09a8cf4f359a4534f777766dffaca883fd6caefdb6c7bfa97e6a14",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/elderly_kw_report.txt",
+      "sha256": "3c549cbb337c59a7b48d9b57dce8691f79be69bed336941926115d49ee0f0cfb",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/elderly_ladder_si.csv",
+      "sha256": "fea6a2644ff7b891bae59cc33a3c405a2fd6eec90e975c00cee9047dc736cdf3",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/elderly_person_report.txt",
+      "sha256": "b43cac8ab8ba001510d4a4a03bd268ca1314f0da0da53d0113eb3ae44ccfe0a3",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/grades_si.csv",
+      "sha256": "4fdc188f0fb8e516f67fc86fb384806171c9d5b76e0b60ef0d60873ba3905c6d",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/model_allage_kw_report.txt",
+      "sha256": "120e444d3da4fb4393a64407d88fdc2103b73ca02472aa301991d290433fed71",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/model_allage_si_report.txt",
+      "sha256": "dbc000b9d1a5e868bc456204795506a7ef01d73b58fa7887bce8e5877192ab1d",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/odds_ratios_elderly_kw.csv",
+      "sha256": "1d1ff167b9307e2644584aece617aab44ee1e699170a9a66f080f4356e0498eb",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/odds_ratios_kw_prospective.csv",
+      "sha256": "0b3b5baa946a014e020b3034b7713964c4d09fec2f50f11c781f8490bec2888e",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/odds_ratios_si.csv",
+      "sha256": "921d4b3e8d4833782ea54ce5b8f670cda9c8136a2782d2ecf2b7e584c2b20e19",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/odds_ratios_장년.csv",
+      "sha256": "af74911e4f4873a02061a00e5ab30c85dd92e6a2d879ace6a9adddc537139a73",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/odds_ratios_장년_kw.csv",
+      "sha256": "95ad601e67d3493dabc8e5b73215e425436aecc3ad78817f8ad4504767ea2b0b",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/odds_ratios_장년_모임포함.csv",
+      "sha256": "af74911e4f4873a02061a00e5ab30c85dd92e6a2d879ace6a9adddc537139a73",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/odds_ratios_중년.csv",
+      "sha256": "72ce7703cf4ffb76ecc162238d772812b31eb0b8e1954de2cf9ac1c91b32b358",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/odds_ratios_중년_kw.csv",
+      "sha256": "fe8f9e080aaa54eb8a0729e06873e18cf8403ebdef0e59aa82c75f3f5ddfbda7",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/odds_ratios_중년넓게.csv",
+      "sha256": "26f25a7dbd01edc8b14696f19f908cf2782eb539657047134b4568f27409cfb3",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_elderly.csv",
+      "sha256": "4159479073a7a89358a7a2e7cc71fc37cddf6124fffc6c1c66442dee7272f788",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_elderly.json",
+      "sha256": "9341437e33251fec04b5ae4d72dec93bcae9166801c0eaf247a32cae9ac56073",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_si.csv",
+      "sha256": "639dfc884dbe3241c7b206ba34e5ae921a8fd6f60dff43c199f8e290f5999d51",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_si.json",
+      "sha256": "f779e9d7680458651754ce5ce99613c41deaa6547fc5076d42495cf6d44e9274",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_장년.csv",
+      "sha256": "09b4a8b516974b36b7ef5558cb573a163b03470d71d26975d6c8929ccef3457c",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_장년.json",
+      "sha256": "a6d7e1ba74927cc44c46ea08321039db1a392cb711d33b6be0f6bb0181865201",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_장년_모임포함.csv",
+      "sha256": "09b4a8b516974b36b7ef5558cb573a163b03470d71d26975d6c8929ccef3457c",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_장년_모임포함.json",
+      "sha256": "a6d7e1ba74927cc44c46ea08321039db1a392cb711d33b6be0f6bb0181865201",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_중년.csv",
+      "sha256": "574ca4ec8467a718643ea72e4d3afbfb67e05131738327a223d67ac023f4f6a7",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_중년.json",
+      "sha256": "1f48c3bfaafc0380ab8d7b44cd4434069f0b770cf263d6e6d23e3d0b3cecf365",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_중년넓게.csv",
+      "sha256": "1756667f340cf555ea6c230067e6a9472435598102bed8288136d79437f64453",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/scorecard_중년넓게.json",
+      "sha256": "028b828013e8621ac8a4854c18ea683a76876d41d1e2bebd30df3f1d5cd3c2f9",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/장년_kw_report.txt",
+      "sha256": "15687d2f255e7a35fabceac5db9cc7663fefa617fac15fc2b973c51d5dd2c3b9",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/장년_person_report.txt",
+      "sha256": "56363bd576995fcee8f9487ee0b75b6b8fc8cfd20e1a90a3b4d86df46dea1954",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/장년_모임포함_person_report.txt",
+      "sha256": "1a927f559d39a1ce6a2b4feee2ca450692078e7d9b287bc7a4a29a1db635e14e",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/중년_kw_report.txt",
+      "sha256": "5022820bb419bdc693ec8799e96745012241b19d141f52824805b2e611ecdf71",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/중년_person_report.txt",
+      "sha256": "c121b06e75323e748865f27d5062d3db5555b9c6d0221c7b468914ac4c3d3a69",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "02_분석리포트/모델_전연령/중년넓게_person_report.txt",
+      "sha256": "a4f7c7db049aa243307451255e671c9d3a56f1f689fb50f4dff66f0c240bfcd1",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "03_코드/activity.py",
+      "sha256": "bc9f59dedc177916f9dafe4b2066223b9f47f2b7254662fe77fc0da02cfa5123",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/activity_deficit.py",
+      "sha256": "0c88d17035751c5304bff370e3b47615be8cb5bab0f1036cd975450790d86107",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/adjust.py",
+      "sha256": "d691623794dfebdc1a1d76a7453ba82b66999d5235d3e8894cfba6d8ca4c0662",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/age_dong.py",
+      "sha256": "0d64d59354ba077e0c2db475d302c7e259ebc88c7066d28b76dc0ac082c37a15",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/age_kw.py",
+      "sha256": "0b806c91d79ad496624819e4aa53ebafcc7c5c2735c0229d07bb338ddb950b9b",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/age_person.py",
+      "sha256": "ff9078c6b1db2784174493e015eb0a0c9fb922efbbc9150942de4f8c378b0569",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/all_age_groups.py",
+      "sha256": "c7c27456c622e0c253c7783e9b3da3d307baf8c8082664a0d72b9e8e5f144b4a",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/an.py",
+      "sha256": "9c6f7691f5a83a3cabd9b1692114913ef93154bb88822a4247648a14be9381f7",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/area_more.py",
+      "sha256": "386400356fd5653a68c9f913f6c24fa4c6b6ab66a5c5588c3594e02f885d6637",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/arrears.py",
+      "sha256": "7e374a00c76bb908ebf4e6569340b9fba87905156faee376c4eac20c7a9a15b9",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/bridge.py",
+      "sha256": "477cff4970ae4e0b3b4dbb3ffc11c19d810870822b5fda142770ce34db11463d",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/build_data.py",
+      "sha256": "69076f4eb85f9d1e3032992374e402f8f00e527117a608ced4c768198894b8c7",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/card.py",
+      "sha256": "51bd268aa3b0b7d89545033f77f71502690589e135baac8ee77d36190db2afcd",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/card_time.py",
+      "sha256": "7758a1d91221e0d6c0f945d113f0274d45cc7675823f63043fa0e934c2b77b07",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/cc.py",
+      "sha256": "b2086c7bc486291b6281c9af7275645186e37a670ba79b05735b34ffbcf1e764",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/cc_v2.py",
+      "sha256": "89917b39e0ea0933b7aa897e78219bdcd3101cd7058d02a86c998c60e03660ea",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/cc_v3.py",
+      "sha256": "09535bf18cacf77861d288b1a73bf4338f5c7dad79b01bae218980af49353136",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/chuncheon_group_index.py",
+      "sha256": "fc50c714966f032159dade869d0422f2c7ab742d50214795577e71bd2a2952a7",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/d1_apps.py",
+      "sha256": "6f25395bc5da65f897e3f1045280abcc62e567f728ee3c955c7553e82943fa0e",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/d2_mobility.py",
+      "sha256": "1666fcd442b53819f00fb402d90485b76158e60e44bac9b896e84013a4e9066e",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/elderly_dong.py",
+      "sha256": "106b4f5a96724d8d6b22a7bdc3cdc5e45c9ec4facb4583918cf7e83b6d167d78",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/elderly_kw.py",
+      "sha256": "708cf01c51144d85bd8f94dda7c514288d822e4dfa593681070202b6ce0eaa14",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/elderly_person.py",
+      "sha256": "55260f5dea802f6636d6c2a29a9f0ffaec026c448eaa6d964b936bc4d4ee9cdd",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/final.py",
+      "sha256": "875da9c8d94fa12180e8e6b1452d63d806eef16bed59aafa022513a6f8429d3d",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/foreign.py",
+      "sha256": "2f3551a83920b62116977f839f510cfadcd1a15294811b2e69685b595311be99",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/gengap.py",
+      "sha256": "ca9b926a20f601cfec7a5e17dc220f3ea44180305929c8805c6833e0765f2693",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/gn.py",
+      "sha256": "4b95c807be3c836a761844379fb439c87c9507e5258ad1a5d7945a1401fdc8bf",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/gn_data.json",
+      "sha256": "d0490b7c333ede477d5bcae826ca3e51644782082195cd1eae5a2f98836b7afc",
+      "permission": "열린데이터광장 조건 확인 후"
+    },
+    {
+      "path": "03_코드/gn_youth.py",
+      "sha256": "3ea141d0ebaff14a7223c27399c66df1ab28dc81052e06191ced6a6da296c050",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/group_dong_index.py",
+      "sha256": "ebc53fd2f63631786b2cb68f98240f7d84d60284490d7221ee6e83c2a1036334",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/hdr.py",
+      "sha256": "01d524b6ef8d2c12fe19ce3ded1a390ff0535a6be7e46c1e3808829eab91f04a",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/kw_fe.py",
+      "sha256": "bcc4c01d4d7bbde8ce766519a1674cefb4b9bd28d8b34098c6f03f36188f13a6",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/kw_load.py",
+      "sha256": "74370ba64dc1706a66ac44067531406b5349feb8694cce6d3d7857a1873d5f62",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/kw_model.py",
+      "sha256": "2415834787e8a1f4d287f0fe514a8fea2fff78044af166f78cf17855f04fdc57",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/lit_indicators.py",
+      "sha256": "62b9e8ef6363cdc9e3d9c099b5883c8a016c9cdc6daae8056dea92635f3e117a",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/make_bundle.py",
+      "sha256": "4fcbe6d329c7ac6a550e7a2f6db6907b78c3d3071f714a850a845df2df914196",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/model_allage_kw.py",
+      "sha256": "bebb0703474f6d4144347b1507edd8825bdd7a26e3f66cb74524807d2c66d410",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/model_allage_si.py",
+      "sha256": "c41fe8006a1d8b164fc9ae34f2e7be6a088e7826a3fb0bebf9b9f0c773bfae03",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/model_isolation.py",
+      "sha256": "071adb12f9a96a474235b6139085ce29f943eeb032d6d361117e7854e672a0b5",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/more_indicators.py",
+      "sha256": "a1e8c09277ae6331e24a134eb189fa435cc9016eee33683fbdef8e4eb2f6f110",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/p_public.py",
+      "sha256": "894eaa0835cae600c82197a4077446611cc6f4c1eeccd7eb8945c530da0af3e8",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/partial_1person.py",
+      "sha256": "634f5cbd999642b4e95a0eceb0a64ae46e6239054e24edced6369eb3026bdb3c",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/partial_resident.py",
+      "sha256": "ef89eff94cf92bd5b36585c1785d48ab295cbac5725f43a429a1668a0f6bd429",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/pdf.py",
+      "sha256": "e79212472866bf2fd3fbb2ec5ef286a55276f7ec2148e4b179ad5893f0c2aad1",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/peek.py",
+      "sha256": "d0475065cb7d78dba9ec7169e0b48b113901a2164462670732a2e3fe22ee745b",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/peek2.py",
+      "sha256": "f56836064c6a8e4cfb1aefebbe3c4a9ce8c086450b96b4b13647b6bcaa7fbee4",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/profile.py",
+      "sha256": "fe00b24f77347322124c847f6416e8df49f45b9a253efa61922fd3953a2648f5",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/r1_social.py",
+      "sha256": "6076f23f3e416654f400d3348fb8938267ff59bb8e2f63c768c830326874e8e1",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/review_fixes.py",
+      "sha256": "c60d07987b72c0b37b55159b38da873a413715c15735d0cf486af6e2bb45e10b",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/risk.py",
+      "sha256": "960c5d51d9e575a7a9b445890d49ce940d38a2df6cca944b8e28b7ec528fa3b2",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/rule_quit.py",
+      "sha256": "21a5aac8add19e288e4eaa4ff6057da2b27572de2b2d06ef5289e24053508239",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/screen.py",
+      "sha256": "c1b5a5e5dd1efa4dfc3fc8a3981bd3cf314d2ad7d7637e4245acb8c0fd786be6",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/season.py",
+      "sha256": "0669e4ad730ac742d63722b650a28676fff6ecd8328172ee8be117df5f3588fc",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/seoul_all.py",
+      "sha256": "8a07c0db68ca1212a4a08b0996923dfbed09c42460a1139f65d1866e9976ba60",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/sk_agg.py",
+      "sha256": "5a4edbff257776aae8a158f4561515cf0c028cd1ac2e198bc7ac8b3d4a61f686",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/stage_ladder.py",
+      "sha256": "b911272f898fdedd460228c0b218ff09435fdfc5e29ad35028cfa9ee9b32e365",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/t1_evening_weekend.py",
+      "sha256": "638aa1b2000fc53789cbd0377fadb759c337233ce6af618ac53c944957a37c30",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/t2_holiday.py",
+      "sha256": "0a7930e987f57d60804250ead771f3eda2137ca6d022e0c4a9bfd9bfdc82ebdc",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/template.html",
+      "sha256": "9b8f74753abb93d7008c8f40f63d89e975dbf86b075e20596c5259261ece733e",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/thresholds.py",
+      "sha256": "4963ac5ca5d52b331c8943d4b8b35db00760c108ee96edb9a03ed283ed8d7f0e",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/trend.py",
+      "sha256": "bb3530ced6e22d20776dc641b8963f255be6ff5fb350580233d57b35d63f8170",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/weights.py",
+      "sha256": "f715381c4b2f090d390ca9c3270aef0c116a51063a6837502e402af47378dabe",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/ys_hyp.py",
+      "sha256": "81f0cf312917a7f32332a44c44a1e37bccf035b306e00d7902d09ba4fbdca070",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/ys_model.py",
+      "sha256": "2c7a2e0eb2abf7d3f5b9c7bf48e6d5c6771708ce6a01f6941162a80d15b99dce",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "03_코드/ys_peek.py",
+      "sha256": "b54b742ba84c8a5a53989b5209a1d1a5fcdb536f30aef47d6f7d05e2b55fe634",
+      "permission": "공개 가능"
+    },
+    {
+      "path": "README.md",
+      "sha256": "eba519b20e76d2ed0a70520267a3c45c304c5b9d30af376b09c501318a0722d1",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "최종_종합보고서.md",
+      "sha256": "21a7bf4266f02bc1cfe0708ae4c6103204036c61f8fa903328f317f50c8d9df0",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "제출_데이터_점검.md",
+      "sha256": "250494d9efdc2460430448906a3d630098de850b7ffff0711b72729bc9da4dc5",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "역산_지표장.md",
+      "sha256": "682adbd224447102785d1e5bd7e9509ba20a2b3a4f9010e8c9861264c54eeae9",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "5단계_위험도.md",
+      "sha256": "df0ce83f616881e1028b11f44b760cd4355e32cdc06b66abede6ee9036c45f75",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "예측모델_보고서.md",
+      "sha256": "5a24d61f587df2c7889cdf3a9417ef640bfc9073c7dfbb864b40b1dc69f7cd04",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "전연령_예측모델_보고서.md",
+      "sha256": "aed65d4c9d21970c7beb9730f4b6e2426d528bf980db442bacce3bedaae4c6b6",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "연령별_측정틀.md",
+      "sha256": "fad2e2e3c2f8c2f770fc44e487293d4ddcd9a09392c4e287f4c7f6d087cd79fc",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "추가지표_문헌조사.md",
+      "sha256": "4d32a62f957f686dbc20a2b22d886e8bf76406aaf0ac6523f9eb88d571518fd9",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "청년고립_최종정리.md",
+      "sha256": "2bcda81af5b57b83eebe19b8b210565683bed0a6367789897060f52bf7c811de",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "복지자원_목록.md",
+      "sha256": "e8c8706bb4ad1e09333a1c32084b0adcf4d2ecb838304d16ed84428b0590fe3f",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "공무원_업무흐름.html",
+      "sha256": "77b361d2bfaeb9838e09c393149f5d1954b75b845ed82c6c7378e4a5500fdee1",
+      "permission": "약관 확인 전 비공개"
+    },
+    {
+      "path": "mas/README.md",
+      "sha256": "85f99cdd3d4b2ee3e47185f50650bb3476e42c98530b4af6b88731f25fc7d0c1",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/3_카드신호/card_weekly_signals.csv",
+      "sha256": "fb520bf00df0ebf9147e791e50a692856b018ab84420ed0cea38d5eb3167c35c",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/3_카드신호/t1_evening_weekend.csv",
+      "sha256": "90b663a3867c37bd512ef45b1a667f796e888dbe8f8f9d97029e4f0d95b8a04a",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/3_카드신호/r1_social.csv",
+      "sha256": "95d3ebe38322e65fb9ec0a9caec3397e3d41c0c9b06e7f3a9bdb0c5fa9300bb8",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/3_카드신호/card_weekly.py",
+      "sha256": "ebb74d192b6b3eb709b2ae7471f3ce36977020f60a5d3963b4a8f02efed50e83",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/1_점수표/scorecard_중년넓게_음수0점.csv",
+      "sha256": "54495d49e302d6b4878b1db162555ca694ee8a3631850c534ff1549be4ce142b",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/1_점수표/scorecard_elderly.csv",
+      "sha256": "4159479073a7a89358a7a2e7cc71fc37cddf6124fffc6c1c66442dee7272f788",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/1_점수표/전연령_점수표.csv",
+      "sha256": "639dfc884dbe3241c7b206ba34e5ae921a8fd6f60dff43c199f8e290f5999d51",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/1_점수표/전연령_등급구간.csv",
+      "sha256": "4fdc188f0fb8e516f67fc86fb384806171c9d5b76e0b60ef0d60873ba3905c6d",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/1_점수표/청년_등급구간.csv",
+      "sha256": "0a09dacbaabd7b3ff6c4dc0b0cd5e760bbf8c91230b2a321f23217d8af1f0dc3",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/1_점수표/노년_점수구간_2025.csv",
+      "sha256": "dfca322c1e00a9733d21cf6b0b13e278545b2ce7519fd50b7cff758a2cecdc2e",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/1_점수표/청년_점수표_18항목.csv",
+      "sha256": "23d11f09de20c6800bd8d0888f17221c0000bec14df67975611810d460b562ca",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/1_점수표/scorecard_중년넓게_원점수.csv",
+      "sha256": "1756667f340cf555ea6c230067e6a9472435598102bed8288136d79437f64453",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/4_복지자원/welfare_resources.csv",
+      "sha256": "8a01dc070e0612f18cf382a3c6e16555d0844d09e5e335d4de57abb41da0ef79",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/4_복지자원/복지자원_목록.md",
+      "sha256": "e8c8706bb4ad1e09333a1c32084b0adcf4d2ecb838304d16ed84428b0590fe3f",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/2_동지수/chuncheon_youth_risk_v3.csv",
+      "sha256": "91862da913eefd2cb8b6091ff76cc36463fb339103cf2f64a38c901af99e061a",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/2_동지수/gangnam_S1.csv",
+      "sha256": "e7ace00d15b44db6c7e3f5f3095106a791737528105b7fa6a7fa76e8c95fd523",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/2_동지수/gangnam_within_rank.csv",
+      "sha256": "b4edebf0c5ef9e0f31da72a1f0abaddabe8e598aa2ac2fa795fb400a84f384c1",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/2_동지수/장년_dong_index_seoul_v2.csv",
+      "sha256": "eebccd4c12ed9bdfc30cc7e9a3624dd9dbdb9c60fb72bbecdc293badfe7b5bea",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/2_동지수/sk_indicator_candidates.csv",
+      "sha256": "dc29362622ad8c32fcd2d6aec58b21081fd3f2c0bf9a166af83febaa65cd4d5d",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/2_동지수/group_dong_index_seoul.csv",
+      "sha256": "754a93a134abc159fd7c239d06b30801b95a595a4f44281a57d31987303d9ae2",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/2_동지수/group_dong_index_chuncheon.csv",
+      "sha256": "51301889afe8ea1685caf62badda325d6dbaa4f42ece7a13b0b1a738e747d462",
+      "permission": "MAS local only"
+    },
+    {
+      "path": "mas/2_동지수/elderly_dong_index_seoul_v2.csv",
+      "sha256": "36c6e4853eac8ea39e2730ddc140f02e0f501a95a6d8785bc0edea825304bb62",
+      "permission": "MAS local only"
+    }
+  ]
+}

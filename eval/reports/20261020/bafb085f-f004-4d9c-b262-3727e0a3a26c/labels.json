@@ -1,0 +1,182 @@
+[
+  {
+    "id": "11230-2025-07-0",
+    "stage": 3,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-07-1",
+    "stage": 2,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-07-2",
+    "stage": 1,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-07-3",
+    "stage": null,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-07-4",
+    "stage": 5,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "11230-2025-07-5",
+    "stage": 4,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "11230-2025-08-0",
+    "stage": 3,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-08-1",
+    "stage": 2,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-08-2",
+    "stage": 1,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-08-3",
+    "stage": null,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-08-4",
+    "stage": 5,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "11230-2025-08-5",
+    "stage": 4,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "11230-2025-09-0",
+    "stage": 3,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-09-1",
+    "stage": 2,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-09-2",
+    "stage": 1,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-09-3",
+    "stage": null,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "11230-2025-09-4",
+    "stage": 5,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "11230-2025-09-5",
+    "stage": 4,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "32010-2025-10-0",
+    "stage": 3,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-10-1",
+    "stage": 2,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-10-2",
+    "stage": 1,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-10-3",
+    "stage": null,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-10-4",
+    "stage": 5,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "32010-2025-10-5",
+    "stage": 4,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "32010-2025-11-0",
+    "stage": 3,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-11-1",
+    "stage": 2,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-11-2",
+    "stage": 1,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-11-3",
+    "stage": null,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-11-4",
+    "stage": 5,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "32010-2025-11-5",
+    "stage": 4,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "32010-2025-12-0",
+    "stage": 3,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-12-1",
+    "stage": 2,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-12-2",
+    "stage": 1,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-12-3",
+    "stage": null,
+    "basis": "hand_rule_example"
+  },
+  {
+    "id": "32010-2025-12-4",
+    "stage": 5,
+    "basis": "provided_stage_preservation"
+  },
+  {
+    "id": "32010-2025-12-5",
+    "stage": 4,
+    "basis": "provided_stage_preservation"
+  }
+]

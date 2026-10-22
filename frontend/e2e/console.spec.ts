@@ -1,0 +1,87 @@
+import {test, expect} from '@playwright/test';
+test('operator receives, acknowledges, approves, rejects and inspects monthly plan', async ({page,context})=>{
+  const consolePage=await context.newPage();
+  await consolePage.goto('/console');
+  await consolePage.getByLabel('담당자 이름').fill('E2E 담당자');
+  await page.goto('/observatory');
+  async function run(index:string,status='승인 대기') {
+    const previous = await page.getByTestId('run-id').count() ? await page.getByTestId('run-id').innerText() : '';
+    await page.getByLabel('시나리오').selectOption(index);
+    await page.getByRole('button',{name:'실행',exact:true}).click();
+    await expect(page.getByTestId('run-id')).not.toHaveText(previous);
+    await expect(page.getByTestId('run-status')).toHaveText(status);
+    return await page.getByTestId('run-id').innerText();
+  }
+  const id=await run('0');
+  const alert=consolePage.getByTestId(`alert-${id}-approval_requested`);
+  await expect(alert).toBeVisible();
+  await alert.getByRole('button',{name:'사람 확인'}).click();
+  await expect(alert).toContainText('확인됨');
+  await alert.getByRole('button',{name:'실행 상세'}).click();
+  await consolePage.getByRole('button',{name:'승인',exact:true}).click();
+  await expect(consolePage.getByRole('heading',{name:'실행 상세 · 완료',exact:true})).toBeVisible();
+  await expect(consolePage.getByTestId(`alert-${id}-linkage_completed`)).toBeVisible();
+  const rejected=await run('0');
+  await consolePage.getByTestId(`alert-${rejected}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
+  await consolePage.getByLabel('반려 사유').fill('추가 상담 필요');
+  await consolePage.getByRole('button',{name:'반려',exact:true}).click();
+  await expect(consolePage.getByRole('heading',{name:'실행 상세 · 반려',exact:true})).toBeVisible();
+  expect((await page.request.get(`/runs/${rejected}/linkage`)).status()).toBe(404);
+  const crisis=await run('1','완료');
+  await expect(consolePage.getByTestId(`alert-${crisis}-crisis`)).toBeVisible();
+  const handoffResponse=await consolePage.request.post('/scenarios/run',{data:{id:'ordering-handoff',type:'case',sim_time:'2025-09-08T09:00:00+09:00',payload:{person:{person_id:'synthetic-order',age:24,sgg:'11230',consent:true,responses_confirmed:true,responses:{'synthetic-contract-fixture':{case:201}}}}}});
+  const handoff=await handoffResponse.json();
+  await expect(consolePage.getByTestId(`alert-${handoff.id}-human_handoff`)).toBeVisible();
+  await expect(consolePage.locator('.alert-list article').first()).toHaveClass(/crisis/);
+  const monthly=await run('2');
+  await consolePage.getByTestId(`alert-${monthly}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
+  await expect(consolePage.getByRole('heading',{name:'동별 상황판 · 47개 동'})).toBeVisible();
+  await consolePage.getByLabel('동 선택').selectOption({index:1});
+  await expect(consolePage.getByRole('table',{name:'연령 상세'}).locator('tbody tr')).toHaveCount(6);
+  await consolePage.getByRole('button',{name:'승인',exact:true}).click();
+  await expect(consolePage.getByRole('heading',{name:'실행 상세 · 완료',exact:true})).toBeVisible();
+  await consolePage.screenshot({path:'../runtime/sample/screenshots/console.png',fullPage:true});
+});
+test('console retries its initial load and restores a pending approval after reload', async ({page,request})=>{
+  const response=await request.post('/scenarios/run',{data:{id:'reload-case',type:'case',sim_time:'2025-07-01T09:00:00+09:00',payload:{text:'합성 상담'}}});
+  const run=await response.json();
+  let failed=false;
+  await page.route('**/alerts?recent=true&limit=200',route=>{if(!failed){failed=true;return route.abort();}return route.continue();});
+  await page.goto('/console');
+  const alert=page.getByTestId(`alert-${run.id}-approval_requested`);
+  await expect(alert).toBeVisible({timeout:10000});
+  await expect(page.getByText('알림 SSE 연결됨 · 최근 200건 · 위기 우선')).toBeVisible();
+  await page.reload();
+  await alert.getByRole('button',{name:'실행 상세'}).click();
+  await expect(page.getByRole('heading',{name:'실행 상세 · 승인 대기'})).toBeVisible();
+});
+
+test('switching review targets hides stale controls until the new snapshot arrives',async({page,request})=>{
+ const run=async(id:string)=>(await(await request.post('/scenarios/run',{data:{id,type:'case',sim_time:'2025-07-01T09:00:00+09:00',payload:{text:'합성 상담 요청'}}})).json()).id;
+ const first=await run('review-first'),second=await run('review-second');
+ await page.goto(`/console?run=${first}`);
+ await expect(page.getByTestId('review-panel')).toContainText(first);
+ let release:()=>void=()=>{};const held=new Promise<void>(resolve=>{release=resolve;});
+ await page.route(`**/runs/${second}/overview`,async route=>{await held;await route.continue();});
+ await page.getByTestId(`alert-${second}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
+ await expect(page.getByTestId('review-panel')).toHaveCount(0);
+ release();await expect(page.getByTestId('review-panel')).toContainText(second);
+ await page.getByLabel('담당자 이름').fill('전환 검토자');
+ await page.getByLabel('반려 사유').fill('새 대상의 자료 보완');
+ await page.getByRole('button',{name:'반려',exact:true}).click();
+ await expect(page.getByTestId('review-panel')).toContainText('실행 상세 · 반려');
+ expect((await(await request.get(`/runs/${first}/approval`)).json()).approval.status).toBe('pending');
+});
+
+
+test('operator can focus urgent and unconfirmed alerts without changing decisions',async({page,request})=>{
+ const r=await request.post('/scenarios/run',{data:{id:'priority-filter-test',type:'crisis',sim_time:'2025-07-01T09:00:00+09:00',payload:{text:'죽고 싶어요.'}}});const run=await r.json();
+ await page.goto('/console');await page.getByTestId(`alert-${run.id}-crisis`).waitFor();
+ await page.getByRole('button',{name:/위기·인계/}).click();
+ await expect(page.getByTestId(`alert-${run.id}-crisis`)).toBeVisible();
+ expect(await page.locator('.alert-list article').evaluateAll(elements=>elements.every(e=>['crisis','human_handoff'].includes(e.getAttribute('data-alert-type')||'')))).toBe(true);
+ await page.getByRole('button',{name:/사람 미확인/}).click();
+ await expect(page.getByTestId(`alert-${run.id}-crisis`)).toBeVisible();
+ expect(await page.locator('.alert-list article').evaluateAll(elements=>elements.every(e=>e.getAttribute('data-alert-status')!=='acknowledged'))).toBe(true);
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+});

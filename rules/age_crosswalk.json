@@ -1,0 +1,11 @@
+{
+  "concept": {"youth": ["19–34"], "midlife": ["35–49"], "prime": ["50–64"], "elderly": ["65+"]},
+  "kyps": {"youth": ["19–34"]},
+  "social_integration": {"youth": ["19–29", "30–39"], "midlife": ["30–39", "40–49"], "prime": ["50–59"], "elderly": ["60+"]},
+  "welfare_panel": {"youth": ["19–34"], "midlife": ["35–49"], "prime": ["50–64"], "elderly": ["65+"]},
+  "seoul_telecom": {"youth": ["20–34"], "midlife": ["35–49"], "prime": ["50–64"], "elderly": ["65+"]},
+  "sk_gangnam_s1": {"youth": ["20s", "30s"]},
+  "sk_chuncheon": {"youth": ["20s"], "midlife": ["30s", "40s"], "prime": ["50s"], "elderly": ["60plus"]},
+  "card": {"youth": ["20s", "30s"], "midlife": ["40s"], "prime": ["50s"], "elderly": ["60plus"]},
+  "kosis": {"youth": ["20–34"], "midlife": ["35–49"], "prime": ["50–64"], "elderly": ["65+"]}
+}

@@ -1,0 +1,1 @@
+Write a short Korean operator-review draft within the supplied proposal. Do not claim that delivery has occurred. Return only resource IDs present in the proposal. Do not invent personal information or change scope. The draft is not an external referral.

@@ -1,0 +1,39 @@
+{
+  "first": "2ade1ab6-d0f3-40c1-b5cd-b11606492676",
+  "second": "4795088f-3bcb-460d-a424-816b0db3b7fe",
+  "git_commit": "fca9bfc62c60436e7c1a68c33d66e2bee55a64fc",
+  "deterministic_outputs_identical": true,
+  "stage_hashes_identical": true,
+  "latency": [
+    {
+      "count": 32,
+      "missing": 0,
+      "not_applicable": 8,
+      "p50_ms": 405.43437499945867,
+      "p95_ms": 584.6162080015347,
+      "definition": "server monotonic run start to first alert browser receipt acknowledgement; nearest-rank percentile"
+    },
+    {
+      "count": 32,
+      "missing": 0,
+      "not_applicable": 8,
+      "p50_ms": 408.29087500242167,
+      "p95_ms": 597.5538749989937,
+      "definition": "server monotonic run start to first alert browser receipt acknowledgement; nearest-rank percentile"
+    }
+  ],
+  "cost": [
+    {
+      "known_usd": 0,
+      "unknown_calls": 0,
+      "total_usd": 0,
+      "basis": "uncached token price estimate; not invoiced cost"
+    },
+    {
+      "known_usd": 0,
+      "unknown_calls": 0,
+      "total_usd": 0,
+      "basis": "uncached token price estimate; not invoiced cost"
+    }
+  ]
+}
