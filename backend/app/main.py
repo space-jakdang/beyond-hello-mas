@@ -33,6 +33,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(batch_router(service))
     from backend.policy.review import policy_review_router
     app.include_router(policy_review_router(store))
+    from backend.policy.alternative_review import router as alternative_review_router
+    from backend.policy.alternative_regeneration import router as regeneration_router
+    app.include_router(alternative_review_router(store))
+    app.include_router(regeneration_router(service))
     from backend.policy.alternatives import router as alternatives_router
     app.include_router(alternatives_router(store))
     from backend.future import future_router

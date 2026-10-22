@@ -654,3 +654,6 @@ class GraphService:
         for identifier in batches:
             try:execute(self,identifier)
             except Exception:pass  # Keep other batches recoverable when a stored mode differs.
+
+        from backend.policy.alternative_regeneration import recover
+        recover(self)

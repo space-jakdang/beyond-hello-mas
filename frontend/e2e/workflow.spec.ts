@@ -5,7 +5,7 @@ test('regional task links agents, immutable results and a fresh revision approva
  await page.getByRole('button',{name:'Supervisor에게 업무 지시'}).click();
  await expect(page.getByTestId('workflow-status')).toContainText('승인 대기',{timeout:20000});
  const original=page.url();
- await expect(page.getByRole('list',{name:'에이전트 업무 진행'}).locator('li')).toHaveCount(5);
+ await expect(page.getByRole('list',{name:'에이전트 업무 진행'}).locator('li')).toHaveCount(6);
  await expect(page.getByRole('tabpanel')).toContainText('지역 분석가');
  await page.screenshot({path:'runtime/sample/workflow-desktop.png',fullPage:true});
  await page.getByRole('tab',{name:'통계 근거'}).click();

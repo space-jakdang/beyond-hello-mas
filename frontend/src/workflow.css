@@ -38,3 +38,5 @@
  .policy-report .no-print,.policy-report .no-print * {display:none}
  .policy-report article {break-inside:avoid}
 }
+
+.alternative-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.policy-alternatives .card{min-width:0;overflow-wrap:anywhere}.policy-alternatives textarea{display:block;width:100%;min-height:100px}.policy-alternatives blockquote{margin:12px 0;padding:12px;background:var(--surface,#f5f7fa)}@media(max-width:900px){.alternative-grid{grid-template-columns:1fr}}
