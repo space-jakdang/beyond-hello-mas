@@ -35,6 +35,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(policy_review_router(store))
     from backend.policy.alternative_export import router as alternative_export_router
     app.include_router(alternative_export_router(store))
+    from backend.app.alternative_quality import router as alternative_quality_router
+    app.include_router(alternative_quality_router(store))
     from backend.policy.alternative_review import router as alternative_review_router
     from backend.policy.alternative_regeneration import router as regeneration_router
     app.include_router(alternative_review_router(store))
