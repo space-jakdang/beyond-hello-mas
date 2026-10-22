@@ -111,6 +111,13 @@ test('policy evidence cards remain tentative and responsive',async({page,request
  await page.getByRole('tab',{name:'자원 제안'}).click();
  await expect(page.getByLabel('추가 정책 조사 후보')).toContainText('확정 배정에 포함되지 않습니다');
  await expect(page.getByRole('link',{name:'공식 정책 원문 ↗'})).toHaveAttribute('href','https://www.gov.kr/');
+ const candidate=overview.review.proposal.policy_research.candidates[0];
+ overview.review.proposal.policy_research.candidates=Array.from({length:5},(_,i)=>({...candidate,policy:{...candidate.policy,id:String(i),title:'관련 지원 '+i}}));
+ await page.reload();await page.getByRole('tab',{name:'자원 제안'}).click();
+ await expect(page.getByLabel('추가 정책 조사 후보').locator('article:visible')).toHaveCount(3);
+ await page.getByText('추가 관련 후보 2개 보기',{exact:true}).click();
+ await expect(page.getByLabel('추가 정책 조사 후보').locator('article:visible')).toHaveCount(5);
+
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
 

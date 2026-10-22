@@ -368,7 +368,7 @@ class GraphService:
                 'status':'unsupported_scope' if unsupported else 'call_limit','recommendations':[],'human_review_required':True,'allocation_performed':False}
             emit('policy-result','policy','supervisor',{'result_kind':'regional_policy_candidates','result':result})
         self.node_event(state,'policy',result,started)
-        proposal['policy_research']={'status':result['status'],'candidates':result.get('recommendations',[]),
+        proposal['policy_research']={'candidate_funnel':result.get('candidate_funnel'),'status':result['status'],'candidates':result.get('recommendations',[]),
             'search_complete_within_scope':result.get('search_complete_within_scope',False),'search_scope':result.get('search_scope'),
             'gap_count':len(gaps),'task':task,'coverage':result.get('coverage'),'steps':result.get('steps',0),'eligibility_verified':False,'remaining_capacity':None,
             'allocation_performed':False,'human_review_required':True}
