@@ -4,7 +4,9 @@ test('index explains the workspace and every page returns home',async({page})=>{
   await page.goto('/');
   await expect(page.getByRole('heading',{name:'무엇을 확인하고 싶으신가요?'})).toBeVisible();
   for(const name of ['동네 분석','관찰','정책 탐색','담당자 콘솔','평가']) {
-    await page.getByRole('navigation').getByRole('link',{name,exact:true}).click();
+    const link=page.getByRole('navigation').getByRole('link',{name,exact:true});
+    if(!await link.isVisible())await page.getByText('검증·연구 도구',{exact:true}).click();
+    await link.click();
     await expect(page.getByRole('heading',{level:1})).toHaveText(name);
     await expect(page.getByRole('navigation').getByRole('link',{name,exact:true})).toHaveAttribute('aria-current','page');
     await page.getByRole('link',{name:'Beyond Hello MAS 인덱스'}).click();
@@ -50,4 +52,27 @@ test('policy page distinguishes credential, cached list, live detail and failed 
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.getByRole('link',{name:'정책 조사 지시하기'}).click();
   await expect(page.locator('#policy-task')).toBeInViewport();
+});
+
+
+test('runtime status distinguishes missing real input from a synthetic demo',async({page})=>{
+ await page.route('**/readiness',route=>route.fulfill({json:{ready:false,data_mode:'local',llm_mode:'live',storage:'temporary_instance',warnings:['인스턴스 변경 후 이력이 사라질 수 있습니다.'],analysis:{status:'unavailable'},catalog:{status:'unavailable'}}}));
+ await page.goto('/');
+ const status=page.getByRole('complementary',{name:'서버 준비 상태'});
+ await expect(status).toContainText('실제 자료 모드 (입력 확인 필요)');await expect(status).toContainText('자료 미준비');
+ await status.getByText(/자료·저장소 확인 항목/).click();await expect(status).toContainText('인스턴스별 임시 저장');
+ await expect(page.getByRole('navigation').getByRole('link',{name:'지역 업무',exact:true})).toBeVisible();
+ await expect(page.getByRole('navigation').getByRole('link',{name:'미래 시나리오',exact:true})).toBeHidden();
+ await page.screenshot({path:'../.local-plans/ux-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+ await page.screenshot({path:'../.local-plans/ux-mobile.png',fullPage:true});
+});
+
+test('runtime status can retry a failed diagnostic without starting work',async({page})=>{
+ let failed=true;
+ await page.route('**/readiness',route=>failed?route.abort():route.fulfill({json:{ready:true,data_mode:'sample',llm_mode:'fake',storage:'local_directory',warnings:[],analysis:{status:'ready',geometry:'synthetic_grid'},catalog:{status:'ready'}}}));
+ await page.goto('/');await expect(page.getByRole('alert')).toContainText('자료 준비 상태를 확인하지 못했습니다');
+ failed=false;await page.getByRole('button',{name:'서버 상태 다시 확인'}).click();
+ await expect(page.getByRole('complementary',{name:'서버 준비 상태'})).toContainText('합성 시연 자료');
 });
