@@ -168,7 +168,9 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
             try:
                 candidate=designer.agents.call(run_id,scope['ym']+'-01T09:00:00+09:00','policy_alternatives',model_context(context)).model_dump()
                 aliases={f'E{i+1}':fact['evidence_id'] for i,fact in enumerate(context['facts'])}
+                target_aliases={label:code for code,label in context['target_group_labels'].items()}
                 for item in candidate['alternatives']:
+                    item['target_groups']=[target_aliases.get(group,group) for group in item['target_groups']]
                     item['problem_evidence_ids']=[aliases.get(identifier,identifier) for identifier in item['problem_evidence_ids']]
                 output=templates(context);used=set()
                 for i,item in enumerate(output['alternatives']):

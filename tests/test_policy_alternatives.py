@@ -141,3 +141,22 @@ def test_regional_facts_over_budget_are_not_silently_truncated():
     from backend.policy.alternatives import model_context
     context={'facts':[{'evidence_id':'e','value':'x'*2000}], 'analyses':[], 'statistics':[], 'matching':[], 'sources':[], 'model_view_budget_bytes':200}
     with pytest.raises(ValueError,match='regional context exceeds'):model_context(context)
+
+
+def test_exact_requested_group_label_maps_back_without_accepting_other_targets(service,monkeypatch):
+    from types import SimpleNamespace
+    from tests.test_workflow_agents import run_task
+    run=run_task(service);proposal=service.approval(run.id)['proposal'];row=proposal['assessment']['segments'][0]
+    def call(run_id,sim,role,context):
+        output=templates(context)
+        for a in output['alternatives']:
+            a['target_groups']=[context['target_group_labels'][context['target_groups'][0]]]
+            a['problem_evidence_ids']=['E1']
+        output['alternatives'][2]['target_groups']=['청소년']
+        return SimpleNamespace(model_dump=lambda:output)
+    monkeypatch.setattr(service.agents,'call',call)
+    monkeypatch.setattr(service.policy_agent,'call_tool',lambda *args:{'status':'unavailable'})
+    scope={**proposal['task'],'target_groups':['M/youth']}
+    result=service.policy_designer.propose(str(uuid4()),run.id,scope,[{'dong_cd':row['dong_cd'],'dong_nm':row['dong_nm']}],[proposal])[0]
+    assert [a['generation_mode'] for a in result['alternatives']]==['fixture','fixture','template_fallback']
+    assert result['alternatives'][0]['target_groups']==['M/youth']
