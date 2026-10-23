@@ -32,3 +32,30 @@ def test_api_404_works_before_frontend_build(tmp_path, monkeypatch):
 
     with TestClient(app) as client:
         assert client.get("/not-an-api-route").status_code == 404
+
+
+def test_external_data_and_runtime_directories(tmp_path):
+    from backend.app.readiness import inspect
+    import shutil
+    from backend.app.config import ROOT
+    shutil.copytree(ROOT / 'data/sample', tmp_path / 'inputs/sample')
+    settings = Settings(_env_file=None, data_mode='sample', llm_mode='fake',
+                        input_root=tmp_path / 'inputs', runtime_storage_root=tmp_path / 'state')
+    assert settings.data_dir == tmp_path / 'inputs/sample'
+    assert settings.runtime_dir == tmp_path / 'state/sample'
+    report = inspect(settings)
+    assert report['ready'] and report['analysis']['geometry'] == 'synthetic_grid'
+    assert report['warnings'] and not report['durability_verified']
+    assert str(tmp_path) not in str(report)
+
+
+def test_missing_real_data_never_falls_back_to_synthetic(tmp_path, monkeypatch):
+    from backend.app.readiness import inspect
+    monkeypatch.setenv('VERCEL', '1')
+    settings = Settings(_env_file=None, data_mode='local', llm_mode='fake', input_root=tmp_path)
+    report = inspect(settings)
+    assert not report['ready']
+    assert report['data_mode'] == 'local' and report['analysis']['status'] == 'unavailable'
+    assert report['storage'] == 'temporary_instance'
+    assert 'synthetic_grid' not in str(report)
+    assert str(tmp_path) not in str(report)
