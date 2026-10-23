@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore", allow_inf_nan=False)
     data_mode: Literal["sample", "local"] = "sample"
+    input_root: Path | None = None
+    runtime_storage_root: Path | None = None
     llm_mode: Literal["fake", "live"] = "fake"
     gov24_service_key: SecretStr | None = Field(
         default=None, validation_alias=AliasChoices("GOV24_API_KEY", "GOV24_SERVICE_KEY")
@@ -31,6 +33,7 @@ class Settings(BaseSettings):
     llm_max_calls: int = Field(default=4, ge=1, le=10)
     llm_max_input_bytes: int = Field(default=24000, ge=1000, le=100000)
     llm_max_output_tokens: int = Field(default=1024, ge=128, le=8192)
+    policy_design_max_output_tokens: int = Field(default=8192, ge=1024, le=8192)
     llm_timeout_seconds: float = Field(default=30, gt=0, le=120)
     person_mcp_mode: Literal["stub", "live"] = "stub"
     mcp_python: str | None = None
@@ -53,10 +56,12 @@ class Settings(BaseSettings):
 
     @property
     def data_dir(self) -> Path:
-        return ROOT / "data" / self.data_mode
+        return (self.input_root or ROOT / "data") / self.data_mode
 
     @property
     def runtime_root(self) -> Path:
+        if self.runtime_storage_root is not None:
+            return self.runtime_storage_root
         # shortcut: per-instance temporary storage for Vercel previews; replace with shared persistence before multi-instance use.
         return Path("/tmp/beyond-hello-mas/runtime") if os.getenv("VERCEL") == "1" else ROOT / "runtime"
 

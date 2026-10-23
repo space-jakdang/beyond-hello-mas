@@ -2,9 +2,11 @@ import { test, expect } from '@playwright/test';
 test('three pages connect to the sample/fake backend', async ({page}) => {
   await page.goto('/');
   for (const name of ['관찰', '담당자 콘솔', '평가']) {
-    await page.getByRole('link', {name, exact: true}).click();
+    const link=page.getByRole('navigation').getByRole('link',{name,exact:true});
+    if(!await link.isVisible())await page.getByText('검증·연구 도구',{exact:true}).click();
+    await link.click();
     await expect(page.getByRole('heading', {name, exact: true})).toBeVisible();
-    await expect(page.getByRole('status').filter({hasText:/^서버/})).toHaveText('서버 연결됨 · 데이터 sample · LLM fake');
+    await expect(page.getByRole('status').filter({hasText:/자료:/})).toContainText('합성 시연 자료');
   }
 });
 

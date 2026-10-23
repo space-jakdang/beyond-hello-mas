@@ -50,6 +50,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(report_router(settings))
     app.include_router(quality_job_router(quality_jobs))
     app.include_router(analysis_router(settings))
+    from backend.app.readiness import readiness_router
+    app.include_router(readiness_router(settings))
     app.include_router(policy_router(settings))
     frontend_dist = ROOT / "frontend" / "dist"
     if frontend_dist.is_dir():
