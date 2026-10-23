@@ -77,6 +77,7 @@ class PolicyAgent:
 
     async def remote(self,tool,args):
         env={'DATA_MODE':self.settings.data_mode,'LLM_MODE':'fake',
+             'INPUT_ROOT':str(self.settings.data_dir.parent),'RUNTIME_STORAGE_ROOT':str(self.settings.runtime_root),
              'GOV24_SERVICE_KEY':self.settings.gov24_service_key.get_secret_value() if self.settings.gov24_service_key else '',
              'POLICY_TIMEOUT_SECONDS':str(self.settings.policy_timeout_seconds),'POLICY_MAX_PAGES':str(self.settings.policy_max_pages),
              'EVALUATION_ID':str(self.settings.evaluation_id) if self.settings.evaluation_id else ''}

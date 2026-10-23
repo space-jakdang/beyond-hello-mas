@@ -55,7 +55,7 @@ def context_for(dong,scope,proposals):
         selected=[r for r in proposal['assessment']['segments'] if r['dong_cd']==dong['dong_cd']]
         ids={r['evidence_id'] for r in selected}
         facts.extend({'evidence_id':r['evidence_id'],'target_group':group,'stage':r['stage'],'index_name':r['index_name'],
-                      'value':r['value'],'source_period':r['source_period'],'flags':r.get('flags',[])} for r in selected)
+                      'value':r['value'],'source_bands':r.get('source_bands',{}),'source_period':r['source_period'],'flags':r.get('flags',[])} for r in selected)
         analyses.append({'target_group':group,'summary':(proposal.get('workflow',{}).get('analysis') or {}).get('summary','분석 미완료')})
         stats=proposal.get('workflow',{}).get('statistics',{})
         statistics.extend(i for i in stats.get('summary',{}).get('insights',{}).get('items',[]) if i['evidence_id'] in ids)
@@ -75,13 +75,17 @@ def context_for(dong,scope,proposals):
 def research(designer,owner_id,run_id,context):
     # Always investigate delivery examples, even when an eligible candidate already exists.
     from backend.policy.alternative_export import group_label
-    words={'economic':'경제','housing':'주거','employment':'일자리','health':'건강','social':'관계','connection':'관계','care':'돌봄'}
+    words={'economic':'경제','housing':'주거','employment':'일자리','health':'건강','relationship':'고립','emotional':'상담'}
     needs=[n for row in context['matching'] for n in row.get('uncovered_needs',[])]+[n for row in context['matching'] for n in row['needs']]
-    queries=list(dict.fromkeys(words[n] for n in needs if n in words))[:3] or ['관계']
+    queries=list(dict.fromkeys(words[n] for n in needs if n in words))[:3] or ['고립']
+    if 'relationship' in needs:queries=list(dict.fromkeys(queries+['사회','상담']))[:3]
+    facts={f['evidence_id']:f['target_group'] for f in context['facts']}
+    focus={facts[row['evidence_id']] for row in context['matching'] if row.get('needs') and row.get('evidence_id') in facts}
+    targets=[g for g in context['target_groups'] if g in focus] or context['target_groups']
     observations=[];sources={source['policy_id']:source for source in context['sources']}
     for query in queries:
         args={'local_scope':{'11230':'gangnam','32010':'chuncheon'}[context['scope']['sgg']],
-              'query':query,'target_group':', '.join(group_label(g) for g in context['target_groups'])}
+              'query':query,'target_group':', '.join(group_label(g) for g in targets)}
         cache_key=digest(args)
         with designer.store.connection() as db:
             row=db.execute('SELECT body FROM policy_alternative_research WHERE owner_id=? AND cache_key=?',(owner_id,cache_key)).fetchone()
@@ -132,6 +136,8 @@ def model_context(context):
     if context.get('model_view_budget_bytes'):
         while view['sources'] and len(json.dumps(view,ensure_ascii=False).encode())>context['model_view_budget_bytes']:
             view['sources'].pop()
+        if len(json.dumps(view,ensure_ascii=False).encode())>context['model_view_budget_bytes']:
+            raise ValueError('policy regional context exceeds input budget')
     return view
 
 
@@ -147,6 +153,10 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
         context=deepcopy(contexts[dong['dong_cd']]) if contexts else context_for(dong,scope,proposals)
         context['reference_version']='short-1'
         context['design_version']='adaptation-1'
+        from pathlib import Path
+        from backend.policy.alternative_export import group_label
+        age_groups=json.loads((Path(__file__).resolve().parents[2]/'rules/age_crosswalk.json').read_text())['concept']
+        context['target_group_labels']={g:group_label(g)+' ('+', '.join(age_groups[g.split('/')[1]])+')' for g in context['target_groups']}
         from backend.agents.llm import PROMPTS
         overhead=len(json.dumps({'prompt':(PROMPTS/'policy_alternatives.txt').read_text(),'payload':{},'schema':Alternatives.model_json_schema()},ensure_ascii=False).encode())
         context['model_view_budget_bytes']=max(1,designer.settings.llm_max_input_bytes-overhead-32)

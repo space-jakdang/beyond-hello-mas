@@ -128,10 +128,16 @@ def test_adaptation_quotes_must_match_actual_source_fields():
 def test_model_preview_budget_preserves_regional_facts_and_original_sources():
     from backend.policy.alternatives import model_context
     import json
-    context={'facts':[{'evidence_id':'e','target_group':'M/youth','value':1,'stage':3}],
+    context={'target_groups':['M/youth'],'facts':[{'evidence_id':'e','target_group':'M/youth','value':1,'stage':3}],
         'analyses':[],'statistics':[],'matching':[],'design_version':'adaptation-1',
         'sources':[{'policy_id':str(i),'role':'analogue_not_local_eligibility','evidence':{'field':'support','value':'방문 상담'*200},'fields':{'support':'방문 상담'*200}} for i in range(8)],
         'model_view_budget_bytes':1800}
     view=model_context(context)
     assert len(json.dumps(view,ensure_ascii=False).encode())<=1800
     assert view['facts']==context['facts'] and len(context['sources'])==8
+
+
+def test_regional_facts_over_budget_are_not_silently_truncated():
+    from backend.policy.alternatives import model_context
+    context={'facts':[{'evidence_id':'e','value':'x'*2000}], 'analyses':[], 'statistics':[], 'matching':[], 'sources':[], 'model_view_budget_bytes':200}
+    with pytest.raises(ValueError,match='regional context exceeds'):model_context(context)

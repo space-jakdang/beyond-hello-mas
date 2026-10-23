@@ -12,4 +12,15 @@ test('three alternatives retain separate reviews, edit resets and stale revision
  const downloaded=page.waitForEvent('download');await panel.getByRole('button',{name:'PDF 다운로드',exact:true}).click();expect((await downloaded).suggestedFilename()).toMatch(/r2\.pdf$/);
  const word=page.waitForEvent('download');await panel.getByRole('button',{name:'Word 다운로드',exact:true}).click();expect((await word).suggestedFilename()).toMatch(/r2\.docx$/);
  await page.reload();await expect(panel.getByText('검토 대기',{exact:true})).toHaveCount(3);
+ const response=await request.get('http://127.0.0.1:'+(process.env.E2E_API_PORT||8000)+'/policy-proposals/'+run.id),body=await response.json();
+ Object.assign(body.sets[0].alternatives[0],{design_checks:{status:'structured_draft',gaps:[]},
+  source_elements:[{policy_id:'fixture',field:'support',quote:'방문 상담과 후속 연락'}],
+  adaptations:[{source_policy_ids:['fixture'],local_difference:'지역 이동 접근성 확인 필요',proposed_change:'청년 방문 예약을 저녁 시간으로 시범 조정',verification_needed:['협력기관 운영시간 확인']}],
+  evaluation_design:{outcome:'연락 유지',baseline_needed:'시행 전 연락률',comparison_method:'동일 집단 전후 비교',observation_period:'시범 8주 제안',success_criterion_to_agree:'유지율 기준 합의',stop_criterion_to_agree:'참여 부담 증가 시 중단 검토'}});
+ await page.route('**/policy-proposals/'+run.id,route=>route.fulfill({json:body}));await page.reload();
+ const adapted=panel.getByRole('region',{name:'지역 맞춤 설계 근거'}).first();
+ await adapted.getByText('원 정책에서 무엇을 바꾸나요?',{exact:true}).click();
+ await expect(adapted).toContainText('청년 방문 예약을 저녁 시간으로 시범 조정');
+ await adapted.getByText('어떻게 효과를 확인하나요?',{exact:true}).click();await expect(adapted).toContainText('시행 전 연락률');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBeTruthy();
 });
