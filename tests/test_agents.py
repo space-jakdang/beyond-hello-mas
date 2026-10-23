@@ -156,3 +156,27 @@ def test_run_budget_blocks_without_resetting_cumulative_budget(store, monkeypatc
     with pytest.raises(ValueError,match='budget'):agents.call('r',SIM,'analysis',{'text':'synthetic'})
     assert settings.llm_budget_usd==1
     with store.connection() as db:assert db.execute('SELECT COUNT(*) FROM llm_calls').fetchone()[0]==0
+
+
+def test_policy_output_limit_is_reserved_before_network(store,monkeypatch):
+    import backend.agents.llm as module
+    from backend.policy.alternatives import templates
+    from types import SimpleNamespace
+    from backend.policy.alternative_contracts import Alternatives
+    settings=Settings(_env_file=None,llm_mode='live',openai_api_key='test',openai_model='test',
+        llm_budget_usd=1,input_usd_per_million=1,output_usd_per_million=2,price_version='test',
+        llm_max_output_tokens=1024,policy_design_max_output_tokens=8192)
+    payload={'dong_nm':'검증동','target_groups':['M/youth']}
+    class Client:
+        def __init__(self,**kwargs):self.responses=self
+        def __enter__(self):return self
+        def __exit__(self,*args):pass
+        def parse(self,**kwargs):
+            assert kwargs['max_output_tokens']==8192
+            with store.connection() as db:
+                row=db.execute('SELECT reserve_usd FROM llm_calls').fetchone()
+                assert row[0]>=8192*2/1_000_000
+            return SimpleNamespace(status='completed',model='test',output_parsed=Alternatives.model_validate(templates(payload)),
+                usage=SimpleNamespace(input_tokens=10,output_tokens=20,model_dump=lambda **kw:{'input_tokens':10,'output_tokens':20}))
+    monkeypatch.setattr(module,'OpenAI',Client)
+    assert len(Agents(store,settings).call('r',SIM,'policy_alternatives',payload).alternatives)==3
