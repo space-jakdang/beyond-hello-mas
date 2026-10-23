@@ -99,6 +99,8 @@ class Agents:
         schema = SCHEMAS[role]
         metadata = {'role': role, 'model': model, 'prompt_hash': digest(prompt), 'prompt': prompt,
                     'input': payload, 'mode': self.settings.llm_mode, 'retry': 0}
+        output_limit = self.settings.policy_design_max_output_tokens if role == 'policy_alternatives' else self.settings.llm_max_output_tokens
+        metadata['max_output_tokens'] = output_limit
         reserve = 0.0
         encoded = json.dumps({'prompt': prompt, 'payload': payload, 'schema': schema.model_json_schema()}, ensure_ascii=False)
         if len(encoded.encode()) > self.settings.llm_max_input_bytes:
@@ -108,7 +110,7 @@ class Agents:
                         self.settings.output_usd_per_million, self.settings.price_version)):
                 raise ValueError('live requires model, positive budget and verified price configuration')
             reserve = ((len(encoded.encode()) + 8192) * self.settings.input_usd_per_million +
-                       self.settings.llm_max_output_tokens * self.settings.output_usd_per_million) / 1_000_000
+                       output_limit * self.settings.output_usd_per_million) / 1_000_000
         with self.store.connection(write=True) as db:
             existing = db.execute('SELECT status,body FROM llm_calls WHERE run_id=? AND call_key=?', (run_id, call_key)).fetchone()
             if existing:
@@ -140,7 +142,7 @@ class Agents:
                 with OpenAI(api_key=self.settings.openai_api_key.get_secret_value(), timeout=self.settings.llm_timeout_seconds, max_retries=0) as client:
                     response = client.responses.parse(model=model, input=[{'role': 'system', 'content': prompt},
                         {'role': 'user', 'content': json.dumps(payload, ensure_ascii=False)}],
-                        text_format=schema, max_output_tokens=self.settings.llm_max_output_tokens, store=False)
+                        text_format=schema, max_output_tokens=output_limit, store=False)
                 if response.status != 'completed' or response.output_parsed is None or response.usage is None:
                     raise ValueError('incomplete or refused structured response')
                 raw = response.output_parsed.model_dump()

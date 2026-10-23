@@ -92,3 +92,71 @@ def test_invalid_alternative_does_not_discard_other_two(service,monkeypatch):
     assert result['generation_mode']=='mixed'
     assert [a['generation_mode'] for a in result['alternatives']]==['template_fallback','fixture','fixture']
     assert result['alternatives'][1]['evidence_status']=='partial'
+
+
+def test_existing_candidate_still_triggers_targeted_research_and_caches(service,monkeypatch):
+    from backend.policy.alternatives import research,model_context
+    run=service.register(scenario());calls=[]
+    def tool(name,args):
+        calls.append(args)
+        return {'status':'evidence_available','analogues':[{'source':{'policy_id':'reference-'+args['query'],'title':'돌봄 지원','scope':'seoul','source_url':'https://www.gov.kr/','checked_at':'2026-10-24','fields':{'title':'돌봄 지원','support':'방문 상담과 후속 연락','eligibility':'청년'}},'comparison':{'similarity_basis':'keyword_rank_only','differences':['전달 기관 미확인']}}]}
+    monkeypatch.setattr(service.policy_agent,'call_tool',tool)
+    context={'scope':{'sgg':'11230'},'target_groups':['M/youth'],'facts':[],'analyses':[],'statistics':[],
+             'matching':[{'needs':['health','housing','economic','employment'],'uncovered_needs':['housing']}],
+             'sources':[{'policy_id':'existing','title':'기존 후보','evidence':{'field':'title','value':'기존 후보'},'role':'existing_candidate'}],
+             'design_version':'adaptation-1'}
+    result=research(service.policy_designer,run.id,run.id,deepcopy(context))
+    assert len(calls)==3 and calls[0]['query']=='주거' and calls[0]['target_group']=='남성 청년'
+    assert len(result['sources'])==4 and result['sources'][1]['evidence']['field']=='support'
+    research(service.policy_designer,run.id,run.id,deepcopy(context));assert len(calls)==3
+    view=model_context(result)
+    assert len(view['sources'])==3 and all('fields' in s for s in view['sources'])
+    assert view['source_count_available']==4
+
+
+def test_adaptation_quotes_must_match_actual_source_fields():
+    context={'dong_nm':'동','target_groups':['M/youth'],'facts':[],
+             'sources':[{'policy_id':'p1','fields':{'support':'방문 상담과 후속 연락'}}]}
+    output=templates(context)
+    output['alternatives'][0].update(source_policy_ids=['p1'],source_elements=[{'policy_id':'p1','field':'support','quote':'방문 상담'}],
+        adaptations=[{'source_policy_ids':['p1'],'local_difference':'전달기관 미확인','proposed_change':'접근성이 낮은 집단 방문 예약','verification_needed':['협력기관 확인']}])
+    assert validate(output,context)['alternatives'][0]['adaptations']
+    output['alternatives'][0]['source_elements'][0]['quote']='월 50만원 지급'
+    with pytest.raises(ValueError,match='not grounded'):validate(output,context)
+
+
+def test_model_preview_budget_preserves_regional_facts_and_original_sources():
+    from backend.policy.alternatives import model_context
+    import json
+    context={'target_groups':['M/youth'],'facts':[{'evidence_id':'e','target_group':'M/youth','value':1,'stage':3}],
+        'analyses':[],'statistics':[],'matching':[],'design_version':'adaptation-1',
+        'sources':[{'policy_id':str(i),'role':'analogue_not_local_eligibility','evidence':{'field':'support','value':'방문 상담'*200},'fields':{'support':'방문 상담'*200}} for i in range(8)],
+        'model_view_budget_bytes':1800}
+    view=model_context(context)
+    assert len(json.dumps(view,ensure_ascii=False).encode())<=1800
+    assert view['facts']==context['facts'] and len(context['sources'])==8
+
+
+def test_regional_facts_over_budget_are_not_silently_truncated():
+    from backend.policy.alternatives import model_context
+    context={'facts':[{'evidence_id':'e','value':'x'*2000}], 'analyses':[], 'statistics':[], 'matching':[], 'sources':[], 'model_view_budget_bytes':200}
+    with pytest.raises(ValueError,match='regional context exceeds'):model_context(context)
+
+
+def test_exact_requested_group_label_maps_back_without_accepting_other_targets(service,monkeypatch):
+    from types import SimpleNamespace
+    from tests.test_workflow_agents import run_task
+    run=run_task(service);proposal=service.approval(run.id)['proposal'];row=proposal['assessment']['segments'][0]
+    def call(run_id,sim,role,context):
+        output=templates(context)
+        for a in output['alternatives']:
+            a['target_groups']=[context['target_group_labels'][context['target_groups'][0]]]
+            a['problem_evidence_ids']=['E1']
+        output['alternatives'][2]['target_groups']=['청소년']
+        return SimpleNamespace(model_dump=lambda:output)
+    monkeypatch.setattr(service.agents,'call',call)
+    monkeypatch.setattr(service.policy_agent,'call_tool',lambda *args:{'status':'unavailable'})
+    scope={**proposal['task'],'target_groups':['M/youth']}
+    result=service.policy_designer.propose(str(uuid4()),run.id,scope,[{'dong_cd':row['dong_cd'],'dong_nm':row['dong_nm']}],[proposal])[0]
+    assert [a['generation_mode'] for a in result['alternatives']]==['fixture','fixture','template_fallback']
+    assert result['alternatives'][0]['target_groups']==['M/youth']

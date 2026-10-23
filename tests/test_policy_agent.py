@@ -220,3 +220,12 @@ def test_empty_finish_requires_complete_fresh_scoped_search(graph):
     partial=deepcopy(search);partial['result'].update(total=6,next_page=2)
     assert graph.policy_agent.finish('completed',[],[partial])['status']=='search_incomplete'
     assert graph.policy_agent.finish('completed',[],[])['status']=='search_incomplete'
+
+
+def test_policy_mcp_uses_same_configured_runtime_root(tmp_path):
+    settings=Settings(_env_file=None,llm_mode='fake',data_mode='sample',gov24_service_key=None,runtime_storage_root=tmp_path/'state')
+    service=PolicyService(settings,provider);service.refresh()
+    graph=GraphService(EventStore(settings.runtime_dir/'events.sqlite3'),settings)
+    result=graph.policy_agent.call_tool('policy_search',{'scopes':['central','seoul','gangnam','gangwon','chuncheon'],'per_page':5})
+    assert result['total']==5
+    assert result['coverage']['source_count']==6

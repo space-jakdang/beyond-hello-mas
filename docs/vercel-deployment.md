@@ -25,6 +25,8 @@ Set these server-side Environment Variables for Preview (and Production only whe
 | `PRICE_VERSION` | A label recording when you checked the prices, e.g. `2026-10-23` |
 | `LLM_BUDGET_USD` | A nonzero total budget, e.g. `2` |
 | `LLM_RUN_BUDGET_USD` | Optional per-run cap, e.g. `0.35` |
+| `LLM_MAX_CALLS` | `10` for the full regional analysis → statistics → policy workflow |
+| `POLICY_DESIGN_MAX_OUTPUT_TOKENS` | `8192` for three detailed policy alternatives |
 | `GOV24_API_KEY` | Your data.go.kr 대한민국 공공서비스(혜택) 정보 service key |
 | `PERSON_MCP_MODE` | `stub` |
 
@@ -52,3 +54,5 @@ Vercel Functions have a read-only filesystem except for temporary `/tmp` storage
 실제 집계는 Git 제외 대상이며 `rules/source_permissions.json`에 공개 확인 전인 원천이 포함되어 있습니다. `data/local`을 저장소나 공개 번들에 복사하지 마세요. 사용 권한이 확인된 접근 제한 서버에 별도로 반입합니다. `/readiness`는 파일 경로·키·원천 레코드를 반환하지 않습니다. 403은 배포 접근 보호·플랫폼 정책 또는 외부 API 권한 응답인지 요청 URL/응답에서 구별해야 하며, 분석 API의 자료 누락은 503으로 반환합니다. `/readiness`는 진단 보고서를 항상 200으로 반환하므로 준비 여부는 본문의 `ready`를 확인합니다.
 
 UI 상단의 자료 준비 상태에서 합성/실제 자료 설정, 경계 연결, 임시 저장 경고를 확인할 수 있습니다. 일상 업무 메뉴는 동네 분석→지역 업무→담당자 콘솔이며 정책 탐색·평가·관찰·합성 미래 실험은 검증·연구 도구에 모았습니다. 이 표시는 API 키의 실제 유효성이나 저장 볼륨 영속성 검증을 대신하지 않습니다.
+
+세 정책안이 기본 구상안으로만 나오는 경우 정책 검색뿐 아니라 호출 예산도 확인하세요. 기본 짧은 시연 설정의 호출 4회가 앞선 분석·통계에서 소진되면 정책 작성이 실행되지 않을 수 있습니다. 실제 전체 흐름 배포에는 LLM_MAX_CALLS=10과 정책 출력 한도8192를 지정하고, 총액·실행별 예산은 운영 예산 안에서 유지하세요. 저장된 제안의 fallback_reason과 생성 방식이 구상안인 이유를 구분합니다.

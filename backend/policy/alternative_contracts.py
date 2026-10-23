@@ -1,6 +1,7 @@
 """Three reviewable alternatives; never an entitlement or an allocation."""
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
+from backend.policy.design_contracts import Adaptation, Citation, EvaluationPlan
 
 
 class Alternative(BaseModel):
@@ -17,6 +18,9 @@ class Alternative(BaseModel):
     budget_questions:list[str]=Field(min_length=1,max_length=5)
     equity_risks:list[str]=Field(min_length=1,max_length=5)
     evaluation_plan:str=Field(min_length=1,max_length=600)
+    adaptations:list[Adaptation]=Field(default_factory=list,max_length=3)
+    source_elements:list[Citation]=Field(default_factory=list,max_length=5)
+    evaluation_design:EvaluationPlan | None = None
     missing_evidence:list[str]=Field(min_length=1,max_length=8)
 
 

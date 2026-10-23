@@ -43,6 +43,18 @@ def sections(body,alternative_id=None):
         for title,key in [('실행 순서','operating_steps'),('필요 역할','required_roles'),('확인할 예산','budget_questions'),('형평성 위험','equity_risks'),('미확인 사항','missing_evidence')]:
             result.append((3,title));result.extend((0,'• '+line) for line in a[key])
         result.extend([(3,'평가 계획'),(0,a['evaluation_plan'])])
+        if a.get('design_checks'):
+            result.append((3,'지역 맞춤 설계 검토'))
+            result.append((0,'구조화 초안·효과 미검증' if a['design_checks']['status']=='structured_draft' else '설계 근거 보완 필요'))
+            result.extend((0,line) for line in a['design_checks']['gaps'])
+        for element in a.get('source_elements',[]):
+            result.append((0,'차용할 원 정책 요소: '+element['policy_id']+' / '+element['field']+' / '+element['quote']))
+        for adaptation in a.get('adaptations',[]):
+            result.extend([(0,'원 정책: '+', '.join(adaptation['source_policy_ids'])),(0,'지역 차이: '+adaptation['local_difference']),
+                           (0,'현지 변경안: '+adaptation['proposed_change']),(0,'검증할 조건: '+' / '.join(adaptation['verification_needed']))])
+        if a.get('evaluation_design'):
+            for key,label in [('outcome','관찰할 결과'),('baseline_needed','필요 기준선'),('comparison_method','비교 방법'),('observation_period','제안 관측 기간'),('success_criterion_to_agree','합의할 성공 기준'),('stop_criterion_to_agree','합의할 중단 기준')]:
+                result.append((0,label+': '+a['evaluation_design'][key]))
         if a.get('operator_notes'):result.extend([(3,'담당자 수정·보완'),(0,a['operator_notes'])])
         result.append((3,'고정 출처와 조회일'))
         for c in a['citations']:

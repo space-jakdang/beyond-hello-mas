@@ -41,3 +41,14 @@ def test_long_korean_and_markup_remain_text(service,tmp_path):
     docx=render_docx(content)
     with zipfile.ZipFile(BytesIO(docx)) as z:
         xml=z.read('word/document.xml').decode();assert '&lt;script&gt;' in xml
+
+
+def test_structured_adaptation_appears_in_shared_report_sections(service):
+    body=sample(service);a=body['alternatives'][0]
+    a.update(design_checks={'status':'structured_draft','gaps':[]},
+        source_elements=[{'policy_id':'p','field':'support','quote':'방문 상담'}],
+        adaptations=[{'source_policy_ids':['p'],'local_difference':'전달기관 확인 필요','proposed_change':'저녁 방문 시범','verification_needed':['기관 근무시간']}],
+        evaluation_design={'outcome':'관계 유지','baseline_needed':'시행 전 연락률','comparison_method':'같은 집단 전후','observation_period':'8주 제안','success_criterion_to_agree':'현장 합의','stop_criterion_to_agree':'부담 증가'})
+    text='\n'.join(line for _,line in sections(body))
+    assert '저녁 방문 시범' in text and '시행 전 연락률' in text and '방문 상담' in text
+    assert '구조화 초안·효과 미검증' in text
