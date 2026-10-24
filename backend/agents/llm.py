@@ -21,7 +21,7 @@ def fake(role, payload):
                 'tool':'source_check' if payload['period_aggregate'] or blocked else 'trend',
                 'reason':'fake: 통계 도구의 관측값과 결측을 확인합니다.','blocked_evidence_ids':blocked}
     if role == 'workflow_matching':
-        return {'selections':[{'evidence_id':r['evidence_id'],'resource_ids':[c['id'] for c in r['candidates']],
+        return {'selections':[{'evidence_id':r['evidence_id'],'resource_ids':[c[payload['candidate_columns'].index('id')] if 'candidate_columns' in payload else c['id'] for c in r['candidates']],
                               'reason':'fake: 관측 욕구 가설과 필수 필터를 통과한 조건부 후보'} for r in payload['choices']],
                 'summary':'fake: 담당자 확인이 필요한 지역 자원 제안입니다.'}
     if role == 'policy_alternatives':

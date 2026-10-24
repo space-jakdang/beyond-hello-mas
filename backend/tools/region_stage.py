@@ -39,11 +39,14 @@ def classify(rows):
         band=level_band(row.index_name,row.value) if row.index_name in ('S1','v3') else None
         stage=youth_stage(band) if row.index_name in ('S1','v3') else row.source_stage
         if row.value is None:stage=None
-        result.append({**row.model_dump(mode='json'),'stage':stage,'level_band':band,
+        result.append({**row.model_dump(mode='json'),'stage':stage,'base_stage':stage,'level_band':band,
+                       'stage_scale':f'{row.index_name}:base','reachable_base_stages':[1,2,3] if row.index_name in ('S1','v3') else [1,2,3,4,5],
+                       'priority_review':None,'priority_criterion_status':'not_established',
                        'interpretation':'먼저 찾아갈 순서','comparable_across_regions':False})
     groups=defaultdict(list)
     for r in result:groups[(r['ym'],r['dong_cd'])].append(r)
     return {'segments':result,'metadata':{'rule_version':VERSION,'input_hash':digest([r.model_dump(mode='json') for r in rows]),
         'provisional':True,'interpretation':'먼저 찾아갈 순서','individual_diagnosis':False,
-        'card_signals_applied':False,'age_crosswalk':'source-specific'},
+        'card_signals_applied':False,'age_crosswalk':'source-specific','stage_contract_version':'regional-stage-scope-1',
+        'common_priority_criterion':'not_established','comparable_across_groups':False},
         'dongs':[{'ym':ym,'dong_cd':dong,'stage':max((r['stage'] for r in items if r['preferred'] and r['stage'] is not None),default=None)} for (ym,dong),items in groups.items()]}

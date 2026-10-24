@@ -56,6 +56,7 @@ def assess(settings, task, source_data=None):
             from backend.tools.region_stage import youth_stage
             row['scenario_signals']=future['signals'][task.ym][row['dong_cd']]
             row['stage']=youth_stage(row['level_band'],row['scenario_signals'])
+            row['scenario_stage']=row['stage']
         row['evidence_id'] = digest(row)
         row['stage_label'] = STAGES.get(row['stage'], '판정 보류')
     if future:

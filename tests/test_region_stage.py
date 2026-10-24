@@ -31,6 +31,18 @@ def test_classify_keeps_comparisons_and_missing_separate():
     assert not result['metadata']['individual_diagnosis']
 
 
+def test_stage_scope_keeps_reachable_youth_range_and_unvalidated_priority_explicit():
+    rows=generate()[:8]
+    result=classify(rows)
+    for row in result['segments']:
+        assert row['base_stage']==row['stage']
+        assert row['reachable_base_stages']==([1,2,3] if row['age_group']=='youth' else [1,2,3,4,5])
+        assert row['priority_review'] is None and row['priority_criterion_status']=='not_established'
+    assert classify([rows[0].model_copy(update={'value':None})])['segments'][0]['reachable_base_stages']==[1,2,3]
+    non_youth=next(row for row in rows if row.age_group!='youth')
+    assert classify([non_youth.model_copy(update={'value':None})])['segments'][0]['reachable_base_stages']==[1,2,3,4,5]
+
+
 def test_v3_sample_and_api_are_repeatable(monkeypatch):
     from fastapi.testclient import TestClient
     from backend.app.main import create_app

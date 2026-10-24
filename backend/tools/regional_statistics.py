@@ -110,17 +110,18 @@ def policy_needs(assessment):
                 for second in needs[i+1:]:pairs[(first,second)]+=1
             profiles.append({'evidence_id':row['evidence_id'],'cohort_id':cohort_id,'dong_nm':row['dong_nm'],'comparable_segments':n,
                 'priority_midrank':(sum(s<row['stage'] for s in stages)+.5*sum(s==row['stage'] for s in stages))/n if observed and n>=3 else None,
-                'priority_review':row['stage']>=4 if observed else None,'base_stage_stable':stable_by_id[row['evidence_id']],
+                'priority_review':None,'priority_criterion_status':'not_established','base_stage_stable':stable_by_id[row['evidence_id']],
                 **profile,'needs':needs,'need_basis':profile['need_basis'] if observed else 'insufficient_evidence',
                 'measured_components':{},
                 'estimated_people':None})
         cohorts.append({'cohort_id':cohort_id,'sgg':key[0],'sex':key[1],'age_group':key[2],'index_name':key[3],
             'source_period':key[4],'total_segments':len(rows),'observed_segments':n,'missing_segments':len(rows)-n,
-            'priority_segments':sum(s>=4 for s in stages),'priority_share':sum(s>=4 for s in stages)/n if n else None,
+            'priority_segments':None,'priority_share':None,'priority_criterion_status':'not_established',
             'need_counts':dict(sorted(counts.items())),
             'joint_needs':[{'needs':list(pair),'segments':count} for pair,count in sorted(pairs.items())]})
     return {'version':'policy-needs-2','cohorts':cohorts,'profiles':profiles,'population_estimate':None,
         'limitations':['선택한 동·집단의 기술 통계이며 주민 유병률·개인 판정·인과 원인이 아닙니다.',
             '상대 위치는 같은 척도·집단·기간의 등급 중간순위이며 위험 확률이 아닙니다. 3개 미만이면 산출하지 않습니다.',
+            '집단별 우선 검토 기준은 미확정입니다. 청년 기본 단계는 1~3이며 공통 4~5 비율로 우선순위가 낮다고 판단하지 않습니다.',
             '관측 요인과 욕구는 다릅니다. 원천 요인 정의·욕구별 근거가 없으면 매핑하지 않으며 청년 지수는 관계 지원 조사 가설로만 사용합니다.',
             '임계값 민감도는 ±0.01 지수 변형 결과이며 보정된 불확실성이 아닙니다.']}

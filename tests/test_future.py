@@ -34,6 +34,7 @@ def test_frozen_future_is_separate_reproducible_and_scoped(service):
     assert future_months(date(2026,12,31))==['2027-01','2027-02','2027-03']
     result=assess(service.settings,task(batch))
     assert all(r['source_file'].startswith('synthetic:') for r in result['segments'])
+    assert all(r.get('scenario_stage')==r['stage'] and r['base_stage'] in (None,1,2,3) for r in result['segments'])
     assert [r['stages'][1] if r['stages'] else None for r in sensitivity(result)['items']]==[r['stage'] for r in result['segments']]
     assert result['metadata']['synthetic_future'] and result['metadata']['synthetic_signals_applied']
     assert all(r['ym']==batch['months'][0] for r in result['segments'])
