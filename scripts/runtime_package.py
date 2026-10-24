@@ -1,11 +1,15 @@
 """Build an allowlisted, immutable input directory; never copy raw survey data or DBs."""
 import argparse
+import atexit
+import base64
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
 import shutil
 import tempfile
+import zipfile
 
 from backend.app.config import Settings
 from backend.tools.catalog import load_catalog
@@ -13,6 +17,10 @@ from backend.tools.neighborhoods import group_analysis
 
 FILES = ('local/segments-v3.parquet', 'local/resources-v3.csv',
          'local/seohee/card_weekly_signals.csv', 'local/seohee/import.json')
+PACKAGE_FILES = (*FILES, 'manifest.json')
+# shortcut: small fixed inputs fit server environment limits; use private object storage when they grow.
+MAX_ENCODED_BYTES = 48 * 1024
+MAX_INPUT_BYTES = 8 * 1024 * 1024
 
 
 def sha(path):
@@ -125,6 +133,58 @@ def build(source, destination, provenance):
     return manifest
 
 
+def encode(root):
+    root = Path(root)
+    manifest = verify(root)
+    if manifest['provenance']['permission_status'] != 'private_contest_use_confirmed':
+        raise ValueError('private contest use confirmation required before export')
+    if sum((root/name).stat().st_size for name in PACKAGE_FILES) > MAX_INPUT_BYTES:
+        raise ValueError('input package exceeds expanded size budget')
+    stream = io.BytesIO()
+    with zipfile.ZipFile(stream, 'w', zipfile.ZIP_DEFLATED) as archive:
+        for name in PACKAGE_FILES:
+            archive.write(regular(root/name), name)
+    value = base64.b64encode(stream.getvalue()).decode('ascii')
+    if len(value) > MAX_ENCODED_BYTES:
+        raise ValueError('input package exceeds server environment budget')
+    return value
+
+
+def restore(value):
+    root = Path(tempfile.mkdtemp(prefix='beyond-regional-inputs-')).resolve()
+    try:
+        if len(value) > MAX_ENCODED_BYTES:
+            raise ValueError('package too large')
+        raw = base64.b64decode(value, validate=True)
+        with zipfile.ZipFile(io.BytesIO(raw)) as archive:
+            names = archive.namelist()
+            if len(names) != len(PACKAGE_FILES) or set(names) != set(PACKAGE_FILES):
+                raise ValueError('unexpected package entries')
+            if sum(info.file_size for info in archive.infolist()) > MAX_INPUT_BYTES:
+                raise ValueError('package too large')
+            for name in PACKAGE_FILES:
+                target = root/name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(archive.read(name))
+        manifest = verify(root)
+        if manifest['provenance']['permission_status'] != 'private_contest_use_confirmed':
+            raise ValueError('private contest use not confirmed')
+    except Exception:
+        shutil.rmtree(root)
+        raise ValueError('invalid RUNTIME_INPUT_PACKAGE or private contest use not confirmed') from None
+    atexit.register(shutil.rmtree, root, ignore_errors=True)
+    return root
+
+
+def deployment_settings():
+    package = os.getenv('RUNTIME_INPUT_PACKAGE')
+    if package is not None:
+        return Settings(data_mode='local', resource_catalog='v3', input_root=restore(package))
+    if os.getenv('VERCEL_ENV') == 'production':
+        raise ValueError('production requires RUNTIME_INPUT_PACKAGE; synthetic fallback is disabled')
+    return Settings()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='command', required=True)
@@ -134,7 +194,17 @@ def main():
     create.add_argument('--provenance', type=Path, required=True)
     check = sub.add_parser('verify')
     check.add_argument('root', type=Path)
+    export = sub.add_parser('encode', help='export confirmed inputs to a private server environment file')
+    export.add_argument('root', type=Path)
+    export.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
+    if args.command == 'encode':
+        value = encode(args.root)
+        descriptor = os.open(args.output, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, 'w') as stream:
+            stream.write(value)
+        print(json.dumps({'encoded_bytes': len(value)}))
+        return
     result = (build(args.source, args.destination, json.loads(args.provenance.read_text()))
               if args.command == 'build' else verify(args.root))
     print(json.dumps({'version': result['version'], 'summary': result['summary'],
