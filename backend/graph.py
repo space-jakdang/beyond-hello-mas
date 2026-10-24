@@ -210,7 +210,7 @@ class GraphService:
                 [t['payload']['observation'] for t in self.store.traces(state['run_id'],limit=1000)
                  if t['kind']=='agent_message' and t['agent']=='statistics' and 'observation' in t['payload']])
         workflow['statistics']=stats;workflow['status']=stats['status']
-        if stats.get('revised_plan'):workflow['analysis']=stats['revised_plan']
+        if stats['status']=='reviewed' and stats.get('revised_plan'):workflow['analysis']=stats['revised_plan']
         self.node_event(state,'statistics',stats,started)
         return {'workflow':workflow}
 
