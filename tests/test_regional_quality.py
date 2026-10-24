@@ -202,7 +202,8 @@ def test_single_agent_invalid_selection_repeat_lookup_and_budget_hold(service,mo
     assert all(not row['recommendations'] for row in first['proposal']['assignments'])
 
 
-def test_evidence_rejects_report_changes_after_preflight(service,recorded,monkeypatch):
+@pytest.mark.parametrize('change',['version','assignment','symlink'])
+def test_evidence_rejects_report_changes_after_preflight(service,recorded,monkeypatch,change):
     from uuid import uuid4
     from fastapi import HTTPException
     import backend.app.quality_jobs as module
@@ -213,8 +214,12 @@ def test_evidence_rejects_report_changes_after_preflight(service,recorded,monkey
         (folder/(name+'.json')).write_text(json.dumps(body))
     original=module.quality_detail
     def change_after_preflight(*args):
-        result=original(*args);changed=deepcopy(report);changed['version']='changed-after-validation'
-        (folder/'workflow-runs.json').write_text(json.dumps(changed))
+        result=original(*args);changed=deepcopy(report);path=folder/'workflow-runs.json'
+        if change=='version':changed['version']='changed-after-validation'
+        if change=='assignment':changed['records'][0]['proposal']['assignments']=[]
+        if change=='symlink':
+            path.rename(folder/'saved-runs.json');path.symlink_to(folder/'saved-runs.json')
+        else:path.write_text(json.dumps(changed))
         return result
     monkeypatch.setattr(module,'quality_detail',change_after_preflight)
     with pytest.raises(HTTPException) as error:
