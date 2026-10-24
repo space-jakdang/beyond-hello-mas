@@ -1,5 +1,5 @@
 from copy import deepcopy
-from backend.tools.regional_resources import source_ages,needs_for,candidates
+from backend.tools.regional_resources import source_ages,source_age_ranges,needs_for,candidates
 from backend.tools.regional_task import assess
 from backend.tools.catalog import load_catalog
 from tests.test_regional_task import task
@@ -10,6 +10,8 @@ def test_source_ages_and_need_mapping_are_evidence_based():
     assert source_ages({'a':['20s','30s'],'b':['19–34']})==(19,39)
     assert source_ages({'a':['65+']})==(65,120)
     assert source_ages({'a':['unknown']}) is None
+    assert source_age_ranges({'a':['20s','60s'],'b':['25–34']})==[(20,34),(60,69)]
+    assert source_age_ranges({'a':['unknown']}) is None
     row={'index_name':'G','value':.5,'components':{'housing':1,'economic':0,'health':None}}
     assert needs_for(row)==['housing']
     row['components']={'economic':1};assert needs_for(row)==['economic']
@@ -25,6 +27,25 @@ def test_statistics_holds_and_catalog_time_are_enforced(service):
     old=deepcopy(a);old['task']['as_of']='1900-01-01'
     assert all(not r['recommendations'] for r in candidates(old,{'status':'reviewed'},resources))
     assert all(r['allocation_performed'] is False and r['remaining_capacity'] is None for r in result)
+
+
+def test_regional_candidate_conditions_reach_saved_evidence_and_model_context(service,monkeypatch):
+    from tests.test_workflow_agents import run_task
+    resources=[r.model_copy(update={'eligibility_tags':['resident']}) for r in load_catalog(service.settings.catalog_path)]
+    monkeypatch.setattr('backend.graph.load_catalog',lambda path:resources)
+    run=run_task(service);proposal=service.approval(run.id)['proposal']
+    rows=[r for r in proposal['assignments'] if r['recommendations']]
+    assert rows
+    for row in rows:
+        for candidate in row['recommendations']:
+            assert candidate['candidate_status']=='conditional'
+            assert candidate['condition_checks']['eligibility:resident']=='unknown'
+            presented=next(c for c in row['decision_evidence']['presented_candidates'] if c['id']==candidate['id'])
+            assert presented['unknown_conditions']==candidate['unknown_conditions']
+    import json
+    with service.store.connection() as db:
+        call=json.loads(db.execute("SELECT body FROM llm_calls WHERE run_id=? AND role='workflow_matching'",(run.id,)).fetchone()[0])
+    assert all(c['candidate_status']=='conditional' for row in call['input']['choices'] for c in row['candidates'])
 
 
 def test_graph_matching_uses_statistics_and_model_is_constrained(service,monkeypatch):

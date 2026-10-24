@@ -6,7 +6,7 @@ from backend.tools.matching import MatchRequest, map_intensity, match
 NEEDS=('relationship','economic','housing','employment','health','emotional')
 
 
-def source_ages(bands):
+def source_age_ranges(bands):
     parsed=[]
     for values in bands.values():
         for value in values:
@@ -17,7 +17,16 @@ def source_ages(bands):
             else:return None
             if not 0<=low<=high<=120:return None
             parsed.append((low,high))
-    return (min(p[0] for p in parsed),max(p[1] for p in parsed)) if parsed else None
+    merged=[]
+    for low,high in sorted(parsed):
+        if merged and low<=merged[-1][1]+1:merged[-1]=(merged[-1][0],max(high,merged[-1][1]))
+        else:merged.append((low,high))
+    return merged or None
+
+
+def source_ages(bands):
+    ranges=source_age_ranges(bands)
+    return (ranges[0][0],ranges[-1][1]) if ranges else None
 
 
 def needs_for(row):
@@ -37,7 +46,7 @@ def candidates(assessment,statistics,resources):
     insights={i['evidence_id']:i for i in statistics.get('summary',{}).get('insights',{}).get('items',[])}
     for row in assessment['segments']:
         base={k:row[k] for k in ('evidence_id','dong_cd','dong_nm','sgg','sex','age_group','stage','source_bands')}
-        needs=needs_for(row);ages=source_ages(row['source_bands'])
+        needs=needs_for(row);ranges=source_age_ranges(row['source_bands']);ages=(ranges[0][0],ranges[-1][1]) if ranges else None
         reason=('statistics_unreviewed' if statistics.get('status')!='reviewed' else
                 'insufficient_observation' if row['stage'] is None or row['evidence_id'] in blocked else
                 'unknown_source_age' if ages is None else 'unmapped_evidence' if not needs else None)
@@ -46,19 +55,21 @@ def candidates(assessment,statistics,resources):
         if reason is None:
             request=MatchRequest(sgg=row['sgg'],age_min=ages[0],age_max=ages[1],needs=needs,stage=row['stage'],
                 intensity=map_intensity(row['stage']),as_of=assessment['task']['as_of'])
-            result=match(resources,request)
+            result=match(resources,request,regional_ages=ranges)
             if not result['recommendations']:reason='no_eligible_catalog_candidates'
-        evidence={'version':'resource-decision-1', 'observation':{k:row.get(k) for k in
+        evidence={'version':'resource-decision-2', 'decision_contract_version':'regional-decision-2', 'observation':{k:row.get(k) for k in
                     ('evidence_id','index_name','value','source_period','components','source_bands')},
                   'mapping_version':'regional-needs-1','provisional_needs':needs,'statistical_context':({**profiles.get(row['evidence_id'],{}),'insight':insights.get(row['evidence_id'])}),
                   'filter_request':request.model_dump(mode='json') if filtered else None,
                   'catalog_metadata':result.get('metadata'),
                   'presented_candidates':[{'id':c['id'],'name':c['name'],'needs':c['needs'],
                       'source_url':c.get('source_url'),'collected_at':c.get('collected_at'),
-                      'eligibility':c['eligibility'],'valid_until':c.get('valid_until')} for c in result['recommendations']],
+                      'eligibility':c['eligibility'],'valid_until':c.get('valid_until'),
+                      **{k:c[k] for k in ('candidate_status','condition_checks','unknown_conditions','age_coverage','eligible_age_ranges')}} for c in result['recommendations']],
                   'unknown_conditions':['individual_eligibility','application_acceptance','remaining_capacity'],
                   'model_reason':None}
-        rows.append({**base,**result,'decision_evidence':evidence,'needs':needs,'age_range':ages,'reason':reason,
+        rows.append({**base,**result,'decision_contract_version':'regional-decision-2','decision_evidence':evidence,
+                     'needs':needs,'age_range':ages,'source_age_ranges':ranges,'reason':reason,
                      'statistical_context':({**profiles.get(row['evidence_id'],{}),'insight':insights.get(row['evidence_id'])}),'catalog_filter_performed':filtered,'status':'candidate' if result['recommendations'] else 'needs_human',
                      'mapping_version':'regional-needs-1','provisional':True,'remaining_capacity':None,
                      'allocation_performed':False,'as_of':assessment['task']['as_of']})

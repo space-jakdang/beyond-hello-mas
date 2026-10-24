@@ -108,3 +108,7 @@ v3 자원은 단계 범위, 체납연계, 제공 자료의 확인/주의 상태,
 새 지역 출력은 `decision_contract_version=regional-decision-2`, 후보별 조건 검사와 확인할 조건, 실제 대상 연령 교집합, 필요 근거 상태, 단계 척도/비교 범위, 검토 전이, `matching_mode`, 조사 사유를 보존한다. 이는 개정 목표이며 이 문서 개정만으로 필드가 생성되지는 않는다. 단계·욕구 규칙을 바꾸면 해당 버전도 갱신하고 입력/카탈로그 해시를 기록한다. 공백 필드는 과거 실행에서 추정해 채우지 않는다. 과거 실행·승인 스냅샷·평가 보고서 schema1–6의 의미는 유지한다.
 
 입력 `RegionalTask.methodology_version`은 현행 `regional-workflow-1`을 유지하고 새 의미는 출력의 `decision_contract_version` 및 개별 규칙 버전으로 구분한다. 지역 후보 전용 호출 경계를 공유 필터에 명시하며 개인 요청에서는 이 경계를 선택할 수 없게 한다. 개인 자격은 계속 `is not True`이면 제외한다. 지역 분기 도입을 위해 자격 필터를 복제하거나 공개 요청에 자격 우회 옵션을 추가하지 않는다.
+
+### 지역 조건부 후보 출력
+
+지역 `candidates()`는 공유 `match(..., regional_ages=...)` 호출에서만 조건부 검사를 선택한다. 공개 `MatchRequest`와 개인 경로는 이 인자를 받지 않으며 엄격한 자격·전체 연령 포괄 검증을 유지한다. 지역 후보의 `candidate_status`는 `matched`(등록 조건 일치) 또는 `conditional`(추가 확인)이고, 확정 자격 불일치는 제외 사유 `eligibility_mismatch:<tag>`로 남는다. `condition_checks`는 검사별 pass/fail/unknown, `unknown_conditions`는 확인할 조건이다. `source_age_ranges`는 원천 구간 합집합, `eligible_age_ranges`는 자원 대상과의 실제 교집합이며 `age_coverage` full/partial을 함께 제공한다. 부분 포괄은 전체 집단의 자격 확인이 아니다. 공유 필터의 지역 분기는 `regional-candidates-1` 정책 버전과 실제 원천 연령 구간을 포함한 입력 해시를 사용한다. `resource-decision-2` / `regional-decision-2`로 새 결과를 구별하며 과거 출력은 이 필드 없이 조회된다. 접수·정원·개인 자격과 실제 배정은 여전히 미확인이다.
