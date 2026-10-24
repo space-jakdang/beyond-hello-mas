@@ -122,7 +122,7 @@ def policy_gap(row,explicit=False,research=None):
     search='not_requested';count=None
     if research is not None:
         count=len(research.get('candidates',research.get('recommendations',[])))
-        search=('search_failed' if research.get('status') in ('failed','error','unavailable','tool_error','tool_unavailable') else
+        search=('search_failed' if research.get('status') in ('failed','error','unavailable','tool_error','tool_unavailable','unsupported_scope') else
                 'search_incomplete' if research.get('search_complete_within_scope') is not True else
                 'candidates_found' if count else 'no_verified_candidates_within_scope')
         action='조회된 후보의 원문·대상 조건을 확인합니다.' if count else '검색 범위·실패·한도 사유를 확인하고 현장 자료를 보완합니다.'
