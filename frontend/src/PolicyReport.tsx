@@ -6,7 +6,7 @@ type Review={revision:number;document:Document;history:{revision:number;action:s
 const states:Record<string,string>={draft:'검토 전 정책안',needs_evidence:'근거 보완 필요',needs_human:'담당자 확인 필요',pending:'검토 대기',approved:'정책안 검토 승인',rejected:'정책안 반려',needs_revision:'보완 요청',revise:'수정본 저장'};
 const reasons:Record<string,string>={policy_search_incomplete:'정책 검색 범위·최신성 확인 필요',existing_candidates_require_review:'기존 후보의 적용 가능성 확인 필요',analogue_evidence_unavailable:'확인된 참고 사례 부족',design_model_tool_or_validation_failed:'모델·도구·원문 검증 확인 필요'};
 const evalNames:Record<string,string>={outcome:'제안 결과지표',baseline_needed:'필요한 기준선',comparison_method:'비교 방법',observation_period:'관측 기간',success_criterion_to_agree:'합의할 성공 기준',stop_criterion_to_agree:'합의할 중단 기준'};
-const date=(value:string|undefined)=>{if(!value)return '시점 미확인';const parsed=new Date(value);return Number.isNaN(parsed.getTime())?'시점 확인 필요':parsed.toLocaleString('ko-KR');};
+const date=(value:string|undefined)=>{if(!value)return '시점 미확인';const parsed=new Date(value);return Number.isNaN(parsed.getTime())?'시점 미확인':parsed.toLocaleString('ko-KR');};
 export function PolicyReport({runId,reviewable=false}:{runId:string;reviewable?:boolean}){
  const [data,setData]=useState<Review>(),[error,setError]=useState(''),[busy,setBusy]=useState(false),[operator,setOperator]=useState(''),[reason,setReason]=useState(''),[title,setTitle]=useState(''),[service,setService]=useState(''),[steps,setSteps]=useState(''),[readiness,setReadiness]=useState('needs_human');
  useEffect(()=>{let active=true;setData(undefined);setError('');api<Review>(`/runs/${encodeURIComponent(runId)}/policy-design`).then(r=>{if(active)setData(r);}).catch(()=>{if(active)setError('정책 보고서를 불러오지 못했습니다. 새로고침해 주세요.');});return()=>{active=false;};},[runId]);

@@ -100,3 +100,15 @@ test('policy search explains a missing snapshot and keeps API detail collapsed',
  const raw=alert.getByText(/private gateway failure/);await expect(raw).toBeHidden();
  await alert.getByText('오류 상세',{exact:true}).click();await expect(raw).toBeVisible();
 });
+
+test('unknown policy coverage status does not claim a saved list is missing',async({page})=>{
+ const coverage={credentials_configured:true,status:'future_status',fetched_at:'2026-10-24T00:00:00Z',stale:false,scopes:{central:2,seoul:0,gangnam:0,gangwon:0,chuncheon:0},source_count:2,limitation:'목록 해석에 제한이 있습니다.',last_attempt:null};
+ await page.route('**/policies**',route=>route.fulfill({json:{items:[],total:0,page:1,next_page:null,coverage}}));
+ await page.goto('/policy');
+ const status=page.getByRole('region',{name:'정부24 연결 및 수집 상태'});
+ await expect(status).toContainText('자료 상태 확인 필요');
+ await expect(status).toContainText('확인 가능한 정책 목록 2건에서 검색합니다');
+ await expect(status).not.toContainText('저장된 정책 목록이 없습니다');
+ const results=page.getByRole('region',{name:'정책 검색 결과'});
+ await expect(results).toContainText('목록 상태를 확인할 수 없어 조건에 맞는 정책을 판단할 수 없습니다.');
+});

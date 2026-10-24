@@ -54,6 +54,28 @@ test('future result lookup explains failure and keeps server detail collapsed',a
  await page.route('**/future/batches/lookup-error',route=>route.fulfill({json:{id:'lookup-error',sgg:'11230',data_mode:'sample',llm_mode:'fake',months:['2026-10'],assumptions:[],seed:1,generator_version:'test',baseline_input_hash:'baseline',input_hash:'input',as_of:'2026-10-24',periods:[{ym:'2026-10',run_id:'missing-run',status:'completed'}]}}));
  await page.route('**/runs/missing-run/overview',route=>route.fulfill({status:503,json:{detail:'private upstream failure'}}));
  await page.goto('/future?batch=lookup-error&period=missing-run');
+ await expect(page.locator('p[role="status"]').filter({hasText:'기간 실행 종료'})).toContainText('1 / 1 기간 실행 종료');
  const alert=page.getByRole('alert');await expect(alert).toContainText('선택한 기간의 결과를 가져오지 못했습니다.');
  const raw=alert.getByText(/private upstream failure/);await expect(raw).toBeHidden();await alert.getByText('오류 상세',{exact:true}).click();await expect(raw).toBeVisible();
+});
+
+test('cancelled future analysis stops polling and shows its final state',async({page})=>{
+ let batchCalls=0,overviewCalls=0;
+ await page.route('**/future/batches/cancelled-batch',route=>{batchCalls++;return route.fulfill({json:{id:'cancelled-batch',sgg:'11230',data_mode:'sample',llm_mode:'fake',months:['2026-10'],assumptions:[],seed:1,generator_version:'test',baseline_input_hash:'baseline',input_hash:'input',as_of:'2026-10-24',periods:[{ym:'2026-10',run_id:'cancelled-run',status:'cancelled'}]}});});
+ await page.route('**/runs/cancelled-run/overview',route=>{overviewCalls++;return route.fulfill({json:{run:{id:'cancelled-run',status:'cancelled',data_mode:'sample'},traces:[]}});});
+ await page.goto('/future?batch=cancelled-batch&period=cancelled-run');
+ await expect(page.getByLabel('기간별 분석 상태')).toContainText('취소');
+ await expect(page.getByText('이 기간의 분석이 취소되었습니다.',{exact:true})).toBeVisible();
+ await expect(page.locator('p[role="status"]').filter({hasText:'기간 실행 종료'})).toContainText('1 / 1 기간 실행 종료');
+ await page.waitForTimeout(4500);
+ expect(batchCalls).toBe(1);expect(overviewCalls).toBe(1);
+});
+
+test('a cancelled period does not stop polling while another period is pending',async({page})=>{
+ let batchCalls=0;
+ await page.route('**/future/batches/mixed-batch',route=>{batchCalls++;return route.fulfill({json:{id:'mixed-batch',sgg:'11230',data_mode:'sample',llm_mode:'fake',months:['2026-10','2026-11'],assumptions:[],seed:1,generator_version:'test',baseline_input_hash:'baseline',input_hash:'input',as_of:'2026-10-24',periods:[{ym:'2026-10',run_id:'cancelled-run',status:'cancelled'},{ym:'2026-11',run_id:'pending-run',status:'pending'}]}});});
+ await page.route('**/runs/cancelled-run/overview',route=>route.fulfill({json:{run:{id:'cancelled-run',status:'cancelled',data_mode:'sample'},traces:[]}}));
+ await page.goto('/future?batch=mixed-batch&period=cancelled-run');
+ await expect(page.getByRole('button',{name:'예약된 기간을 분석하고 있습니다'})).toBeDisabled();
+ await expect.poll(()=>batchCalls,{timeout:5000}).toBeGreaterThan(1);
 });
