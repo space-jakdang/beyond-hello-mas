@@ -9,7 +9,10 @@ def proposal(service):
     from tests.test_workflow_agents import run_task
     run=run_task(service)
     p=deepcopy(service.approval(run.id)['proposal'])
-    for a in p['assignments']:a.update(shortfall=3,catalog_filter_performed=True)
+    from backend.tools.regional_resources import policy_gap
+    for a in p['assignments']:
+        a.update(shortfall=3,catalog_filter_performed=True,recommendations=[],uncovered_needs=a['needs'])
+        a['policy_gap']=policy_gap(a)
     p['policy_research']={'status':'no_verified_candidates','candidates':[],
         'search_complete_within_scope':True,'search_scope':{'scopes':['central','seoul','gangnam'],'query':'관계','page':1},
         'coverage':{'fetched_at':'2026-10-22T00:00:00Z'}}

@@ -48,7 +48,8 @@ class PolicyDesigner:
             observation=db.execute('SELECT body FROM policy_design_observations WHERE run_id=?',(run_id,)).fetchone()
         if saved:return json.loads(saved[0])
         research=proposal.get('policy_research') or {};task=proposal['task']
-        gaps=[a for a in proposal['assignments'] if a.get('catalog_filter_performed') and a.get('shortfall',0)>0]
+        current=(proposal.get('assessment') or {}).get('metadata',{}).get('policy_gap_version')=='policy-gap-1'
+        gaps=[a for a in proposal['assignments'] if a.get('policy_gap',{}).get('research_needed')] if current else [a for a in proposal['assignments'] if a.get('catalog_filter_performed') and a.get('shortfall',0)>0]
         scope=research.get('search_scope') or {}
         complete=research.get('search_complete_within_scope') is True and research.get('status')=='no_verified_candidates'
         gap=Gap(state='candidate_found' if research.get('candidates') else 'no_verified_candidates' if complete else 'search_incomplete',

@@ -100,3 +100,33 @@ def select_candidates(rows):
     return selected,{'matching_mode':'deterministic-regional-1','model_calls':0,
         'status':'reviewed' if any(row['recommendations'] for row in selected) else 'needs_human',
         'summary':(reason if any(row['recommendations'] for row in selected) else '제안할 후보가 없어 보류 사유와 추가 확인 계획을 검토해야 합니다.')+' 실제 자격·접수·정원은 담당자가 확인해야 합니다.'}
+
+
+def policy_gap(row,explicit=False,research=None):
+    needs=row.get('needs',[]);uncovered=row.get('uncovered_needs',needs)
+    unknown=any(c.get('unknown_conditions') for c in row.get('recommendations',[]))
+    if row.get('stage') is None or row.get('reason')=='insufficient_observation':
+        status='insufficient_observation';needed=False;action='원천 관측을 보완한 뒤 필요를 확인합니다.'
+    elif not needs:
+        status='needs_unconfirmed';needed=False;action='욕구별 측정 자료와 현장 필요를 확인합니다.'
+    elif row.get('reason')=='matching_unavailable' or not row.get('catalog_filter_performed'):
+        status='matching_incomplete';needed=False;action='통계 검토 또는 카탈로그 조회를 완료합니다.'
+    elif uncovered:
+        status='unmet_need_hypotheses' if row.get('recommendations') else 'no_catalog_candidates'
+        needed=True;action='미충족 필요 가설을 대상으로 범위를 정해 정책을 조사합니다.'
+    elif unknown:
+        status='qualification_unconfirmed';needed=False;action='후보의 개인 자격·해당 연령·지원 조건을 확인합니다.'
+    else:
+        status='candidate_coverage';needed=False;action='후보의 접수 여부와 실제 수용량을 확인합니다.'
+    reasons=([status] if needed else [])+(['explicit_request'] if explicit else [])
+    search='not_requested';count=None
+    if research is not None:
+        count=len(research.get('candidates',research.get('recommendations',[])))
+        search=('search_failed' if research.get('status') in ('failed','error','unavailable','tool_error','tool_unavailable','unsupported_scope') else
+                'search_incomplete' if research.get('search_complete_within_scope') is not True else
+                'candidates_found' if count else 'no_verified_candidates_within_scope')
+        action='조회된 후보의 원문·대상 조건을 확인합니다.' if count else '검색 범위·실패·한도 사유를 확인하고 현장 자료를 보완합니다.'
+    return {'version':'policy-gap-1','status':status,'research_needed':needed or explicit,'research_reasons':reasons,
+            'recommendation_slot_shortfall':row.get('shortfall',3),'unmet_need_hypotheses':uncovered,
+            'qualification_unconfirmed':unknown,'search_status':search,'policy_candidates_returned':count,'search_scope':research.get('search_scope') if research else None,
+            'field_gap_status':'not_evaluated','absence_established':False,'next_action':action}
