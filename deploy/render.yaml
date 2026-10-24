@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: beyond-hello-private
+    runtime: python
+    plan: 1c-2g
+    region: singapore
+    numInstances: 1
+    autoDeployTrigger: "off"
+    buildCommand: uv sync --frozen --no-dev && npm --prefix frontend ci && npm --prefix frontend run build
+    startCommand: .venv/bin/python -m scripts.serve_hosted
+    healthCheckPath: /healthz
+    maxShutdownDelaySeconds: 120
+    disk:
+      name: regional-state
+      mountPath: /var/lib/beyond-hello
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.17
+      - key: NODE_VERSION
+        value: "22"
+      - key: UV_VERSION
+        value: 0.8.8
+      - key: RUNTIME_STORAGE_ROOT
+        value: /var/lib/beyond-hello
+      - key: RUNTIME_INPUT_PACKAGE
+        sync: false
+      - key: PRIVATE_HTTP_USER
+        value: reviewer
+      - key: PRIVATE_HTTP_PASSWORD
+        generateValue: true
+      - key: LLM_MODE
+        value: fake
+      - key: PERSON_MCP_MODE
+        value: stub
+      - key: LLM_MAX_CALLS
+        value: "10"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        sync: false
+      - key: GOV24_SERVICE_KEY
+        sync: false
+      - key: LLM_BUDGET_USD
+        sync: false
+      - key: LLM_RUN_BUDGET_USD
+        sync: false
+      - key: INPUT_USD_PER_MILLION
+        sync: false
+      - key: OUTPUT_USD_PER_MILLION
+        sync: false
+      - key: PRICE_VERSION
+        sync: false

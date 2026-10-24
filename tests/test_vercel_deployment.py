@@ -1,7 +1,21 @@
 from fastapi.testclient import TestClient
+import runpy
+
+import pytest
 
 from backend.app import main
 from backend.app.config import Settings
+
+
+def test_production_entrypoint_requires_existing_regional_inputs(tmp_path, monkeypatch):
+    from backend.app.config import ROOT
+    monkeypatch.setenv('VERCEL', '1')
+    monkeypatch.setenv('VERCEL_ENV', 'production')
+    monkeypatch.setenv('DATA_MODE', 'sample')
+    monkeypatch.setenv('RUNTIME_STORAGE_ROOT', str(tmp_path / 'state'))
+    monkeypatch.delenv('RUNTIME_INPUT_PACKAGE', raising=False)
+    with pytest.raises(ValueError, match='RUNTIME_INPUT_PACKAGE'):
+        runpy.run_path(str(ROOT / 'app.py'))
 
 
 def test_vercel_runtime_uses_writable_temporary_directory(monkeypatch):
