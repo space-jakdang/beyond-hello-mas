@@ -92,7 +92,7 @@ test('all four filters default to all and preserve independent cohorts',async({p
  const source=await(await request.get('/analysis/groups?week=all&card_age=all')).json();
  const month=source.months.at(-1),dong=source.neighborhoods.find((d:any)=>d.sgg==='11230');
  const rows=source.segments.filter((r:any)=>r.dong_cd===dong.dong_cd&&r.preferred&&r.ym===month);
- await expect(page.getByRole('region',{name:'전체 집단 요약'}).locator('tbody tr').first()).toContainText(`${rows.filter((r:any)=>r.stage>=4).length}개 · ${rows.filter((r:any)=>r.stage!==null).length}/8개`);
+ await expect(page.getByRole('region',{name:'전체 집단 요약'}).locator('tbody tr').first()).toContainText(`미평가 · ${rows.filter((r:any)=>r.stage!==null).length}/8개`);
  for(const name of ['성별','연령집단','신호 주','카드 연령'])await expect(page.getByRole('combobox',{name,exact:true})).toHaveValue('all');
  await expect(page.getByRole('region',{name:'선택한 동의 집단별 결과'}).locator('table').first().locator('tbody tr')).toHaveCount(8);
  await page.getByRole('combobox',{name:'성별',exact:true}).selectOption('F');

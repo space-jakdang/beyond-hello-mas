@@ -1,7 +1,7 @@
 export type CandidateCheck={candidate_status?:string;unknown_conditions?:string[];age_coverage?:string;eligible_age_ranges?:[number,number][]};
 export function CandidateConditions({candidate}:{candidate:CandidateCheck}){
  if(!candidate.candidate_status)return null;
- const unknown=[...new Set((candidate.unknown_conditions||[]).map(c=>c==='age'?'해당 연령 일부':c==='unstructured_eligibility'?'지원 대상 원문':c.startsWith('eligibility:')?'지원 자격':'추가 운영 조건'))];
+ const unknown=[...new Set((candidate.unknown_conditions||[]).map(c=>c==='age'?'해당 연령 일부':c==='unstructured_eligibility'?'지원 자격 확인 필요':c==='support_stage'?'지원 단계 확인 필요':c==='support_intensity'?'지원 강도 확인 필요':c.startsWith('eligibility:')?'지원 자격':'추가 운영 조건'))];
  return <div><p>{candidate.candidate_status==='conditional'?'조건부 검토 후보':'등록 조건 일치'} · 지원 확정 아님</p><p>{candidate.age_coverage==='partial'?'일부 연령만 해당':'원자료 연령 범위 포함'}: {candidate.eligible_age_ranges?.map(([low,high])=>`${low}–${high}세`).join(', ')}</p>{!!unknown.length&&<p>추가 확인: {unknown.join(' · ')}</p>}</div>;
 }
 export type DecisionEvidenceData={version:string;observation:{evidence_id:string;index_name:string;value:number|null;source_period:string;components:Record<string,unknown>|null};mapping_version:string;provisional_needs:string[];filter_request:Record<string,unknown>|null;catalog_metadata:Record<string,unknown>|null;presented_candidates:({id:string;name:string;needs:string[];source_url?:string|null;collected_at?:string|null;eligibility:string;valid_until?:string|null}&CandidateCheck)[];unknown_conditions:string[];model_reason:string|null};

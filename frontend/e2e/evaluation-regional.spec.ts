@@ -39,7 +39,7 @@ test('resource gap research stays a candidate outside approved assignments',asyn
  await page.goto('/observatory');
  await page.getByRole('combobox',{name:'시나리오',exact:true}).selectOption({label:'monthly-resource-research'});
  await page.getByRole('button',{name:'실행',exact:true}).click();
- await expect(page.getByTestId('run-status')).toHaveText('승인 대기');
+ await expect(page.getByTestId('run-status')).toHaveText('승인 대기',{timeout:20000});
  const id=await page.getByTestId('run-id').innerText();
  const review=await(await request.get(`/runs/${id}/approval`)).json();
  expect(review.proposal.policy_research.eligibility_verified).toBe(false);

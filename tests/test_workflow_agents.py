@@ -94,7 +94,8 @@ def test_both_roles_receive_stage_meaning_and_source_limits(service,monkeypatch)
             assert context['stage_meanings'][5]=='집중 검토'
             assert context['group_definition']=='19–34'
             assert context['provisional'] is True
-            assert 'flags' in payload['facts'][0] and 'stage_label' in payload['facts'][0]
+            assert 'flags' in payload['facts'][0] and 'stage' in payload['facts'][0]
+            assert 'unvalidated' in context['stage_scope']
         return original(run_id,sim_ts,role,payload)
     monkeypatch.setattr(service.agents,'call',call)
     run=run_task(service)

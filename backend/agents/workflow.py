@@ -27,7 +27,7 @@ class StatisticsDecision(BaseModel):
 
 def observations(assessment):
     from backend.tools.regional_resources import need_profile
-    return [{'evidence_id':r['evidence_id'],**{k:r.get(k) for k in ('dong_nm','stage','stage_label','index_name','value','source_period','source_bands','flags')},
+    return [{'evidence_id':r['evidence_id'],**{k:r.get(k) for k in ('dong_nm','stage','index_name','value','source_period','source_bands','flags')},
              **({'observed_factors':need_profile(r)['observed_factors']} if r.get('components') else {})} for r in assessment['segments']]
 
 
@@ -65,7 +65,7 @@ def model_summary(summary):
 
 def methodology(assessment):
     from backend.tools.regional_task import STAGES
-    return {'version':assessment['methodology_version'],'stage_meanings':STAGES,
+    return {'version':assessment['methodology_version'],'stage_meanings':STAGES,'stage_scope':'S1/v3 base stages 1-3; other source/rank stages 1-5. Common priority criterion is unvalidated; no cross-scale comparison. Weekly exploration is separate.',
             'group_definition':', '.join(json.loads((Path(__file__).resolve().parents[2]/'rules/age_crosswalk.json').read_text())['concept'][assessment['task']['age_group']]),
             'provisional':True,'purpose':'within-region outreach priority; not individual diagnosis or absolute cross-region risk',
             'need_mapping':'regional-needs-2: source factors are uninterpreted observations, not verified service needs; S1/v3 support only a relationship outreach hypothesis, including stage 1',
