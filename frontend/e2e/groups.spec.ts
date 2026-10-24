@@ -74,7 +74,9 @@ test('both sexes preserve source stages, selection, URL and missing rows',async(
   await expect(panel.getByRole('link',{name:/지역 업무 시작/})).toHaveAttribute('href',new RegExp('sex='+sex));
  }
  await page.getByRole('combobox',{name:'성별',exact:true}).selectOption('F');
- await page.goBack();await expect(male).toBeVisible();await page.reload();await expect(female).toBeVisible();
+ await page.goBack();await expect(male).toBeVisible();
+ const reloadSource=page.waitForResponse(r=>r.url().includes('/analysis/groups?')&&r.ok());
+ await page.reload();await(await reloadSource).finished();await expect(female).toBeVisible();
  await page.setViewportSize({width:390,height:844});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  data.segments=data.segments.filter((r:any)=>!(r.dong_cd===selected.dong_cd&&r.sex==='F'));
