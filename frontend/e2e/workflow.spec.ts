@@ -133,18 +133,25 @@ test('policy evidence cards remain tentative and responsive',async({page,request
  const response=await request.post('/scenarios/run',{data:{id:'regional-workflow-cards',type:'monthly',sim_time:'2026-10-21T09:00:00+09:00',payload:{workflow_version:'regional-workflow-1',task:{sgg:'11230',sex:'M',age_group:'youth',ym:source.months.at(-1),as_of:'2026-10-21'}}}});
  const run=await response.json();let overview:any;
  await expect.poll(async()=>{overview=await(await request.get(`/runs/${run.id}/overview`)).json();return overview.run.status;}).toBe('awaiting_approval');
- overview.review.proposal.policy_research={status:'completed',steps:3,candidates:[{policy:{id:'test',title:'테스트 관계망 지원',agency:'테스트 기관',scope:'gangnam',url:'https://www.gov.kr/'},explanation:'관계망 욕구의 조사 후보',evidence:{field:'title',value:'테스트 관계망 지원'},detail_status:'live',checked_at:'2026-10-21'}]};
+ overview.review.proposal.policy_research={status:'completed',steps:3,candidate_funnel:{retrieved:3,details_checked:3,selected:1,shortfall:2,not_selected:[{policy_id:'cached-policy',title:'저장 상태 후보',reason:'not_selected_by_agent',detail_status:'cached'},{policy_id:'unknown-policy',title:'미상 상태 후보',reason:'not_selected_by_agent',detail_status:'unknown_detail_state'}]},candidates:[{policy:{id:'test',title:'테스트 관계망 지원',agency:'테스트 기관',scope:'gangnam',url:'https://www.gov.kr/'},explanation:'관계망 욕구의 조사 후보',evidence:{field:'title',value:'테스트 관계망 지원'},detail_status:'live',checked_at:'2026-10-21'}]};
  await page.route(`**/runs/${run.id}/overview`,r=>r.fulfill({json:overview}));
  await page.setViewportSize({width:390,height:844});await page.goto(`/workspace?run=${run.id}`);
  await page.getByRole('tab',{name:'자원 제안'}).click();
  await expect(page.getByLabel('추가 정책 조사 후보')).toContainText('확정 배정에 포함되지 않습니다');
+ await expect(page.getByLabel('추가 정책 조사 후보')).toContainText('정부24 최신 상세 확인');
+ await expect(page.getByLabel('추가 정책 조사 후보')).toContainText('원문 근거 · 정책명');
+ await page.getByText('선택하지 않은 상세 조회 후보',{exact:true}).press('Enter');
+ await expect(page.getByText('저장 상태 후보 · 저장된 상세 · 최신 확인 필요',{exact:true})).toBeVisible();
+ await expect(page.getByText('미상 상태 후보 · 상세 상태 확인 필요',{exact:true})).toBeVisible();
  await expect(page.getByRole('link',{name:'공식 정책 원문 ↗'})).toHaveAttribute('href','https://www.gov.kr/');
  const candidate=overview.review.proposal.policy_research.candidates[0];
- overview.review.proposal.policy_research.candidates=Array.from({length:5},(_,i)=>({...candidate,policy:{...candidate.policy,id:String(i),title:'관련 지원 '+i}}));
+ overview.review.proposal.policy_research.candidates=Array.from({length:5},(_,i)=>({...candidate,policy:{...candidate.policy,id:String(i),title:'관련 지원 '+i},...(i===4?{detail_status:'unknown_detail_state',evidence:{field:'unknown_source_field',value:'검토 근거'}}:{})}));
  await page.reload();await page.getByRole('tab',{name:'자원 제안'}).click();
  await expect(page.getByLabel('추가 정책 조사 후보').locator('article:visible')).toHaveCount(3);
  await page.getByText('추가 관련 후보 2개 보기',{exact:true}).click();
  await expect(page.getByLabel('추가 정책 조사 후보').locator('article:visible')).toHaveCount(5);
+ const unknown=page.getByLabel('추가 정책 조사 후보').locator('article').filter({hasText:'관련 지원 4'});
+ await expect(unknown).toContainText('상세 상태 확인 필요');await expect(unknown).toContainText('정책 원문 항목');await expect(unknown).not.toContainText('unknown_detail_state');
 
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
