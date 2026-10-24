@@ -92,7 +92,7 @@ def test_regional_unknown_is_conditional_but_false_and_known_mismatches_are_excl
     assert confirmed['recommendations'][0]['candidate_status'] == 'conditional'
     assert confirmed['recommendations'][0]['condition_checks']['eligibility:resident']=='pass'
     assert confirmed['recommendations'][0]['condition_checks']['support_intensity']=='unknown'
-    assert confirmed['metadata']['policy_version']=='regional-candidates-2'
+    assert confirmed['metadata']['policy_version']=='regional-candidates-3'
     assert confirmed['metadata']['input_hash']!=match([base],request(eligibility={'resident':True}))['metadata']['input_hash']
     for change, reason in [({'jurisdiction':['32010']},'jurisdiction'),
                            ({'active':False},'inactive_or_expired'),
@@ -130,3 +130,14 @@ def test_regional_priority_never_confirms_a_personal_support_stage():
     assert not match([resource],req)['recommendations']
     row=match([resource],req,regional_ages=[(20,29)])['recommendations'][0]
     assert row['candidate_status']=='conditional' and row['condition_checks']['support_stage']=='unknown'
+
+
+def test_regional_order_uses_need_overlap_then_unknown_conditions_then_id():
+    base=catalog()[0]
+    resources=[base.model_copy(update={'id':'a-conditional','eligibility_tags':['resident']}),
+               base.model_copy(update={'id':'z-unrestricted'}),base.model_copy(update={'id':'b-unrestricted'})]
+    output=match(resources,request(),regional_ages=[(20,29)])
+    assert [r['id'] for r in output['recommendations']]==['b-unrestricted','z-unrestricted','a-conditional']
+    assert output['recommendations'][0]['rank_factors']['unknown_conditions']==1
+    assert output['recommendations'][-1]['rank_factors']['unknown_conditions']==2
+    assert match(list(reversed(resources)),request(),regional_ages=[(20,29)])==output

@@ -215,24 +215,28 @@ class GraphService:
         return {'workflow':workflow}
 
     def workflow_match(self,state):
-        from backend.tools.regional_resources import candidates
+        from backend.tools.regional_resources import candidates,select_candidates
         from backend.agents.workflow_matching import select
         started=time.monotonic();workflow=dict(state['workflow']);rows=[]
         cached=next((t['payload']['candidates'] for t in self.store.traces(state['run_id'],limit=1000)
                      if t['kind']=='agent_message' and t['payload'].get('result_kind')=='workflow_candidates'),None)
         try:
             if time.time()>=state['workflow_deadline']:raise ValueError('deadline')
-            from backend.app.contracts import Resource
-            frozen=state['classification'].get('catalog_snapshot')
-            resources=[Resource.model_validate(r) for r in frozen] if frozen is not None else load_catalog(self.settings.catalog_path)
-            rows=cached if cached is not None else candidates(state['classification'],workflow['statistics'],resources)
+            if cached is None:
+                from backend.app.contracts import Resource
+                frozen=state['classification'].get('catalog_snapshot')
+                resources=[Resource.model_validate(r) for r in frozen] if frozen is not None else load_catalog(self.settings.catalog_path)
+                rows=candidates(state['classification'],workflow['statistics'],resources)
+            else:rows=cached
             self.regional_emit(state)('workflow-candidates','statistics','match',{'result_kind':'workflow_candidates','candidates':rows})
-            rows,matching=select(self.agents,state['run_id'],state['scenario']['sim_time'],rows,workflow['statistics'])
+            rows,matching=select_candidates(rows) if state['classification']['metadata'].get('matching_mode')=='deterministic-regional-1' else select(self.agents,state['run_id'],state['scenario']['sim_time'],rows,workflow['statistics'])
             if time.time()>=state['workflow_deadline']:raise ValueError('deadline')
         except Exception as exc:
             if not rows:rows=candidates(state['classification'],{'status':'needs_human'},[])
             rows=[{**r,'recommendations':[],'shortfall':3,'uncovered_needs':r['needs'],'reason':'matching_unavailable','status':'needs_human'} for r in rows]
             matching={'status':'needs_human','summary':'매칭을 완료하지 못했습니다. 담당자 확인이 필요합니다.','error_type':type(exc).__name__}
+            if state['classification']['metadata'].get('matching_mode')=='deterministic-regional-1':
+                matching.update(matching_mode='deterministic-regional-1',model_calls=0)
         workflow.update(assignments=rows,matching=matching,status='reviewed' if matching['status']=='reviewed' and workflow['statistics']['status']=='reviewed' else 'needs_human')
         self.regional_emit(state)('workflow-match','match','supervisor',matching)
         self.node_event(state,'match',{'status':matching['status'],'assignment_count':len(rows)},started)

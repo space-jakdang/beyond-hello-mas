@@ -79,9 +79,10 @@ def test_matching_replay_and_catalog_failure_preserve_evidence(service,monkeypat
     calls=lambda:sum(t['kind']=='llm_call' and t['payload'].get('role')=='workflow_matching' for t in service.store.traces(run.id,limit=1000))
     before=calls()
     monkeypatch.setattr(service,'workflow_match',original)
-    assert service.drive(run.id).status=='awaiting_approval' and calls()==before
     import backend.graph as module
     monkeypatch.setattr(module,'load_catalog',lambda *args: (_ for _ in ()).throw(OSError('unavailable')))
+    assert service.drive(run.id).status=='awaiting_approval' and calls()==before==0
+    assert service.approval(run.id)['proposal']['workflow']['matching']['status']=='reviewed'
     held=service.start(scenario('monthly',workflow_version='regional-workflow-1',task=task().model_dump(mode='json'),research_gaps=True))
     proposal=service.approval(held.id)['proposal']
     assert proposal['assignments'] and all(not r['recommendations'] for r in proposal['assignments'])
