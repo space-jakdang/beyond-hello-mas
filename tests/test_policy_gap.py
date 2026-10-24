@@ -30,7 +30,7 @@ def test_slots_do_not_establish_unmet_needs_or_a_field_gap():
 
 
 @pytest.mark.parametrize('status,complete,candidates,expected',[
-    ('tool_error',False,[],'search_failed'),('call_limit',False,[],'search_incomplete'),
+    ('tool_error',False,[],'search_failed'),('unsupported_scope',False,[],'search_failed'),('call_limit',False,[],'search_incomplete'),
     ('completed',False,[],'search_incomplete'),('no_verified_candidates',True,[],'no_verified_candidates_within_scope'),
     ('completed',True,[{'id':'candidate'}],'candidates_found')])
 def test_search_results_never_prove_policy_absence(status,complete,candidates,expected):
@@ -80,7 +80,9 @@ def test_analogue_research_reuses_snapshots_and_separates_as_of(service,monkeypa
     assert research(service.policy_designer,run.id,run.id,deepcopy(context))['source_search_status']=='not_requested'
     context['matching'][0]['policy_gap']=policy_gap(row(),True)
     context['sources']=[{'policy_id':'saved'}]
-    assert research(service.policy_designer,run.id,run.id,deepcopy(context))['source_search_status']=='existing_snapshot_reused'
+    reused=research(service.policy_designer,run.id,run.id,deepcopy(context))
+    assert reused['source_search_status']=='existing_snapshot_reused'
+    assert reused['research_steps'][0]['research_reasons']==['explicit_request']
     assert not calls
     context['sources']=[];context['matching'][0]['uncovered_needs']=['relationship']
     research(service.policy_designer,run.id,run.id,deepcopy(context));first=len(calls)
@@ -88,3 +90,23 @@ def test_analogue_research_reuses_snapshots_and_separates_as_of(service,monkeypa
     research(service.policy_designer,run.id,run.id,deepcopy(context));assert len(calls)==first
     context['scope']['as_of']='2026-10-24'
     research(service.policy_designer,run.id,run.id,context);assert len(calls)==2*first
+
+
+def test_alternative_need_limits_follow_only_its_cited_rows(service,monkeypatch):
+    from types import SimpleNamespace
+    from uuid import uuid4
+    from backend.policy.alternatives import generate,templates
+    run=service.register(scenario());dong={'dong_cd':'11230680','dong_nm':'검증동'}
+    scope={'sgg':'11230','ym':'2025-09','as_of':'2026-10-24','target_groups':['M/youth','F/prime']}
+    context={**dong,'scope':scope,'gap_contract_version':'policy-gap-1','target_groups':scope['target_groups'],
+        'facts':[{'evidence_id':'mapped','target_group':'M/youth','value':.4,'stage':3},
+                 {'evidence_id':'unmapped','target_group':'F/prime','value':.5,'stage':4}],
+        'analyses':[],'statistics':[],'sources':[],
+        'matching':[{'evidence_id':'mapped','needs':['relationship']},{'evidence_id':'unmapped','needs':[]}]}
+    def call(*args):
+        output=templates(context)
+        for item,ids in zip(output['alternatives'],[['mapped'],['unmapped'],[]]):item['problem_evidence_ids']=ids
+        return SimpleNamespace(model_dump=lambda:output)
+    monkeypatch.setattr(service.agents,'call',call)
+    result=generate(service.policy_designer,str(uuid4()),run.id,scope,[dong],[],{dong['dong_cd']:context})[0]
+    assert [a['claim_limits']['local_need'] for a in result['alternatives']]==['hypothesis_only','unconfirmed','unconfirmed']
