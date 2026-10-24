@@ -79,7 +79,8 @@ def context_for(dong,scope,proposals):
 def research(designer,owner_id,run_id,context):
     if context.get('gap_contract_version')=='policy-gap-1' and (not any((row.get('policy_gap') or {}).get('research_needed') for row in context['matching']) or
             (context['sources'] and not any(row['uncovered_needs'] for row in context['matching']))):
-        context['research_steps']=[{'status':'existing_snapshot_reused' if context['sources'] else 'not_requested','purpose':'operating_alternatives_not_slot_filling','absence_established':False}]
+        context['research_steps']=[{'status':'existing_snapshot_reused' if context['sources'] else 'not_requested','purpose':'operating_alternatives_not_slot_filling','absence_established':False,
+            'research_reasons':sorted({reason for row in context['matching'] for reason in (row.get('policy_gap') or {}).get('research_reasons',[])})}]
         context['source_search_status']=context['research_steps'][0]['status']
         return context
     from backend.policy.alternative_export import group_label
@@ -211,7 +212,8 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
             if item['evaluation_design'] is None:gaps.append('기준선·비교·관측 기간·성공/중단 기준 필요')
             item['design_checks']={'status':'needs_design_review' if gaps else 'structured_draft','gaps':gaps,'effectiveness_verified':False}
             if context.get('gap_contract_version')=='policy-gap-1':
-                item['claim_limits']={'local_need':'hypothesis_only' if any(row.get('needs') for row in context['matching']) else 'unconfirmed',
+                cited=[row for row in context['matching'] if row['evidence_id'] in item['problem_evidence_ids']]
+                item['claim_limits']={'local_need':'hypothesis_only' if cited and all(row.get('needs') for row in cited) else 'unconfirmed',
                     'evidence_status_meaning':'citation_and_observation_coverage_only','feasibility':'not_evaluated','effectiveness':'not_evaluated','field_gap':'not_evaluated'}
             if gaps and item['evidence_status']=='supported':item['evidence_status']='partial'
         body={**output,'owner_id':owner_id,**dong,'scope':scope,'input_version':digest(context),'generation_mode':mode,

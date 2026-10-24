@@ -93,6 +93,10 @@ def test_blind_output_ratings_keep_missing_development_and_disagreement(recorded
     data=ratings_for(key);summary=aggregate(frozen,report,key,data)
     assert all(m['resolved']==2 and m['family_success_rate']==1 and m['mean_edits']==2 for m in summary['methods'])
     assert not summary['evaluation_complete'] and summary['adoption_decision']=='not_evaluated'
+    import hashlib
+    from pathlib import Path
+    import eval.rate_regional_quality as rating_module
+    assert summary['rating_code_hash']==hashlib.sha256(Path(rating_module.__file__).read_bytes()).hexdigest()
     assert 'SYNTHETIC PRIVATE RATING' not in json.dumps(summary) and 'reviewers' not in summary
     data['ratings'][0]['omitted_constraints']=True
     summary=aggregate(frozen,report,key,data)
@@ -128,6 +132,7 @@ def test_shared_source_runs_are_charged_once_and_scales_are_not_pooled(service):
     group=classification(frozen,labels,report['arms'][0]['predictions'])['groups'][0]
     assert group['stage_scale'] and group['priority_criterion_status']=='not_established'
     assert group['priority_recall'] is None and group['flag_rate'] is None
+    assert group['priority_support'] is None and group['priority_flagged'] is None
 
 
 def test_quality_api_filters_output_ratings_without_exposing_private_raters(tmp_path,recorded):
@@ -195,3 +200,23 @@ def test_single_agent_invalid_selection_repeat_lookup_and_budget_hold(service,mo
     assert first['proposal']['workflow']['analysis'] is None
     assert first['proposal']['workflow']['statistics']['status']=='needs_human'
     assert all(not row['recommendations'] for row in first['proposal']['assignments'])
+
+
+def test_evidence_rejects_report_changes_after_preflight(service,recorded,monkeypatch):
+    from uuid import uuid4
+    from fastapi import HTTPException
+    import backend.app.quality_jobs as module
+    frozen,report=recorded;identifier=uuid4()
+    folder=service.settings.runtime_root/'quality/sample'/str(identifier);folder.mkdir(parents=True)
+    for name,body in [('inputs',frozen),('labels',{'dataset_hash':frozen['dataset_hash'],'reviewers':[],'judgments':[]}),
+                      ('workflow-runs',report),('predictions',report['arms'][-1]['predictions'])]:
+        (folder/(name+'.json')).write_text(json.dumps(body))
+    original=module.quality_detail
+    def change_after_preflight(*args):
+        result=original(*args);changed=deepcopy(report);changed['version']='changed-after-validation'
+        (folder/'workflow-runs.json').write_text(json.dumps(changed))
+        return result
+    monkeypatch.setattr(module,'quality_detail',change_after_preflight)
+    with pytest.raises(HTTPException) as error:
+        module.case_evidence(module.QualityJobs(service.store,service.settings),identifier,frozen['dataset']['cases'][0]['id'],'sample')
+    assert error.value.status_code==409

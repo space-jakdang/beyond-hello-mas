@@ -197,7 +197,10 @@ def case_evidence(jobs,report_id,case_id,source):
     recorded=folder/'workflow-runs.json'
     if recorded.exists():
         from eval.run_regional_quality import validate_report
-        report=json.loads(recorded.read_text());validate_report(frozen,report)
+        try:
+            report=json.loads(recorded.read_text());validate_report(frozen,report)
+        except (ValueError,KeyError,TypeError,AttributeError,OSError):
+            raise HTTPException(409,'recorded source run differs') from None
         record=next((r for r in report['records'] if r['run_id']==run_id and case_id in r['case_ids']),None)
         if not record:raise HTTPException(409,'recorded source run differs')
         assignments=(record['proposal'] or {}).get('assignments',[])

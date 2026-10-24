@@ -1,5 +1,6 @@
 """Bind the existing independent output rubric to recorded regional-quality runs."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import random
@@ -101,6 +102,7 @@ def aggregate(frozen,report,key,body,case_ids=None):
         paired.append({'baseline':baseline,'challenger':'mas','case_count':len(selected),'paired_resolved':count,'family_count':len(families),
             'wins':wins,'ties':ties,'losses':losses,'family_success_delta':mean(mean(v) for v in families.values()) if selected and count==len(selected) else None})
     return {'version':'regional-output-ratings-1','report_hash':digest(report),'ratings_hash':digest(data.model_dump()),
+        'rating_code_hash':hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         'mode':report['mode'],'methods':methods,'paired':paired,'evaluation_complete':False,'adoption_decision':'not_evaluated',
         'limitations':['계열·사례별 기술 통계입니다. 누락·이견·개발 참여 평정을 독립 합의로 바꾸지 않습니다.',
             '수정·소요 시간은 평정자가 기록한 관찰이며 무작위 담당자 실험이 아닙니다.',

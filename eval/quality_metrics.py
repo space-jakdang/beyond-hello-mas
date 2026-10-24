@@ -113,8 +113,8 @@ def classification(frozen, labels, predictions, case_ids=None):
             'non_independent_labels':non_independent,'valid_predictions':valid,'missing_predictions':n-valid,
             'macro_f1':sum(fs)/len(fs) if fs else None,'macro_class_policy':'grades_with_reference_or_prediction_support',
             'stage_scale':scale,'priority_criterion_status':'not_established' if scale else 'legacy_4_5',
-            'priority_precision':None if scale else ratio(hit,flagged),'priority_recall':None if scale else ratio(hit,positive),'priority_support':positive,
-            'priority_flagged':flagged,'flag_rate':None if scale else ratio(flagged,n),'coverage':ratio(valid,n),
+            'priority_precision':None if scale else ratio(hit,flagged),'priority_recall':None if scale else ratio(hit,positive),'priority_support':None if scale else positive,
+            'priority_flagged':None if scale else flagged,'flag_rate':None if scale else ratio(flagged,n),'coverage':ratio(valid,n),
             'mae':ratio(sum(abs(t-g) for t,g in pairs if g is not None),valid),
             'confusion':matrix,'per_grade':per_grade,'errors':errors})
     return {'prediction_hash':digest(data.model_dump()),'model':data.model,'method':data.method,
