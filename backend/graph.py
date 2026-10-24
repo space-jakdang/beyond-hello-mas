@@ -237,6 +237,8 @@ class GraphService:
             matching={'status':'needs_human','summary':'매칭을 완료하지 못했습니다. 담당자 확인이 필요합니다.','error_type':type(exc).__name__}
             if state['classification']['metadata'].get('matching_mode')=='deterministic-regional-1':
                 matching.update(matching_mode='deterministic-regional-1',model_calls=0)
+                rows=[{**r,'matching_mode':'deterministic-regional-1',
+                       'decision_evidence':{**r['decision_evidence'],'matching_mode':'deterministic-regional-1'}} for r in rows]
         if state['classification']['metadata'].get('policy_gap_version')=='policy-gap-1':
             from backend.tools.regional_resources import policy_gap
             rows=[{**row,'policy_gap':policy_gap(row,state['scenario']['payload'].get('policy_research_requested') is True)} for row in rows]
