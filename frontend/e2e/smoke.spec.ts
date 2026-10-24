@@ -1,14 +1,17 @@
 import { test, expect } from '@playwright/test';
 test('three pages connect to the sample/fake backend', async ({page}) => {
-  await page.goto('/');
+  const initialReady=page.waitForResponse(r=>r.url().endsWith('/readiness')&&r.ok());
+  await page.goto('/');await(await initialReady).finished();
   for (const name of ['관찰', '담당자 콘솔', '평가']) {
     const link=page.getByRole('navigation').getByRole('link',{name,exact:true});
     if(!await link.isVisible())await page.getByText('검증·연구 도구',{exact:true}).click();
-    await link.click();
+    const ready=page.waitForResponse(r=>r.url().endsWith('/readiness')&&r.ok());
+    await link.click();await(await ready).finished();
     await expect(page.getByRole('heading', {name, exact: true})).toBeVisible();
     await expect(page.getByRole('status').filter({hasText:/자료:/})).toContainText('합성 시연 자료');
   }
 });
+
 
 test('evaluation shows saved JSON counts and metrics',async({page,request})=>{
   const reports=await (await request.get('/reports')).json();
