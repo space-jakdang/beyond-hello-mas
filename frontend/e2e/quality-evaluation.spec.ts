@@ -3,6 +3,19 @@ const id='00000000-0000-4000-8000-000000000001';
 const readiness={cases:1,reference_items:2,missing:2,unknown:0,disagreement:0,resolved:0,independent_resolved:0};
 const brief={id,dataset:'평가 준비 예제',version:'1',status:'not_evaluated',readiness};
 const detail={...brief,dataset_hash:'input-version',label_hash:'label-version',filters:{region:['샘플지역'],period:['2026-01'],methodology:['v1'],source:['synthetic']},cases:[{id:'a',region:'샘플지역',neighborhood:'예제동',period:'2026-01',methodology:'v1',source:'synthetic',references:[{policy_id:null,state:'missing',independent:false,review_count:0,adjudicated:false,provenance:[]}]}],limitations:['실제 지역 성능이 아닙니다.']};
+
+test('recorded regional comparison preserves missing independent ratings and unvalidated priorities',async({page})=>{
+ const workflow_quality={mode:'fake',report_hash:'recorded-version',evaluation_complete:false,methods:['rules','single','mas'].map(method=>({method,case_count:2,family_count:1,resolved:0,missing:2,disagreement:0,not_independent:0,success_rate:null,family_success_rate:null,major_error_cases:0,mean_edits:null,mean_task_seconds:null,edit_observations:0,time_observations:0})),paired:[{baseline:'single',challenger:'mas',case_count:2,paired_resolved:0,family_count:0,family_success_delta:null}],limitations:['외부 전이 미평가']};
+ const classification={model:'fake-v1',method:'mas',version:'regional-quality-1',prediction_hash:'frozen',groups:[{source:'synthetic',methodology:'regional-workflow-1',stage_scale:'S1:base',priority_criterion_status:'not_established',state:'not_evaluated',input_cases:2,reference_count:0,missing_labels:2,unknown_labels:0,non_independent_labels:0,valid_predictions:0,missing_predictions:0,macro_f1:null,priority_recall:null,priority_precision:null,priority_support:0,priority_flagged:0,flag_rate:null,coverage:null,mae:null,confusion:Array.from({length:5},()=>[0,0,0,0,0,0]),per_grade:[],errors:[]}]};
+ await page.route('**/reports/quality**',route=>route.fulfill({json:new URL(route.request().url()).pathname.endsWith(id)?{...detail,workflow_quality,classification}:[brief]}));
+ await page.setViewportSize({width:390,height:844});await page.goto('/evaluation');
+ const panel=page.getByRole('region',{name:'실행에 연결된 지역 판단 비교'});
+ await expect(panel).toContainText('실제 모델 품질은 미평가');await expect(panel).toContainText('독립 합의 0 / 2사례');
+ await expect(panel).toContainText('내용 성공률 미평가');await expect(panel).toContainText('짝지은 평정 0/2');
+ const grades=page.getByRole('region',{name:'동네 등급 분류 품질'});
+ await expect(grades).toContainText('공통 우선 기준');await expect(grades).not.toContainText('4–5등급 재현율');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();
+});
 test('quality readiness is distinct from successful execution and works on mobile',async({page})=>{
  await page.route('**/reports/quality**',async route=>{
   const u=new URL(route.request().url());

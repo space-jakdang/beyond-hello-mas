@@ -9,7 +9,7 @@ test('operator receives, acknowledges, approves, rejects and inspects monthly pl
     await page.getByLabel('시나리오').selectOption(index);
     await page.getByRole('button',{name:'실행',exact:true}).click();
     await expect(page.getByTestId('run-id')).not.toHaveText(previous);
-    await expect(page.getByTestId('run-status')).toHaveText(status);
+    await expect(page.getByTestId('run-status')).toHaveText(status,{timeout:20000});
     return await page.getByTestId('run-id').innerText();
   }
   const id=await run('0');

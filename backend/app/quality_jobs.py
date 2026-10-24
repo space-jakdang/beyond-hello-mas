@@ -95,7 +95,7 @@ class QualityJobs:
         if suite=='grounding' and not preflight['grounding_available']:raise HTTPException(409,'; '.join(preflight['grounding_reasons']))
         folder=quality_root(self.settings,source)/str(report_id)
         snapshot={}
-        for name in ('inputs.json','labels.json','predictions.json','study.json','policy-candidates.json','policy-drafts.json','policy-draft-ratings.json'):
+        for name in ('inputs.json','labels.json','predictions.json','study.json','policy-candidates.json','policy-drafts.json','policy-draft-ratings.json','workflow-runs.json','workflow-private-key.json','workflow-ratings.json'):
             path=folder/name
             if path.is_symlink():raise HTTPException(409,'evaluation input symlink not allowed')
             if path.exists():snapshot[name]=json.loads(path.read_text())
@@ -194,6 +194,21 @@ def case_evidence(jobs,report_id,case_id,source):
     run_id=row.run_id if row else None
     evidence_id=case.facts.get('evidence_id')
     if not run_id or not evidence_id:return {'run_id':None,'rows':[],'reason':'원래 실행 ID 또는 관측 근거 ID가 기록되지 않았습니다.'}
+    recorded=folder/'workflow-runs.json'
+    if recorded.is_symlink():raise HTTPException(409,'recorded source symlink not allowed')
+    if recorded.exists():
+        from eval.run_regional_quality import validate_report
+        try:
+            report=json.loads(recorded.read_text());validate_report(frozen,report)
+        except (ValueError,KeyError,TypeError,AttributeError,OSError):
+            raise HTTPException(409,'recorded source run differs') from None
+        record=next((r for r in report['records'] if r['run_id']==run_id and case_id in r['case_ids']),None)
+        if not record:raise HTTPException(409,'recorded source run differs')
+        assignments=(record['proposal'] or {}).get('assignments',[])
+        selected=[a for a in assignments if a['evidence_id']==evidence_id]
+        return {'run_id':None,'source_run_id':run_id,'reason':'격리 평가에서 저장한 실제 실행의 근거입니다. 현재 서버의 새 실행이나 사후 설명이 아닙니다.',
+            'rows':[{'decision_evidence':a.get('decision_evidence'),'selected_ids':[p['id'] for p in a.get('recommendations',[])],
+                     'excluded':a.get('excluded',[]),'held':not a.get('recommendations')} for a in selected]}
     try:
         UUID(run_id);run=jobs.store.get_run(run_id)
     except (ValueError,KeyError):return {'run_id':None,'rows':[],'reason':'이 서버에서 원래 실행을 찾지 못했습니다.'}

@@ -1,3 +1,4 @@
+import {WorkflowQuality,WorkflowQualityData} from './WorkflowQuality';
 import {PolicyDesignQuality,DesignQualityData} from './PolicyDesignQuality';
 import {useEffect,useState} from 'react';
 import {api} from './api';
@@ -11,7 +12,7 @@ import {ApiErrorNotice} from './ApiErrorNotice';
 type Ready={cases:number;reference_items:number;missing:number;unknown:number;disagreement:number;resolved:number;independent_resolved:number};
 type Brief={id:string;dataset:string;version:string;status:string;readiness:Ready|null};
 type Reference={policy_id:string|null;state:string;independent:boolean;review_count:number;adjudicated:boolean;provenance:string[]};
-type Detail=Brief&{policy_matching?:MatchingData|null;policy_design?:DesignQualityData|null;study?:StudyData|null;grounding?:GroundingData|null;matching?:MatchingData|null;classification?:ClassificationData|null;dataset_hash:string;label_hash:string;filters:Record<'region'|'period'|'methodology'|'source',string[]>;cases:{id:string;region:string;neighborhood:string;period:string;methodology:string;source:string;references:Reference[]}[];limitations:string[]};
+type Detail=Brief&{workflow_quality?:WorkflowQualityData|null;policy_matching?:MatchingData|null;policy_design?:DesignQualityData|null;study?:StudyData|null;grounding?:GroundingData|null;matching?:MatchingData|null;classification?:ClassificationData|null;dataset_hash:string;label_hash:string;filters:Record<'region'|'period'|'methodology'|'source',string[]>;cases:{id:string;region:string;neighborhood:string;period:string;methodology:string;source:string;references:Reference[]}[];limitations:string[]};
 const states:Record<string,string>={missing:'미등록',unknown:'판단불가',disagreement:'이견 조정 필요',resolved:'참조 등록'};
 const qualityStatuses:Record<string,string>={failed:'자료 오류',partial:'부분 평가',not_evaluated:'평가 준비',evaluated:'평가 완료'};
 const axes=[['분류 품질','독립 등급 기준답과 예측 결과가 필요합니다.'],['자원 매칭','정책별 적합성 평정과 추천 결과가 필요합니다.'],['설명 근거','실제 모델 입력·응답과 근거 평가가 필요합니다.'],['지역·시간 일반화','미사용 실제 지역·후속 기간 평가가 필요합니다.'],['MAS 효과','같은 조건의 규칙·단일·다중 에이전트 비교가 필요합니다.']];
@@ -39,6 +40,7 @@ export function QualityEvaluation({source,reload}:{source:string;reload:number})
  {detail.matching&&<MatchingQuality data={detail.matching}/>}{detail.policy_matching&&<MatchingQuality data={detail.policy_matching} title="정부24 정책 후보 품질 · 최대 5건"/>}{detail.policy_design&&<PolicyDesignQuality data={detail.policy_design}/>}
  {detail.grounding&&<GroundingQuality data={detail.grounding}/>}
  {detail.study&&<StudyQuality data={detail.study}/>}
+ {detail.workflow_quality&&<WorkflowQuality data={detail.workflow_quality}/>}
  <h3>사례별 평가 준비</h3>{detail.cases.map(c=><details key={c.id} className="card"><summary>{c.neighborhood} · {c.period} · {c.source==='synthetic'?'합성':'실제 관측'} · {c.references.filter(r=>r.state==='missing').length}개 미등록</summary><p>{c.region} · {c.methodology}</p><ul>{c.references.map(r=><li key={r.policy_id||'grade'}>{r.policy_id?`정책 ${r.policy_id}`:'지역 등급'}: {states[r.state]||'상태 확인 필요'} · 검토 {r.review_count}명 · {r.independent?'독립 참조':'독립 참조 미충족'}{r.adjudicated?' · 조정 완료':''}</li>)}</ul><QualityEvidence key={`${source}/${selected}/${c.id}`} reportId={selected} caseId={c.id} source={source}/></details>)}
  <ul>{detail.limitations.map(v=><li key={v}>{v}</li>)}</ul>{!qualityStatuses[detail.status]&&<details><summary>기술 평가 상태 코드</summary><code>{detail.status}</code></details>}<details><summary>평가 입력·기준답 버전</summary><p style={{overflowWrap:'anywhere'}}>입력 {detail.dataset_hash}<br/>기준답 {detail.label_hash}</p></details></>}
  </section>;

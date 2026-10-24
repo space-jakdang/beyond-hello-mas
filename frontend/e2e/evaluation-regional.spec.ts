@@ -48,6 +48,7 @@ test('resource gap research stays a candidate outside approved assignments',asyn
  expect((await request.get(`/runs/${id}/linkage`)).status()).toBe(404);
  await page.goto('/console');
  await page.getByTestId(`alert-${id}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
+ await expect(page.getByTestId('review-panel')).toBeVisible({timeout:20000});
  await expect(page.getByText('정책 조사 결과는 후보입니다.',{exact:false})).toBeVisible();
 });
 
