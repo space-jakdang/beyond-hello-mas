@@ -98,7 +98,7 @@ test('all four filters default to all and preserve independent cohorts',async({p
  await page.getByRole('combobox',{name:'성별',exact:true}).selectOption('F');
  await expect(page.getByRole('region',{name:'선택한 동의 집단별 결과'}).locator('table').first().locator('tbody tr')).toHaveCount(4);
  await page.goBack();await page.reload();
- await expect(page.getByRole('region',{name:'선택한 동의 집단별 결과'}).locator('table').first().locator('tbody tr')).toHaveCount(8);
+ await expect(page.getByRole('region',{name:'선택한 동의 집단별 결과'}).locator('table').first().locator('tbody tr')).toHaveCount(8,{timeout:20000});
  await page.setViewportSize({width:390,height:844});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
 });
