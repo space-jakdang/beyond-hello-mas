@@ -17,6 +17,10 @@ def fake(role, payload):
                 'priority_evidence_ids':[f['evidence_id'] for f in payload['facts'] if f['evidence_id'] not in blocked][:5]}
     if role == 'workflow_statistics':
         blocked=payload['summary']['blocked_evidence_ids']
+        if payload.get('review_version')=='statistics-review-2':
+            action='revise' if set(blocked)&set(payload['plan']['priority_evidence_ids']) else 'lookup' if payload['review_phase']=='initial' and not payload['observations'] and '추이' in payload['task']['goal'] else 'finish'
+            return {'action':action,'tool':'source_check' if payload['period_aggregate'] or blocked else 'trend',
+                    'reason':'fake: 제공된 요약과 보완된 분석의 범위를 검토합니다.','blocked_evidence_ids':blocked}
         return {'action':'lookup' if not payload['observations'] else 'revise' if set(blocked)&set(payload['plan']['priority_evidence_ids']) else 'finish',
                 'tool':'source_check' if payload['period_aggregate'] or blocked else 'trend',
                 'reason':'fake: 통계 도구의 관측값과 결측을 확인합니다.','blocked_evidence_ids':blocked}

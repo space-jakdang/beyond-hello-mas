@@ -66,4 +66,4 @@ def assess(settings, task, source_data=None):
     return {**result, 'source_observations':[r.model_dump(mode='json') for r in rows if r.sgg==task.sgg and r.sex==task.sex and r.age_group==task.age_group and (r.ym is None or r.ym<=task.ym)], 'task': task.model_dump(mode='json'), 'methodology_version': VERSION,
             'data_mode': settings.data_mode, 'period_aggregate': any(r.ym is None for r in selected),
             'metadata': {**result['metadata'], 'analysis_version':'v3', 'workflow_version':VERSION,
-                         'source':source, 'baseline_period_aggregate':future.get('baseline_period_aggregate') if future else None, 'synthetic_future':bool(future), 'provisional':True, 'card_signals_applied':False, 'synthetic_signals_applied':bool(future)}}
+                         'source':source,'review_contract_version':'statistics-review-2', 'baseline_period_aggregate':future.get('baseline_period_aggregate') if future else None, 'synthetic_future':bool(future), 'provisional':True, 'card_signals_applied':False, 'synthetic_signals_applied':bool(future)}}

@@ -2,6 +2,7 @@ import {test,expect} from '@playwright/test';
 
 test('regional task links agents, immutable results and a fresh revision approval',async({page})=>{
  await page.goto('/workspace?sex=M&age=youth');
+ await page.getByLabel('업무 목표').fill('월별 추이를 확인하세요.');
  await page.getByRole('button',{name:'Supervisor에게 업무 지시'}).click();
  await expect(page.getByTestId('workflow-status')).toContainText('승인 대기',{timeout:20000});
  const original=page.url();
