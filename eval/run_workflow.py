@@ -58,16 +58,20 @@ def evaluate(dataset,classifier=classify):
             valid=base.model_copy(update={'id':'eligible','jurisdiction':['KR'],'age_min':0,'age_max':120,'needs':['relationship'],
                 'eligibility':'unrestricted','eligibility_tags':[],'collected_at':datetime(2024,1,1,tzinfo=timezone.utc),
                 'valid_until':None,'active':True,'stage_min':1,'stage_max':5})
-            # Every decoy violates one independently known mandatory constraint.
+            # Unknown eligibility and partial ages are conditional regional candidates.
             catalog=[valid,valid.model_copy(update={'id':'future','collected_at':datetime(2030,1,1,tzinfo=timezone.utc)}),
                 valid.model_copy(update={'id':'expired','valid_until':date(2024,12,31)}),
                 valid.model_copy(update={'id':'wrong_region','jurisdiction':['32010' if row['sgg']=='11230' else '11230']}),
+                valid.model_copy(update={'id':'wrong_age','age_min':90,'age_max':99}),
                 valid.model_copy(update={'id':'narrow_age','age_min':20,'age_max':29}),
                 valid.model_copy(update={'id':'unverified','eligibility_tags':['resident']})]
             matched=candidates(assessment,stats,catalog)[0]
             selected=[r['id'] for r in matched['recommendations']]
             covered+=bool(selected) and expected_available
-            violations+=sum(r!='eligible' or not expected_available for r in selected)
+            violations+=sum(not expected_available or r['id'] not in ('eligible','narrow_age','unverified')
+                or (r['id']=='narrow_age' and (r.get('age_coverage')!='partial' or r.get('candidate_status')!='conditional'))
+                or (r['id']=='unverified' and (r.get('condition_checks',{}).get('eligibility:resident')!='unknown' or r.get('candidate_status')!='conditional'))
+                for r in matched['recommendations'])
             recommendations+=len(selected)
         except Exception as exc:error=type(exc).__name__;replays.append(False)
         results.append({'id':case['id'],'split':case['split'],'family':case['family'],'sgg':case['segment']['sgg'],
