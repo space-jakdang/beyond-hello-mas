@@ -65,7 +65,7 @@ test('evaluation subtools explain failures and keep technical messages collapsed
  });
  await page.goto('/evaluation');
  const alternative=page.getByRole('region',{name:'정책 대안 품질'}).getByRole('alert');
- await expect(alternative).toContainText('정책 대안 평가를 완료하지 못했습니다');
+ await expect(alternative).toContainText('정책 대안 평가 정보를 불러오지 못했습니다');
  await expect(page.getByText('저장된 정책 제안이 없습니다. 지역 업무를 먼저 실행하세요.')).toHaveCount(0);
  await expect(alternative.locator('pre')).toBeHidden();
  await alternative.getByText('기술 오류 상세',{exact:true}).click();
