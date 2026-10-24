@@ -1,0 +1,24 @@
+[Unit]
+Description=Beyond Hello private regional service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=beyond-hello
+Group=beyond-hello
+WorkingDirectory=/opt/beyond-hello/current
+EnvironmentFile=/etc/beyond-hello/service.env
+ExecStart=/opt/beyond-hello/current/.venv/bin/python -m scripts.serve_private --port 8000
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=120
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/beyond-hello
+
+[Install]
+WantedBy=multi-user.target
