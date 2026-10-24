@@ -65,7 +65,10 @@ def filter_catalog(resources, request, *, regional_ages=None):
             full_age = all(resource.age_min <= low and high <= resource.age_max for low, high in regional_ages)
             conditions['age'] = 'pass' if full_age else 'unknown' if overlaps else 'fail'
             if not overlaps:reasons.append('age')
-        if request.stage is not None and resource.stage_min is not None:
+        # Catalog stage ranges replace intensity in the personal policy.
+        if regional_ages is not None:
+            conditions['support_stage' if resource.stage_min is not None else 'support_intensity']='unknown'
+        elif request.stage is not None and resource.stage_min is not None:
             if not resource.stage_min <= request.stage <= resource.stage_max:reasons.append('stage')
         elif resource.intensity != request.intensity:
             reasons.append('intensity')
@@ -99,7 +102,7 @@ def rank(resources, request):
 
 
 def match(resources, request, policy=None, *, regional_ages=None):
-    policy = policy or MatchPolicy(version='regional-candidates-1' if regional_ages is not None else
+    policy = policy or MatchPolicy(version='regional-candidates-2' if regional_ages is not None else
                                   'seohee-match-3' if request.stage is not None else 'provisional-1')
     candidates, excluded, checks = filter_catalog(resources, request, regional_ages=regional_ages)
     ranked = rank(candidates, request)

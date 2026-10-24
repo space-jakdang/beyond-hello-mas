@@ -62,7 +62,7 @@ def test_regional_candidate_conditions_reach_saved_evidence_and_model_context(se
     import json
     with service.store.connection() as db:
         call=json.loads(db.execute("SELECT body FROM llm_calls WHERE run_id=? AND role='workflow_matching'",(run.id,)).fetchone()[0])
-    assert all(c['candidate_status']=='conditional' for row in call['input']['choices'] for c in row['candidates'])
+    assert all(c[call['input']['candidate_columns'].index('candidate_status')]=='conditional' for row in call['input']['choices'] for c in row['candidates'])
 
 
 def test_graph_matching_uses_statistics_and_model_is_constrained(service,monkeypatch):

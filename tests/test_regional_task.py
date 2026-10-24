@@ -24,6 +24,20 @@ def test_invalid_scope_and_time_are_rejected():
     with pytest.raises(ValueError):task_from({'workflow_version':'invented'})
 
 
+def test_map_base_stage_matches_task_with_weekly_exploration_separate(service):
+    from backend.tools.neighborhoods import group_analysis
+    assessment=assess(service.settings,task(ym='2025-12'))
+    plain=group_analysis(service.settings,'all','all')
+    exploratory=group_analysis(service.settings,None,'20s')
+    for row in assessment['segments']:
+        def corresponding(data):
+            return next(r for r in data['segments'] if all(r[k]==row[k] for k in ('ym','dong_cd','sex','age_group','index_name')))
+        base=corresponding(plain);replay=corresponding(exploratory)
+        assert base['stage']==base['base_stage']==replay['base_stage']==row['stage']
+        assert base['exploratory_stage'] is None
+        assert replay['exploratory_stage']==replay['stage'] and replay['priority_group_applied']
+
+
 def test_graph_keeps_task_scope_and_rejects_unknown_version(service):
     from tests.test_graph import scenario
     run=service.start(scenario('monthly',workflow_version='regional-workflow-1',task=task().model_dump(mode='json')))

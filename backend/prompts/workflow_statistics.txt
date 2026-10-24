@@ -15,3 +15,5 @@ summary.insights.items are compact rows using the accompanying item_columns; com
 Trend points use point_columns (ym, value, change); null changes are not comparable.
 
 regional-needs-2: Source factors and positive field names do not establish service needs. S1/v3 permit only a relationship investigation hypothesis, even at stage 1. If unmapped, request factor definitions, need measurements and field checks; never invent needs or count holds as recommendations.
+
+Facts carry numeric stage; methodology.stage_meanings supplies the shared labels.

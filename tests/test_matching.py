@@ -83,14 +83,16 @@ def test_regional_unknown_is_conditional_but_false_and_known_mismatches_are_excl
     unknown = match([base], request(), regional_ages=[(20,29)])['recommendations'][0]
     assert unknown['candidate_status'] == 'conditional'
     assert unknown['condition_checks']['eligibility:resident'] == 'unknown'
-    assert unknown['unknown_conditions'] == ['eligibility:resident']
+    assert unknown['unknown_conditions'] == ['eligibility:resident','support_intensity']
     assert match([base], request())['recommendations'] == []
     rejected = match([base], request(eligibility={'resident':False}), regional_ages=[(20,29)])
     assert not rejected['recommendations']
     assert rejected['excluded'][0]['reasons'] == ['eligibility_mismatch:resident']
     confirmed = match([base], request(eligibility={'resident':True}), regional_ages=[(20,29)])
-    assert confirmed['recommendations'][0]['candidate_status'] == 'matched'
-    assert confirmed['metadata']['policy_version']=='regional-candidates-1'
+    assert confirmed['recommendations'][0]['candidate_status'] == 'conditional'
+    assert confirmed['recommendations'][0]['condition_checks']['eligibility:resident']=='pass'
+    assert confirmed['recommendations'][0]['condition_checks']['support_intensity']=='unknown'
+    assert confirmed['metadata']['policy_version']=='regional-candidates-2'
     assert confirmed['metadata']['input_hash']!=match([base],request(eligibility={'resident':True}))['metadata']['input_hash']
     for change, reason in [({'jurisdiction':['32010']},'jurisdiction'),
                            ({'active':False},'inactive_or_expired'),
@@ -99,7 +101,7 @@ def test_regional_unknown_is_conditional_but_false_and_known_mismatches_are_excl
         result = match([base.model_copy(update=change)],request(),regional_ages=[(20,29)])
         assert not result['recommendations'] and reason in result['excluded'][0]['reasons']
     free_text = catalog()[0].model_copy(update={'eligibility':'담당자 확인 필요'})
-    assert match([free_text],request(),regional_ages=[(20,29)])['recommendations'][0]['unknown_conditions'] == ['unstructured_eligibility']
+    assert match([free_text],request(),regional_ages=[(20,29)])['recommendations'][0]['unknown_conditions'] == ['support_intensity','unstructured_eligibility']
     assert not match([],request(),regional_ages=[(20,29)])['recommendations']
 
 
@@ -120,3 +122,11 @@ def test_regional_age_union_never_fills_gaps_or_approves_the_entire_cohort():
             match([base],req,regional_ages=ages)
     with pytest.raises(ValidationError):
         request(regional_ages=[(20,29)])
+
+
+def test_regional_priority_never_confirms_a_personal_support_stage():
+    resource=catalog()[0].model_copy(update={'stage_min':4,'stage_max':5})
+    req=request(stage=1)
+    assert not match([resource],req)['recommendations']
+    row=match([resource],req,regional_ages=[(20,29)])['recommendations'][0]
+    assert row['candidate_status']=='conditional' and row['condition_checks']['support_stage']=='unknown'
