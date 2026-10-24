@@ -98,8 +98,10 @@ class QualityGraph(GraphService):
 
 def prediction(case,proposal):
     from backend.tools.matching import MatchRequest,filter_catalog
-    segment=next(r for r in proposal['assessment']['segments'] if r['evidence_id']==case.facts['evidence_id'])
-    row=next(a for a in proposal['assignments'] if a['evidence_id']==segment['evidence_id'])
+    segment=next((r for r in proposal['assessment']['segments'] if r['evidence_id']==case.facts['evidence_id']),None)
+    if segment is None:raise ValueError('source evidence missing')
+    row=next((a for a in proposal['assignments'] if a['evidence_id']==segment['evidence_id']),None)
+    if row is None:raise ValueError('source assignment missing')
     workflow=proposal['workflow'];failed=any(part.get('failure_kind') or part.get('error_type') for part in (workflow,workflow['statistics'],workflow.get('matching') or {}))
     pool=[]
     if row['catalog_filter_performed'] and not failed:

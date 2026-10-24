@@ -195,6 +195,7 @@ def case_evidence(jobs,report_id,case_id,source):
     evidence_id=case.facts.get('evidence_id')
     if not run_id or not evidence_id:return {'run_id':None,'rows':[],'reason':'원래 실행 ID 또는 관측 근거 ID가 기록되지 않았습니다.'}
     recorded=folder/'workflow-runs.json'
+    if recorded.is_symlink():raise HTTPException(409,'recorded source symlink not allowed')
     if recorded.exists():
         from eval.run_regional_quality import validate_report
         try:
