@@ -239,6 +239,9 @@ class GraphService:
                 matching.update(matching_mode='deterministic-regional-1',model_calls=0)
                 rows=[{**r,'matching_mode':'deterministic-regional-1',
                        'decision_evidence':{**r['decision_evidence'],'matching_mode':'deterministic-regional-1'}} for r in rows]
+        if state['classification']['metadata'].get('policy_gap_version')=='policy-gap-1':
+            from backend.tools.regional_resources import policy_gap
+            rows=[{**row,'policy_gap':policy_gap(row,state['scenario']['payload'].get('policy_research_requested') is True)} for row in rows]
         workflow.update(assignments=rows,matching=matching,status='reviewed' if matching['status']=='reviewed' and workflow['statistics']['status']=='reviewed' else 'needs_human')
         self.regional_emit(state)('workflow-match','match','supervisor',matching)
         self.node_event(state,'match',{'status':matching['status'],'assignment_count':len(rows)},started)
@@ -344,7 +347,8 @@ class GraphService:
     def regional_policy_node(self, state):
         started=time.monotonic()
         proposal=dict(state['proposal'])
-        gaps=[a for a in proposal['assignments'] if a.get('shortfall',0)>0 and (not proposal.get('workflow_version') or a.get('catalog_filter_performed'))]
+        current=(proposal.get('assessment') or {}).get('metadata',{}).get('policy_gap_version')=='policy-gap-1'
+        gaps=[a for a in proposal['assignments'] if a.get('policy_gap',{}).get('research_needed')] if current else [a for a in proposal['assignments'] if a.get('shortfall',0)>0 and (not proposal.get('workflow_version') or a.get('catalog_filter_performed'))]
         scopes={'central'}
         jurisdiction={'11230':('seoul','gangnam'),'32010':('gangwon','chuncheon')}
         unsupported=any(a['dong_cd'][:5] not in jurisdiction for a in gaps)
@@ -356,6 +360,8 @@ class GraphService:
         remaining=max(0,limit-calls)
         task={'goal':'지역 집단 자원 부족을 보완할 정책 후보를 조사하세요. 개인 자격·정원·배정은 확정하지 마세요.',
               'scopes':sorted(scopes),'query':'','max_steps':max(1,remaining-2 if proposal.get('workflow_version') and remaining>=5 else remaining)}
+        if current:
+            task['goal']='필요 가설과 명시된 조사 사유에 따라 정책 후보를 확인하세요. 후보 수로 정책 부재를 추정하지 말고 개인 자격·정원·배정을 확정하지 마세요. 조사 사유: '+', '.join(sorted({reason for row in gaps for reason in row['policy_gap']['research_reasons']}))
         if proposal.get('workflow_version'):
             task['goal']+=' 검색 후 적합한 후보의 상세 원문을 확인하고 근거를 반환하세요. 욕구 가설: '+', '.join(sorted({n for a in gaps for n in a.get('needs',[])}))+'; 기준일: '+proposal['task']['as_of']
             task['goal']+=' 요청 집단(관측 모집단과 동등함을 뜻하지 않음): '+json.dumps({k:proposal['task'].get(k) for k in ('sgg','sex','age_group','ym','dong_cd')},ensure_ascii=False)
@@ -378,6 +384,13 @@ class GraphService:
             'search_complete_within_scope':result.get('search_complete_within_scope',False),'search_scope':result.get('search_scope'),
             'gap_count':len(gaps),'task':task,'coverage':result.get('coverage'),'steps':result.get('steps',0),'eligibility_verified':False,'remaining_capacity':None,
             'allocation_performed':False,'human_review_required':True}
+        if current:
+            from backend.tools.regional_resources import policy_gap
+            proposal['policy_research']['research_request_count']=len(gaps)
+            proposal['policy_research']['gap_count_definition']='segments_requiring_research_not_verified_field_gaps'
+            proposal['policy_research']['research_reasons']=sorted({reason for row in gaps for reason in row['policy_gap']['research_reasons']})
+            proposal['assignments']=[{**row,'policy_gap':policy_gap(row,state['scenario']['payload'].get('policy_research_requested') is True,proposal['policy_research'])} if row['policy_gap']['research_needed'] else row for row in proposal['assignments']]
+            proposal['workflow']={**proposal['workflow'],'assignments':proposal['assignments']}
         proposal.pop('snapshot_version',None);proposal['snapshot_version']=digest(proposal)
         return {'proposal':proposal}
 
@@ -498,7 +511,11 @@ class GraphService:
                 return 'approval'
             builder.add_node('policy_alternatives',self.policy_alternatives_node)
             builder.add_edge('policy_alternatives','approval')
-            builder.add_conditional_edges('workflow_proposal',lambda s:'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and any(a.get('catalog_filter_performed') and a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else after_research(s))
+            def workflow_research(s):
+                if s['classification']['metadata'].get('policy_gap_version')=='policy-gap-1':
+                    return 'regional_policy' if (s['scenario']['payload'].get('research_gaps') is True or s['scenario']['payload'].get('policy_research_requested') is True) and any(a.get('policy_gap',{}).get('research_needed') for a in s['proposal']['assignments']) else after_research(s)
+                return 'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and any(a.get('catalog_filter_performed') and a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else after_research(s)
+            builder.add_conditional_edges('workflow_proposal',workflow_research)
             builder.add_node('regional_prepare',self.regional_prepare)
             builder.add_node('regional_analyst',lambda s:self.regional_step(s,'analyze'))
             builder.add_node('regional_reviewer',lambda s:self.regional_step(s,'review'))
