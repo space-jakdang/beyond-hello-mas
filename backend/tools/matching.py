@@ -88,6 +88,8 @@ def filter_catalog(resources, request, *, regional_ages=None):
             unknown = sorted(key for key, value in conditions.items() if value == 'unknown')
             checks[resource.id] = {'candidate_status':'conditional' if unknown else 'matched',
                 'condition_checks':conditions, 'unknown_conditions':unknown,
+                'rank_factors':{'need_hypotheses_matched':len(set(request.needs).intersection(resource.needs)),
+                                'unknown_conditions':len(unknown),'tie_breaker':'resource_id'},
                 'age_coverage':'full' if conditions['age'] == 'pass' else 'partial' if overlaps else 'none',
                 'eligible_age_ranges':overlaps}
         if reasons:
@@ -97,15 +99,17 @@ def filter_catalog(resources, request, *, regional_ages=None):
     return candidates, excluded, checks
 
 
-def rank(resources, request):
-    return sorted(resources, key=lambda r: (-int(request.arrears and r.arrears_link), -len(set(request.needs).intersection(r.needs)), r.id))
+def rank(resources, request, checks=None):
+    checks=checks or {}
+    return sorted(resources, key=lambda r: (-int(request.arrears and r.arrears_link), -len(set(request.needs).intersection(r.needs)),
+        len(checks.get(r.id,{}).get('unknown_conditions',[])),r.id))
 
 
 def match(resources, request, policy=None, *, regional_ages=None):
-    policy = policy or MatchPolicy(version='regional-candidates-2' if regional_ages is not None else
+    policy = policy or MatchPolicy(version='regional-candidates-3' if regional_ages is not None else
                                   'seohee-match-3' if request.stage is not None else 'provisional-1')
     candidates, excluded, checks = filter_catalog(resources, request, regional_ages=regional_ages)
-    ranked = rank(candidates, request)
+    ranked = rank(candidates, request, checks)
     selected = ranked[:3]
     if request.arrears:
         arrears = next((r for r in ranked if r.arrears_link),None)

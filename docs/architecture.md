@@ -89,7 +89,8 @@ flowchart TB
 | [`backend/graph.py`](../backend/graph.py) | Supervisor, 역할 노드, 조건부 분기와 승인 |
 | [`backend/agents/workflow.py`](../backend/agents/workflow.py) | 지역 분석·통계 검토·보완 루프 |
 | [`backend/tools/regional_statistics.py`](../backend/tools/regional_statistics.py) | 비교 범위·추이·민감도·정책 필요 프로필 |
-| [`backend/agents/workflow_matching.py`](../backend/agents/workflow_matching.py) | 필터를 통과한 자원 중 선택·설명 |
+| [`backend/tools/regional_resources.py`](../backend/tools/regional_resources.py) | 신규 지역 업무의 조건부 후보·결정적 순위와 계산 근거 |
+| [`backend/agents/workflow_matching.py`](../backend/agents/workflow_matching.py) | 과거 버전 LLM 선택/복구 호환 경로 |
 | [`backend/policy/`](../backend/policy/) | 정책 ReAct, MCP, 유사사례, 설계·검토 |
 | [`backend/events.py`](../backend/events.py) | 실행·트레이스·알림 저장 |
 | [`backend/app/quality_jobs.py`](../backend/app/quality_jobs.py) / [`eval/`](../eval/) | 평가 입력 동결·작업·분류·매칭·RAGAS |

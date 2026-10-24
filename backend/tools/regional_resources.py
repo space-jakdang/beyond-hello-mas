@@ -78,7 +78,7 @@ def candidates(assessment,statistics,resources):
                   'presented_candidates':[{'id':c['id'],'name':c['name'],'needs':c['needs'],
                       'source_url':c.get('source_url'),'collected_at':c.get('collected_at'),
                       'eligibility':c['eligibility'],'valid_until':c.get('valid_until'),
-                      **{k:c[k] for k in ('candidate_status','condition_checks','unknown_conditions','age_coverage','eligible_age_ranges')}} for c in result['recommendations']],
+                      **{k:c[k] for k in ('candidate_status','condition_checks','unknown_conditions','age_coverage','eligible_age_ranges','rank_factors')}} for c in result['recommendations']],
                   'unknown_conditions':['individual_eligibility','application_acceptance','remaining_capacity'],
                   'model_reason':None}
         rows.append({**base,**result,'decision_contract_version':'regional-decision-2','decision_evidence':evidence,
@@ -87,3 +87,16 @@ def candidates(assessment,statistics,resources):
                      'mapping_version':MAPPING_VERSION,'need_profile':profile,'provisional':True,'remaining_capacity':None,
                      'allocation_performed':False,'as_of':assessment['task']['as_of']})
     return rows
+
+
+def select_candidates(rows):
+    reason='욕구 가설 일치 수 내림차순, 미확인 조건 수 오름차순, 동률 자원 ID 순의 검토 후보입니다.'
+    selected=[]
+    for row in rows:
+        evidence={**row['decision_evidence'],'matching_mode':'deterministic-regional-1',
+                  'selection_reason':reason if row['recommendations'] else '등록 조건 검사 후 제안할 후보가 없습니다.' if row.get('catalog_filter_performed') else '관측 또는 통계 검토가 부족해 자원 순위를 계산하지 않았습니다.','model_reason':None}
+        selected.append({**row,'matching_mode':'deterministic-regional-1','decision_evidence':evidence,
+                         'status':'conditional_recommendation' if row['recommendations'] else 'needs_human'})
+    return selected,{'matching_mode':'deterministic-regional-1','model_calls':0,
+        'status':'reviewed' if any(row['recommendations'] for row in selected) else 'needs_human',
+        'summary':(reason if any(row['recommendations'] for row in selected) else '제안할 후보가 없어 보류 사유와 추가 확인 계획을 검토해야 합니다.')+' 실제 자격·접수·정원은 담당자가 확인해야 합니다.'}
