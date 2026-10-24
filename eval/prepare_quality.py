@@ -27,7 +27,9 @@ def read_judgments(path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('dataset', type=Path)
+    parser.add_argument('dataset', type=Path,nargs='?')
+    parser.add_argument('--regional-tasks',type=Path,help='Capture current observations/catalog from a JSON task list, always dev split')
+    parser.add_argument('--data-mode',choices=['sample','local'],default='sample')
     parser.add_argument('--labels', type=Path, help='JSON reviewers and judgments bound to dataset_hash')
     parser.add_argument('--judgments', type=Path, help='CSV/JSON judgments replacing labels judgments')
     parser.add_argument('--predictions', type=Path, help='Frozen-dataset-bound model predictions JSON')
@@ -37,9 +39,14 @@ def main():
     parser.add_argument('--key', type=Path, help='Private map for blind case IDs in supplied judgments')
     parser.add_argument('--output-root', type=Path, default=None)
     args = parser.parse_args()
+    if bool(args.dataset)==bool(args.regional_tasks):parser.error('provide exactly one dataset or --regional-tasks')
     if args.judgments and not args.labels:
         parser.error('--judgments requires --labels reviewer metadata')
-    body = json.loads(args.dataset.read_text())
+    if args.regional_tasks:
+        from backend.app.config import Settings
+        from eval.run_regional_quality import capture
+        body=capture(Settings(data_mode=args.data_mode,llm_mode='fake'),json.loads(args.regional_tasks.read_text()))
+    else:body = json.loads(args.dataset.read_text())
     if 'schema_version' in body:
         load_frozen(body)
         frozen = body

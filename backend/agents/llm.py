@@ -11,6 +11,11 @@ PROMPTS = Path(__file__).resolve().parents[1] / 'prompts'
 
 
 def fake(role, payload):
+    if role=='workflow_single':
+        return {'action':'lookup' if not payload['observations'] and '추이' in payload['task']['goal'] else 'finish',
+            'tool':'source_check' if payload['methodology']['period_role']!='observed month' else 'trend','reason':'fake: 동일 근거를 한 분석가가 자체 확인합니다.',
+            'plan':{'summary':'fake: 단일 분석가의 지역 조사 가설입니다.',
+                    'priority_evidence_ids':[r['evidence_id'] for r in payload['facts'] if r['evidence_id'] not in payload['summary']['blocked_evidence_ids']][:5]}}
     if role == 'workflow_analyst':
         blocked=set(((payload.get('feedback') or {}).get('statistics') or {}).get('blocked_evidence_ids',[]))
         return {'summary':'fake: 관측 근거와 자료 한계를 검토한 잠정 지역 분석입니다.',
@@ -133,7 +138,7 @@ class Agents:
                 raise ValueError('LLM call or cost budget exceeded')
             db.execute('INSERT INTO llm_calls VALUES (?,?,?,?,?,?)', (run_id, call_key, role, 'pending', reserve, json.dumps(metadata)))
             self.store._trace(db, run_id, sim_ts, 'llm_call', metadata, 'supervisor' if role == 'route' else
-                              {'analysis': 'classify', 'recommendations': 'match', 'draft': 'link', 'policy_decision': 'policy', 'policy_design':'policy_design','policy_alternatives':'policy_design', 'regional_analyst':'regional_analyst', 'regional_reviewer':'regional_reviewer', 'regional_worker':'regional_analyst', 'regional_planner':'regional_analyst', 'regional_audit':'regional_reviewer', 'workflow_analyst':'regional_analyst', 'workflow_statistics':'statistics', 'workflow_matching':'match'}[role])
+                              {'analysis': 'classify', 'recommendations': 'match', 'draft': 'link', 'policy_decision': 'policy', 'policy_design':'policy_design','policy_alternatives':'policy_design', 'regional_analyst':'regional_analyst', 'regional_reviewer':'regional_reviewer', 'regional_worker':'regional_analyst', 'regional_planner':'regional_analyst', 'regional_audit':'regional_reviewer', 'workflow_analyst':'regional_analyst', 'workflow_single':'regional_analyst', 'workflow_statistics':'statistics', 'workflow_matching':'match'}[role])
         started = time.monotonic()
         tokens_in = tokens_out = 0
         actual = None
