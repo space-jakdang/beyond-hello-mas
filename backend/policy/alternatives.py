@@ -55,11 +55,14 @@ def context_for(dong,scope,proposals):
         selected=[r for r in proposal['assessment']['segments'] if r['dong_cd']==dong['dong_cd']]
         ids={r['evidence_id'] for r in selected}
         facts.extend({'evidence_id':r['evidence_id'],'target_group':group,'stage':r['stage'],'index_name':r['index_name'],
+                      'base_stage':r.get('base_stage'),'stage_scale':r.get('stage_scale'),'scenario_stage':r.get('scenario_stage'),
                       'value':r['value'],'source_bands':r.get('source_bands',{}),'source_period':r['source_period'],'flags':r.get('flags',[])} for r in selected)
         analyses.append({'target_group':group,'summary':(proposal.get('workflow',{}).get('analysis') or {}).get('summary','분석 미완료')})
         stats=proposal.get('workflow',{}).get('statistics',{})
         statistics.extend(i for i in stats.get('summary',{}).get('insights',{}).get('items',[]) if i['evidence_id'] in ids)
         matching.extend({'evidence_id':a['evidence_id'],'needs':a.get('needs',[]),'uncovered_needs':a.get('uncovered_needs',[]),
+                         'policy_gap':a.get('policy_gap'),'need_mapping_status':(a.get('need_profile') or {}).get('mapping_status'),
+                         'candidate_conditions':[{'id':r['id'],'unknown_conditions':r.get('unknown_conditions',[])} for r in a.get('recommendations',[])],
                          'selected_resource_ids':[r['id'] for r in a.get('recommendations',[])]} for a in proposal.get('assignments',[]) if a['evidence_id'] in ids)
         for c in (proposal.get('policy_research') or {}).get('candidates',[]):
             policy=c['policy'];pid=policy['id']
@@ -68,12 +71,17 @@ def context_for(dong,scope,proposals):
                           'evidence':c['evidence'],'checked_at':c.get('checked_at') or c.get('cached_at'),
                           'detail_status':c['detail_status'],'role':'existing_candidate',
                           'fields':{k:policy[k] for k in ('title','support','eligibility','criteria','deadline') if policy.get(k)}}
-    return {**dong,'scope':scope,'target_groups':groups,'facts':facts,'analyses':analyses,'statistics':statistics,'matching':matching,
+    current=bool(proposals) and all(p.get('assessment',{}).get('metadata',{}).get('policy_gap_version')=='policy-gap-1' for p in proposals)
+    return {**dong,'scope':scope,'gap_contract_version':'policy-gap-1' if current else None,'target_groups':groups,'facts':facts,'analyses':analyses,'statistics':statistics,'matching':matching,
             'sources':list(sources.values()),'limits':['예산·정원·효과는 미확인','정책 부재를 증명한 것이 아닙니다.']}
 
 
 def research(designer,owner_id,run_id,context):
-    # Always investigate delivery examples, even when an eligible candidate already exists.
+    if context.get('gap_contract_version')=='policy-gap-1' and (not any((row.get('policy_gap') or {}).get('research_needed') for row in context['matching']) or
+            (context['sources'] and not any(row['uncovered_needs'] for row in context['matching']))):
+        context['research_steps']=[{'status':'existing_snapshot_reused' if context['sources'] else 'not_requested','purpose':'operating_alternatives_not_slot_filling','absence_established':False}]
+        context['source_search_status']=context['research_steps'][0]['status']
+        return context
     from backend.policy.alternative_export import group_label
     words={'economic':'경제','housing':'주거','employment':'일자리','health':'건강','relationship':'고립','emotional':'상담'}
     needs=[n for row in context['matching'] for n in row.get('uncovered_needs',[])]+[n for row in context['matching'] for n in row['needs']]
@@ -86,7 +94,7 @@ def research(designer,owner_id,run_id,context):
     for query in queries:
         args={'local_scope':{'11230':'gangnam','32010':'chuncheon'}[context['scope']['sgg']],
               'query':query,'target_group':', '.join(group_label(g) for g in targets)}
-        cache_key=digest(args)
+        cache_key=digest({'arguments':args,'as_of':context['scope'].get('as_of')})
         with designer.store.connection() as db:
             row=db.execute('SELECT body FROM policy_alternative_research WHERE owner_id=? AND cache_key=?',(owner_id,cache_key)).fetchone()
         if row:result=json.loads(row[0])
@@ -98,7 +106,7 @@ def research(designer,owner_id,run_id,context):
                 db.execute('INSERT OR IGNORE INTO policy_alternative_research VALUES (?,?,?)',(owner_id,cache_key,json.dumps(result,ensure_ascii=False)))
                 result=json.loads(db.execute('SELECT body FROM policy_alternative_research WHERE owner_id=? AND cache_key=?',(owner_id,cache_key)).fetchone()[0])
                 designer.store._trace(db,run_id,utcnow().isoformat(),'tool_result',{'tool':'policy_analogues','arguments':args,'result':result},'policy_design')
-        observations.append({'query':query,'status':result.get('status','unavailable'),'candidate_count':result.get('total_matches'),
+        observations.append({'query':query,'purpose':'operating_examples_not_verified_field_gap','status':result.get('status','unavailable'),'candidate_count':result.get('total_matches'),
                              'limitations':result.get('limitations',[]),'absence_established':False})
         for rank,analogue in enumerate(result.get('analogues',[])[:5]):
             source=analogue.get('source',{});fields=source.get('fields',{})
@@ -202,6 +210,9 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
             if not substantive or not substantive<=adapted:gaps.append('공식 지원 내용·대상과 현지 변경안을 연결할 필요')
             if item['evaluation_design'] is None:gaps.append('기준선·비교·관측 기간·성공/중단 기준 필요')
             item['design_checks']={'status':'needs_design_review' if gaps else 'structured_draft','gaps':gaps,'effectiveness_verified':False}
+            if context.get('gap_contract_version')=='policy-gap-1':
+                item['claim_limits']={'local_need':'hypothesis_only' if any(row.get('needs') for row in context['matching']) else 'unconfirmed',
+                    'evidence_status_meaning':'citation_and_observation_coverage_only','feasibility':'not_evaluated','effectiveness':'not_evaluated','field_gap':'not_evaluated'}
             if gaps and item['evidence_status']=='supported':item['evidence_status']='partial'
         body={**output,'owner_id':owner_id,**dong,'scope':scope,'input_version':digest(context),'generation_mode':mode,
               'fallback_reason':reason,'created_at':utcnow().isoformat(),'review_revision':0,'human_review_required':True,

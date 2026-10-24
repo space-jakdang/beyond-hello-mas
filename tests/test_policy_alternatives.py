@@ -65,6 +65,10 @@ def test_model_and_tool_failure_preserve_three_and_cancellation_stops_next_dong(
     run=run_task(service);p=service.approval(run.id)['proposal']
     rows=p['assessment']['segments'];dong={'dong_cd':rows[0]['dong_cd'],'dong_nm':rows[0]['dong_nm']}
     scope={**p['task'],'target_groups':['M/youth']}
+    from backend.tools.regional_resources import policy_gap
+    for a in p['assignments']:
+        a.update(recommendations=[],uncovered_needs=a['needs'],shortfall=3)
+        a['policy_gap']=policy_gap(a)
     def fail(*args):raise RuntimeError('offline')
     monkeypatch.setattr(service.agents,'call',fail);monkeypatch.setattr(service.policy_agent,'call_tool',fail)
     result=service.policy_designer.propose(str(uuid4()),run.id,scope,[dong],[p])[0]
