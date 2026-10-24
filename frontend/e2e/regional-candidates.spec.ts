@@ -7,7 +7,7 @@ test('conditional regional candidates show partial ages and pending eligibility 
  await expect.poll(async()=>{overview=await(await request.get(`/runs/${run.id}/overview`)).json();return overview.run.status;},{timeout:20000}).toBe('awaiting_approval');
  const proposal=overview.review.proposal;
  const row=proposal.assignments.find((r:any)=>r.recommendations.length);
- const conditions={candidate_status:'conditional',age_coverage:'partial',eligible_age_ranges:[[25,29]],unknown_conditions:['age','eligibility:resident']};
+ const conditions={candidate_status:'conditional',age_coverage:'partial',eligible_age_ranges:[[25,29]],unknown_conditions:['age','eligibility:resident','support_stage','support_intensity','unstructured_eligibility']};
  Object.assign(row.recommendations[0],conditions);
  Object.assign(row.decision_evidence.presented_candidates.find((c:any)=>c.id===row.recommendations[0].id),conditions);
  await page.route(`**/runs/${run.id}/overview`,r=>r.fulfill({json:overview}));
@@ -18,6 +18,9 @@ test('conditional regional candidates show partial ages and pending eligibility 
  await expect(item).toContainText('지원 확정 아님');
  await expect(item).toContainText('일부 연령만 해당: 25–29세');
  await expect(item).toContainText('추가 확인: 해당 연령 일부 · 지원 자격');
+ await expect(item).toContainText('지원 단계 확인 필요');
+ await expect(item).toContainText('지원 강도 확인 필요');
+ await expect(item).toContainText('지원 자격 확인 필요');
  await item.locator('.decision-evidence > summary').click();
  await expect(item.locator('.decision-evidence')).toContainText('일부 연령만 해당: 25–29세');
  delete row.recommendations[0].candidate_status;
