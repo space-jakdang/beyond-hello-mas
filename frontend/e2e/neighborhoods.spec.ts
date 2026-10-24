@@ -2,7 +2,8 @@ import {test,expect} from '@playwright/test';
 
 test('neighborhood map filters and keyboard selection match API stages',async({page,request})=>{
   const data=await(await request.get('/analysis')).json();
-  await page.goto('/neighborhoods/legacy');
+  const sourceReady=page.waitForResponse(r=>r.url().endsWith('/analysis')&&r.ok());
+  await page.goto('/neighborhoods/legacy');await(await sourceReady).finished();
   await expect(page.getByRole('heading',{name:'과거 6연령 분석',exact:true})).toBeVisible();
   await expect(page.getByText('합성 데이터 · 격자는 실제 동네 위치가 아닙니다.',{exact:false})).toBeVisible();
   await page.getByLabel('분석 월',{exact:true}).selectOption('2025-07');
