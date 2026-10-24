@@ -15,17 +15,27 @@ test('operator receives, acknowledges, approves, rejects and inspects monthly pl
   const id=await run('0');
   const alert=consolePage.getByTestId(`alert-${id}-approval_requested`);
   await expect(alert).toBeVisible();
+  await expect(alert).toContainText('브라우저 도착');
+  await expect(alert.getByText(id,{exact:true})).toBeHidden();
+  await expect(alert.locator('details')).not.toHaveAttribute('open','');
   await alert.getByRole('button',{name:'사람 확인'}).click();
-  await expect(alert).toContainText('확인됨');
+  await expect(alert).toHaveAttribute('data-alert-status','acknowledged');
+  await expect(alert.locator('strong')).toContainText('담당자 확인 완료');
   await alert.getByRole('button',{name:'실행 상세'}).click();
+  const review=consolePage.getByTestId('review-panel');
+  await expect(review).toContainText('합성 테스트 자료');
+  await expect(review).toContainText('승인은 시스템 내부의 후속 절차를 진행합니다.');
+  await expect(review).toContainText('실제 전달되지 않았습니다.');
+  await expect(review.getByText(id,{exact:true})).toBeHidden();
+  await expect(review.getByLabel('검토 사유')).toBeVisible();
   await consolePage.getByRole('button',{name:'승인',exact:true}).click();
-  await expect(consolePage.getByRole('heading',{name:'실행 상세 · 완료',exact:true})).toBeVisible();
+  await expect(consolePage.getByRole('heading',{name:'검토 대상 · 완료',exact:true})).toBeVisible();
   await expect(consolePage.getByTestId(`alert-${id}-linkage_completed`)).toBeVisible();
   const rejected=await run('0');
   await consolePage.getByTestId(`alert-${rejected}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
-  await consolePage.getByLabel('반려 사유').fill('추가 상담 필요');
+  await consolePage.getByLabel('검토 사유').fill('추가 상담 필요');
   await consolePage.getByRole('button',{name:'반려',exact:true}).click();
-  await expect(consolePage.getByRole('heading',{name:'실행 상세 · 반려',exact:true})).toBeVisible();
+  await expect(consolePage.getByRole('heading',{name:'검토 대상 · 반려',exact:true})).toBeVisible();
   expect((await page.request.get(`/runs/${rejected}/linkage`)).status()).toBe(404);
   const crisis=await run('1','완료');
   await expect(consolePage.getByTestId(`alert-${crisis}-crisis`)).toBeVisible();
@@ -35,11 +45,11 @@ test('operator receives, acknowledges, approves, rejects and inspects monthly pl
   await expect(consolePage.locator('.alert-list article').first()).toHaveClass(/crisis/);
   const monthly=await run('2');
   await consolePage.getByTestId(`alert-${monthly}-approval_requested`).getByRole('button',{name:'실행 상세'}).click();
-  await expect(consolePage.getByRole('heading',{name:'동별 상황판 · 47개 동'})).toBeVisible();
+  await expect(consolePage.getByRole('heading',{name:'동별 우선 확인 · 47개 동'})).toBeVisible();
   await consolePage.getByLabel('동 선택').selectOption({index:1});
   await expect(consolePage.getByRole('table',{name:'연령 상세'}).locator('tbody tr')).toHaveCount(6);
   await consolePage.getByRole('button',{name:'승인',exact:true}).click();
-  await expect(consolePage.getByRole('heading',{name:'실행 상세 · 완료',exact:true})).toBeVisible();
+  await expect(consolePage.getByRole('heading',{name:'검토 대상 · 완료',exact:true})).toBeVisible();
   await consolePage.screenshot({path:'../runtime/sample/screenshots/console.png',fullPage:true});
 });
 test('console retries its initial load and restores a pending approval after reload', async ({page,request})=>{
@@ -50,10 +60,10 @@ test('console retries its initial load and restores a pending approval after rel
   await page.goto('/console');
   const alert=page.getByTestId(`alert-${run.id}-approval_requested`);
   await expect(alert).toBeVisible({timeout:10000});
-  await expect(page.getByText('알림 SSE 연결됨 · 최근 200건 · 위기 우선')).toBeVisible();
+  await expect(page.getByText('실시간 알림 연결됨 · 최근 최대 200건 · 위기·인계 우선')).toBeVisible();
   await page.reload();
   await alert.getByRole('button',{name:'실행 상세'}).click();
-  await expect(page.getByRole('heading',{name:'실행 상세 · 승인 대기'})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'검토 대상 · 승인 대기'})).toBeVisible();
 });
 
 test('switching review targets hides stale controls until the new snapshot arrives',async({page,request})=>{
@@ -67,9 +77,9 @@ test('switching review targets hides stale controls until the new snapshot arriv
  await expect(page.getByTestId('review-panel')).toHaveCount(0);
  release();await expect(page.getByTestId('review-panel')).toContainText(second);
  await page.getByLabel('담당자 이름').fill('전환 검토자');
- await page.getByLabel('반려 사유').fill('새 대상의 자료 보완');
+ await page.getByLabel('검토 사유').fill('새 대상의 자료 보완');
  await page.getByRole('button',{name:'반려',exact:true}).click();
- await expect(page.getByTestId('review-panel')).toContainText('실행 상세 · 반려');
+ await expect(page.getByTestId('review-panel')).toContainText('검토 대상 · 반려');
  expect((await(await request.get(`/runs/${first}/approval`)).json()).approval.status).toBe('pending');
 });
 
