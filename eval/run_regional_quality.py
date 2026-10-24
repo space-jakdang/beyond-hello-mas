@@ -115,7 +115,9 @@ def prediction(case,proposal):
 def execute(frozen,settings,store):
     dataset=load_frozen(frozen)
     prepared={case.id:frozen_assessment(case,settings) for case in dataset.cases}
-    if settings.llm_mode=='live' and settings.llm_run_budget_usd is None:raise ValueError('live comparison requires a per-run budget')
+    if settings.llm_mode=='live' and not all((settings.llm_run_budget_usd,settings.openai_model,settings.llm_budget_usd,
+                                            settings.input_usd_per_million,settings.output_usd_per_million,settings.price_version)):
+        raise ValueError('live comparison requires model, verified prices, cumulative and per-run budgets')
     conditions={'model':settings.openai_model if settings.llm_mode=='live' else 'fake-v1','tools_version':TOOLS,
         'catalog_hash':digest({case.id:case.policies for case in dataset.cases}),'max_calls':settings.llm_max_calls,
         'max_usd':float(settings.llm_run_budget_usd or 0)}
@@ -204,16 +206,38 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('folder',type=Path)
     parser.add_argument('--live',action='store_true',help='Use explicitly configured paid model and persistent dataset ledger')
     args=parser.parse_args();folder=args.folder
-    if any((folder/name).exists() for name in ('workflow-runs.json','study.json','predictions.json')):parser.error('results already exist; preserve the recorded runs and ledger')
+    if any((folder/name).is_symlink() for name in ('inputs.json','labels.json')):parser.error('evaluation input symlink not allowed')
     frozen=json.loads((folder/'inputs.json').read_text());dataset=load_frozen(frozen)
     mode='sample' if all(c.source=='synthetic' for c in dataset.cases) else 'local'
     settings=Settings(data_mode=mode,llm_mode='live' if args.live else 'fake',evaluation_id=UUID(folder.name))
     store=EventStore(settings.runtime_dir/'events.sqlite3')
-    report=execute(frozen,settings,store)
+    path=folder/'workflow-runs.json'
+    if any((folder/name).is_symlink() for name in ('workflow-runs.json','study.json','predictions.json')):parser.error('evaluation output symlink not allowed')
+    if path.exists():
+        report=json.loads(path.read_text());validate_report(frozen,report)
+    else:
+        with store.connection() as db:
+            partial=db.execute("SELECT 1 FROM sqlite_master WHERE name='workflows'").fetchone()
+            partial=partial and db.execute("SELECT 1 FROM workflows WHERE json_extract(scenario,'$.payload.evaluation_protocol')=? LIMIT 1",(VERSION,)).fetchone()
+        if partial:parser.error('partial evaluation ledger exists; restore its original runs before starting another comparison')
+        report=execute(frozen,settings,store)
+        with path.open('x') as file:file.write(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+    path=folder/'predictions.json';predictions=report['arms'][-1]['predictions']
+    if path.exists():
+        if json.loads(path.read_text())!=predictions:parser.error('preserve existing predictions; they differ from recorded runs')
+    else:
+        with path.open('x') as file:file.write(json.dumps(predictions,ensure_ascii=False,indent=2)+'\n')
     # Labels are first opened after all predictions are fixed.
     labels=json.loads((folder/'labels.json').read_text())
-    outputs={'workflow-runs':report,'study':study_for(frozen,labels,report),'predictions':report['arms'][-1]['predictions']}
-    for name,value in outputs.items():(folder/(name+'.json')).write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n')
+    study=study_for(frozen,labels,report);path=folder/'study.json'
+    if path.exists() and json.loads(path.read_text())!=study:
+        old=json.loads(path.read_text());archive=folder/('study-'+digest(old)+'.json')
+        if archive.is_symlink() or (archive.exists() and json.loads(archive.read_text())!=old):parser.error('preserve conflicting study history')
+        if not archive.exists():
+            with archive.open('x') as file:file.write(json.dumps(old,ensure_ascii=False,indent=2)+'\n')
+    temporary=folder/'study.tmp'
+    with temporary.open('x') as file:file.write(json.dumps(study,ensure_ascii=False,indent=2)+'\n')
+    temporary.replace(path)
     print(folder)
 
 
