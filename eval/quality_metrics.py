@@ -1,7 +1,7 @@
 """Quality metrics from frozen reference labels; no labels or predictions invented."""
 from typing import Literal
 from pydantic import Field, model_validator
-from eval.quality_contracts import Contract, load_frozen, resolve_labels
+from eval.quality_contracts import Contract, load_frozen, resolve_labels, stage_scope
 from backend.tools.indicators import digest
 
 
@@ -84,10 +84,10 @@ def classification(frozen, labels, predictions, case_ids=None):
     groups={}
     for case in dataset.cases:
         if case_ids is not None and case.id not in case_ids:continue
-        group=groups.setdefault((case.source,case.methodology),[])
+        group=groups.setdefault((case.source,case.methodology,stage_scope(case)),[])
         group.append(case)
     result=[]
-    for (source,methodology),cases in groups.items():
+    for (source,methodology,scale),cases in groups.items():
         matrix=[[0]*6 for _ in range(5)];errors=[];pairs=[];missing_labels=unknown_labels=non_independent=0
         for case in cases:
             reference=refs[case.id]
@@ -98,7 +98,7 @@ def classification(frozen, labels, predictions, case_ids=None):
             matrix[truth-1][grade-1 if grade is not None else 5]+=1
             pairs.append((truth,grade))
             if grade!=truth:errors.append({'case_id':case.id,'neighborhood':case.neighborhood,'reference':truth,
-                'predicted':grade,'status':p.status if p else 'missing_prediction','run_id':p.run_id if p else None})
+                'predicted':grade,'status':p.status if p else 'missing_prediction','run_id':p.run_id if p else None,'recorded_evaluation':data.version=='regional-quality-1'})
         n=len(pairs);valid=sum(g is not None for _,g in pairs);per_grade=[];fs=[]
         for i in range(5):
             support=sum(matrix[i]);returned=sum(row[i] for row in matrix);tp=matrix[i][i]
@@ -112,8 +112,9 @@ def classification(frozen, labels, predictions, case_ids=None):
             'input_cases':len(cases),'reference_count':n,'missing_labels':missing_labels,'unknown_labels':unknown_labels,
             'non_independent_labels':non_independent,'valid_predictions':valid,'missing_predictions':n-valid,
             'macro_f1':sum(fs)/len(fs) if fs else None,'macro_class_policy':'grades_with_reference_or_prediction_support',
-            'priority_precision':ratio(hit,flagged),'priority_recall':ratio(hit,positive),'priority_support':positive,
-            'priority_flagged':flagged,'flag_rate':ratio(flagged,n),'coverage':ratio(valid,n),
+            'stage_scale':scale,'priority_criterion_status':'not_established' if scale else 'legacy_4_5',
+            'priority_precision':None if scale else ratio(hit,flagged),'priority_recall':None if scale else ratio(hit,positive),'priority_support':None if scale else positive,
+            'priority_flagged':None if scale else flagged,'flag_rate':None if scale else ratio(flagged,n),'coverage':ratio(valid,n),
             'mae':ratio(sum(abs(t-g) for t,g in pairs if g is not None),valid),
             'confusion':matrix,'per_grade':per_grade,'errors':errors})
     return {'prediction_hash':digest(data.model_dump()),'model':data.model,'method':data.method,

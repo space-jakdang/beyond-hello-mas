@@ -100,6 +100,11 @@ def load_frozen(body):
     return Dataset.model_validate(body['dataset'])
 
 
+def stage_scope(case):
+    assessment=case.facts.get('assessment') or {}
+    return next((r.get('stage_scale') for r in assessment.get('segments',[]) if r.get('evidence_id')==case.facts.get('evidence_id')),None)
+
+
 def resolve_labels(frozen, labels):
     """Resolve only agreed or separately adjudicated labels; preserve missingness."""
     dataset = load_frozen(frozen)
