@@ -552,14 +552,17 @@ class GraphService:
             self.once(db, state, 'approval-alert', 'alert', alert.model_dump(mode='json'))
             self.update_run(db, state['run_id'], status='awaiting_approval')
 
+    def check_evaluation(self,payload):
+        if payload.get('evaluation_protocol') and (payload['evaluation_protocol'],payload.get('evaluation_method'),payload.get('evaluation_input_hash'))!=(getattr(self,'evaluation_protocol',None),getattr(self,'evaluation_method',None),getattr(self,'evaluation_input_hash',None)):
+            raise ValueError('resume evaluation with its recorded method and frozen inputs')
+
     def drive(self, run_id, initial=None):
         if self.store.get_run(run_id).llm_mode != self.settings.llm_mode:
             raise ValueError('restore the original LLM_MODE before resuming this run')
         with self.store.connection() as db:
             saved=db.execute('SELECT scenario FROM workflows WHERE run_id=?',(run_id,)).fetchone()
         payload=json.loads(saved[0])['payload'] if saved else {}
-        if payload.get('evaluation_protocol') and (payload['evaluation_protocol'],payload.get('evaluation_method'),payload.get('evaluation_input_hash'))!=(getattr(self,'evaluation_protocol',None),getattr(self,'evaluation_method',None),getattr(self,'evaluation_input_hash',None)):
-            raise ValueError('resume evaluation with its recorded method and frozen inputs')
+        self.check_evaluation(payload)
         config = {'configurable': {'thread_id': run_id}}
         with self.lock(run_id), self.graph() as graph, tracing_context(enabled=False):
             run=self.store.get_run(run_id)
@@ -599,6 +602,7 @@ class GraphService:
         return self.store.get_run(run_id)
 
     def register(self, scenario):
+        self.check_evaluation(scenario.payload)
         if 'revision' in scenario.payload:raise ValueError('use the revision endpoint for linked reruns')
         if scenario.payload.get('workflow_version'):
             from backend.tools.regional_task import task_from

@@ -170,6 +170,11 @@ def test_isolated_run_evidence_uses_recorded_proposal_and_generic_recovery_canno
     correct=QualityGraph(service.store,service.settings,single['proposal']['assessment'],'single')
     assert correct.drive(run_id).status=='awaiting_approval'
     assert service.store.traces(run_id,limit=1000)==before
+    from tests.test_graph import scenario
+    with service.store.connection() as db:count=db.execute('SELECT COUNT(*) FROM runs').fetchone()[0]
+    with pytest.raises(ValueError,match='recorded method'):
+        service.register(scenario(evaluation_protocol='regional-quality-1',evaluation_method='single',evaluation_input_hash='untrusted'))
+    with service.store.connection() as db:assert db.execute('SELECT COUNT(*) FROM runs').fetchone()[0]==count
 
 
 @pytest.mark.parametrize('invalid',['evidence','duplicate_tool','budget'])
