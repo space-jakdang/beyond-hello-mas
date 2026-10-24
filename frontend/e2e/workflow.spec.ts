@@ -40,7 +40,7 @@ test('regional task links agents, immutable results and a fresh revision approva
  await expect(page.getByTestId('review-panel')).toContainText('조건부');
  await expect(page.getByTestId('review-panel').locator('.workflow-context')).toContainText('자료: 합성 테스트 자료');
  await page.getByLabel('담당자 이름').fill('워크플로 검토자');
- await page.getByLabel('반려 사유').fill('통계의 출처와 누락 근거를 보완하세요.');
+ await page.getByLabel('검토 사유').fill('통계의 출처와 누락 근거를 보완하세요.');
  await page.getByRole('button',{name:'보완 요청'}).click();
  await expect(page).toHaveURL(/\/workspace\?run=/);
  expect(page.url()).not.toBe(original);
