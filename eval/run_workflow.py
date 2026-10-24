@@ -105,7 +105,7 @@ def run(seed=20261021):
             'Provided non-youth stages test preservation only. Youth examples test provisional rule implementation.',
             'Matching uses synthetic decoys and no actual capacity or budget. No LLM calls were made.',
             'Repeated runs are reproducibility checks, not additional independent cases. Existing temporal and A/B/C reports remain separate.']}
-    report['metadata'].update({'methodology_version':'regional-workflow-1','mapping_version':'regional-needs-1','reference_source':'AI-assisted hand-specified rule examples','family_count':len({r['family'] for r in dataset['inputs']}),'llm_calls':0,
+    report['metadata'].update({'methodology_version':'regional-workflow-1','mapping_version':'regional-needs-2','reference_source':'AI-assisted hand-specified rule examples','family_count':len({r['family'] for r in dataset['inputs']}),'llm_calls':0,
         'code_hash':digest({p:(root/p).read_text(encoding='utf-8') for p in ['eval/run_workflow.py','scripts/generate_workflow_cases.py','backend/tools/region_stage.py','backend/tools/regional_resources.py','backend/tools/matching.py','backend/tools/regional_statistics.py','backend/tools/regional_task.py','backend/tools/segments_v3.py','backend/tools/indicators.py','backend/tools/catalog.py','backend/app/contracts.py','data/sample/resources.csv','eval/workflow_contract.json']})})
     (directory/'summary.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     return report

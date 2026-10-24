@@ -26,7 +26,9 @@ class StatisticsDecision(BaseModel):
 
 
 def observations(assessment):
-    return [{'evidence_id':r['evidence_id'],**{k:r.get(k) for k in ('dong_nm','stage','stage_label','index_name','value','source_period','source_bands','flags')}} for r in assessment['segments']]
+    from backend.tools.regional_resources import need_profile
+    return [{'evidence_id':r['evidence_id'],**{k:r.get(k) for k in ('dong_nm','stage','stage_label','index_name','value','source_period','source_bands','flags')},
+             **({'observed_factors':need_profile(r)['observed_factors']} if r.get('components') else {})} for r in assessment['segments']]
 
 
 def model_observations(items):
@@ -66,6 +68,7 @@ def methodology(assessment):
     return {'version':assessment['methodology_version'],'stage_meanings':STAGES,
             'group_definition':', '.join(json.loads((Path(__file__).resolve().parents[2]/'rules/age_crosswalk.json').read_text())['concept'][assessment['task']['age_group']]),
             'provisional':True,'purpose':'within-region outreach priority; not individual diagnosis or absolute cross-region risk',
+            'need_mapping':'regional-needs-2: source factors are uninterpreted observations, not verified service needs; S1/v3 support only a relationship outreach hypothesis, including stage 1',
             'source_age_mapping':'source-specific ranges are retained; requested group labels are not measured population equivalence',
             'synthetic_future':assessment['metadata'].get('synthetic_future',False),
             'period_role':'synthetic future scenario; not an observation or calibrated forecast' if assessment['metadata'].get('synthetic_future') else 'execution reference only; not a monthly observation' if assessment['period_aggregate'] else 'observed month',

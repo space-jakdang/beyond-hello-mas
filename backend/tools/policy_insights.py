@@ -9,6 +9,7 @@ def cohort(row):
 
 
 def insights(assessment):
+    from backend.tools.regional_resources import need_profile
     source=assessment.get('source_observations',assessment['segments'])
     items=[]
     for row in assessment['segments']:
@@ -18,18 +19,16 @@ def insights(assessment):
         center=median(r['value'] for r in peers) if len(peers)>=3 else None
         direction=-1 if row.get('risk_direction')=='low_is_risk' else 1
         difference=direction*(value-center) if valid and center is not None else None
-        measured={k:v for k,v in row.get('components',{}).items() if k in ('relationship','economic','housing','employment','health','emotional','activity_deficit') and type(v) in (float,int) and isfinite(v)}
-        # Magnitudes across different factor scales are not comparable contribution weights.
-        positive=sorted(k for k,v in measured.items() if v>0)
+        profile=need_profile(row)
         flags=row.get('flags',[])
         action='추가 비교 자료를 확보한 뒤 지원 우선순위를 검토합니다.' if difference is None else '비교군보다 위험 방향으로 치우쳐 우선 현장 확인과 접근 경로를 검토합니다.' if difference>0 else '비교군보다 두드러진 위험 차이가 없어 보편적 안내와 관측 유지를 검토합니다.'
         items.append({'evidence_id':row['evidence_id'],'dong_nm':row['dong_nm'],'question':'비교 가능한 다른 동과 어떤 차이가 있는가?',
                       'comparison':{'peer_count':len(peers),'peer_median':center,'risk_direction_difference':difference,'unit':'source_index',
                                     'source_period':row['source_period'],'source_bands':row['source_bands']},
-                      'measured_need_signals':positive,'need_interpretation':'observed_factor_hypotheses' if measured else 'index_proxy_only',
+                      'measured_need_signals':[],'need_interpretation':profile['mapping_status'],'need_profile':profile,
                       'policy_implication':action,'missing_evidence':['서비스 실제 이용량·수용량','수급 대상 인구 분모'],
                       'limitations':['차이는 인과 효과나 위험 확률이 아닙니다.']+(['성별로 측정된 지수가 아니므로 성별 차이로 해석하지 않습니다.'] if 'index_not_sex_specific' in flags else [])})
-    return {'version':'policy-insights-1','items':items,'input_hash':assessment['metadata']['input_hash'],'causal_claim':False}
+    return {'version':'policy-insights-2','items':items,'input_hash':assessment['metadata']['input_hash'],'causal_claim':False}
 
 
 def persistence(observation):

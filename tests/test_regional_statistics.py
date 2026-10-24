@@ -54,7 +54,9 @@ def test_policy_statistics_separate_scales_missing_and_need_combinations(service
         r['source_bands']=a['segments'][0]['source_bands'];r['source_period']='same';r['index_name']='v3'
     result=summary(a)['policy_needs'];cohort=result['cohorts'][0]
     assert cohort['observed_segments']==3 and cohort['missing_segments']==1 and cohort['priority_share']==pytest.approx(2/3)
-    assert cohort['need_counts']['economic']==1 and any(x['needs']==['economic','housing'] for x in cohort['joint_needs'])
+    assert cohort['need_counts']=={'relationship':3} and not cohort['joint_needs']
+    assert result['profiles'][1]['observed_factors']=={'economic':.4,'housing':.2}
+    assert result['profiles'][1]['measured_components']=={}
     assert result['profiles'][0]['priority_midrank']==pytest.approx(1/6)
     assert result['profiles'][-1]['need_basis']=='insufficient_evidence'
     assert result['profiles'][-1]['priority_midrank'] is None and result['profiles'][-1]['needs']==[]
