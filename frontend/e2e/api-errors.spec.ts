@@ -30,7 +30,7 @@ test('missing analysis inputs explain configuration rather than a JSON dump',asy
  await expect(page.getByRole('alert')).toContainText('데이터 설정과 서버 상태');
  await expect(page.getByRole('button',{name:'집단 분석 다시 불러오기'})).toBeVisible();
  await page.goto('/workspace');
- await expect(page.getByRole('button',{name:'분석 자료 다시 불러오기'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'지역 자료 다시 불러오기'})).toBeVisible();
 });
 
 

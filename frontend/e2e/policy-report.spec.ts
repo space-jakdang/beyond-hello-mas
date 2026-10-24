@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 test('policy report has separate versioned review, readable sources and mobile print',async({page,request})=>{
- await page.goto('/workspace?sex=M&age=youth');await page.getByRole('button',{name:'Supervisor에게 업무 지시'}).click();
+ await page.goto('/workspace?sex=M&age=youth');await page.getByRole('button',{name:'지역 분석 요청'}).click();
  await expect(page.getByTestId('workflow-status')).toContainText('승인 대기',{timeout:20000});
  const runId=new URL(page.url()).searchParams.get('run')!;
  const overview=await (await request.get(`/runs/${runId}/overview`)).json();overview.review.proposal.policy_design={status:'draft'};
