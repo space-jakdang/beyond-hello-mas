@@ -1,5 +1,5 @@
 from copy import deepcopy
-from backend.tools.regional_resources import source_ages,source_age_ranges,needs_for,candidates
+from backend.tools.regional_resources import source_ages,source_age_ranges,needs_for,need_profile,candidates
 from backend.tools.regional_task import assess
 from backend.tools.catalog import load_catalog
 from tests.test_regional_task import task
@@ -13,9 +13,26 @@ def test_source_ages_and_need_mapping_are_evidence_based():
     assert source_age_ranges({'a':['20s','60s'],'b':['25–34']})==[(20,34),(60,69)]
     assert source_age_ranges({'a':['unknown']}) is None
     row={'index_name':'G','value':.5,'components':{'housing':1,'economic':0,'health':None}}
-    assert needs_for(row)==['housing']
-    row['components']={'economic':1};assert needs_for(row)==['economic']
+    assert needs_for(row)==[]
+    row['components']={'economic':1};assert needs_for(row)==[]
     row['components']={};assert needs_for(row)==[]
+
+
+def test_need_profiles_preserve_source_factors_without_inventing_service_needs():
+    row={'index_name':'G_chuncheon','value':.5,'components':{'structure':-.3,'visibility_risk':.8,'economic':1,'unknown':2,'health':float('nan'),'housing':float('inf'),'relationship':True}}
+    profile=need_profile(row)
+    assert profile['needs']==[] and profile['mapping_status']=='unmapped_evidence'
+    assert profile['observed_factors']=={'structure':-.3,'visibility_risk':.8,'economic':1,'unknown':2}
+    assert profile['invalid_factors']==['health','housing','relationship']
+    assert profile['needed_data'] and '현장' in profile['next_action']
+    for value in (None,float('nan'),float('inf'),-float('inf')):
+        missing=need_profile({**row,'index_name':'S1','value':value})
+        assert missing['needs']==[] and missing['mapping_status']=='insufficient_observation'
+    youth=need_profile({**row,'index_name':'S1','value':.31,'stage':1,'components':{}})
+    assert youth['needs']==['relationship'] and youth['mapping_status']=='index_hypothesis'
+    population=need_profile({**row,'index_name':'v3','components':{'youth_population_both_sexes':123}})
+    assert population['observed_factors']=={} and population['population_context']=={'youth_population_both_sexes':123}
+    assert not population['invalid_factors'] and population['needs']==['relationship']
 
 
 def test_statistics_holds_and_catalog_time_are_enforced(service):

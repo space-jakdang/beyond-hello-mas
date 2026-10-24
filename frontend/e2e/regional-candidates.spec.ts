@@ -25,3 +25,18 @@ test('conditional regional candidates show partial ages and pending eligibility 
  await page.reload();await page.getByRole('tab',{name:'자원 제안'}).click();
  await expect(item).not.toContainText('일부 연령만 해당: 25–29세');
 });
+
+
+test('unmapped source factors yield a concrete field-check plan rather than invented needs',async({page,request})=>{
+ const source=await(await request.get('/analysis/groups')).json();
+ const response=await request.post('/scenarios/run',{data:{id:'regional-workflow-unmapped',type:'monthly',sim_time:'2026-10-21T09:00:00+09:00',payload:{workflow_version:'regional-workflow-1',task:{sgg:'32010',sex:'F',age_group:'prime',ym:source.months.at(-1),as_of:'2026-10-21'}}}});
+ const run=await response.json();
+ await expect.poll(async()=> (await(await request.get(`/runs/${run.id}`)).json()).status,{timeout:20000}).toBe('awaiting_approval');
+ await page.goto(`/workspace?run=${run.id}`);await page.getByRole('tab',{name:'자원 제안'}).click();
+ const evidence=page.locator('.need-evidence').first();
+ await expect(evidence).toContainText('서비스 욕구를 확정할 근거가 부족합니다.');
+ await expect(evidence).toContainText('현장 욕구를 확인한 뒤 자원을 다시 조회');
+ await evidence.locator('summary').click();
+ await expect(evidence).toContainText('원천 요인 정의·욕구별 측정 자료');
+ await expect(evidence).toContainText('경제·주거·건강 욕구로 환산하지 않습니다.');
+});
