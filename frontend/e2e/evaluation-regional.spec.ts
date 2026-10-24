@@ -5,7 +5,7 @@ test('regional agents exchange evidence and retain human approval',async({page})
  await page.getByRole('button',{name:'실행',exact:true}).click();
  await expect(page.getByTestId('run-status')).toHaveText('승인 대기');
  await expect(page.getByTestId('agent-messages')).toContainText('지역 분석 → 근거 검토');
- await expect(page.getByTestId('agent-messages')).toContainText('근거 검토 → Supervisor');
+ await expect(page.getByTestId('agent-messages')).toContainText('근거 검토 → 총괄 조정');
  await page.reload();await expect(page.getByTestId('agent-messages').getByRole('listitem')).toHaveCount(4);
 });
 

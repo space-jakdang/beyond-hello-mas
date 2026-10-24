@@ -7,3 +7,15 @@ test('policy alternative evaluation separates completion from missing independen
  await expect(panel.getByText('1/1',{exact:true})).toBeVisible();await expect(panel).toContainText('기본 구상안');await expect(panel).toContainText('원문 인용 대조 N/A');await panel.locator('summary').first().click();await expect(panel).toContainText('실행 가능성: 미평가');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
 });
+
+test('malformed alternative ratings explain how to fix the upload',async({page})=>{
+ const owner='11111111-1111-4111-8111-111111111111';
+ await page.route('**/policy-proposals',r=>r.fulfill({json:[{owner_id:owner,dong_count:1,created_at:'2026-10-23',data_mode:'sample',synthetic_future:false}]}));
+ await page.route(`**/policy-proposals/${owner}/quality`,r=>r.fulfill({json:{input_hash:'test-hash',sets:0,exactly_three:0,alternatives:0,strategy_unique_sets:0,template_count:0,fixture_count:0,grounding_eligible:0,rows:[],limitations:[]}}));
+ await page.goto('/evaluation');const panel=page.getByRole('region',{name:'정책 대안 품질',exact:true});
+ await panel.getByText('독립 평정 등록').click();
+ await panel.getByLabel('평정 JSON').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from('{')});
+ const alert=panel.getByRole('alert');await expect(alert).toContainText('평정 파일을 읽지 못했습니다');
+ await expect(alert.locator('pre')).toBeHidden();await alert.getByText('기술 오류 상세',{exact:true}).click();
+ await expect(alert).toContainText('SyntaxError');
+});

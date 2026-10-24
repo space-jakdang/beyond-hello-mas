@@ -74,10 +74,22 @@ test('runtime status distinguishes missing real input from a synthetic demo',asy
 
 test('runtime status can retry a failed diagnostic without starting work',async({page})=>{
  let failed=true;
- await page.route('**/readiness',route=>failed?route.abort():route.fulfill({json:{ready:true,data_mode:'sample',llm_mode:'fake',storage:'local_directory',warnings:[],analysis:{status:'ready',geometry:'synthetic_grid'},catalog:{status:'ready'}}}));
+ await page.route('**/readiness',route=>failed?route.fulfill({status:503,json:{detail:'private readiness failure'}}):route.fulfill({json:{ready:true,data_mode:'sample',llm_mode:'fake',storage:'local_directory',warnings:[],analysis:{status:'ready',geometry:'synthetic_grid'},catalog:{status:'ready'}}}));
  await page.goto('/');await expect(page.getByRole('alert')).toContainText('자료 준비 상태를 확인하지 못했습니다');
+ await expect(page.getByRole('alert').locator('pre')).toBeHidden();
+ await page.getByText('기술 오류 상세',{exact:true}).click();await expect(page.getByRole('alert')).toContainText('private readiness failure');
  failed=false;await page.getByRole('button',{name:'서버 상태 다시 확인'}).click();
  await expect(page.getByRole('complementary',{name:'서버 준비 상태'})).toContainText('합성 시연 자료');
+});
+
+test('runtime status does not guess when a mode or readiness state is unknown',async({page})=>{
+ let unknownMode=true;
+ await page.route('**/readiness',route=>route.fulfill({json:{ready:false,data_mode:unknownMode?'future_mode':'local',llm_mode:'future_model',storage:'future_storage',warnings:[],analysis:{status:'future_status',geometry:'future_geometry'},catalog:{status:'future_status'}}}));
+ await page.goto('/');const status=page.getByRole('complementary',{name:'서버 준비 상태'});
+ await expect(status).toContainText('자료 모드 확인 필요');await expect(status).toContainText('자료 유형 확인 필요');await expect(status).toContainText('모델 실행 방식 확인 필요');
+ await status.getByText('자료·저장소 확인 항목',{exact:false}).click();await expect(status).toContainText('자료 상태 확인 필요');await expect(status).toContainText('운영 환경에서 확인 필요');
+ await expect(status).not.toContainText('합성 시연 자료');await expect(status).not.toContainText('정해진 테스트 응답');
+ unknownMode=false;await page.reload();await expect(status).toContainText('실제 자료 모드 (상태 확인 필요)');await expect(status).not.toContainText('실제 지역 집계');
 });
 
 

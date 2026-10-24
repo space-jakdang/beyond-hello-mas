@@ -13,7 +13,7 @@ test('execute, inspect, restore, switch and reconnect a run', async ({page, cont
   await context.setOffline(true);
   await page.waitForTimeout(2200);
   await context.setOffline(false);
-  await expect(page.getByText('SSE 연결됨', {exact:true})).toBeVisible({timeout:15000});
+  await expect(page.getByText('실시간 기록 연결: 연결됨', {exact:true})).toBeVisible({timeout:15000});
   await expect.poll(()=>page.getByTestId('trace-row').count()).toBeGreaterThanOrEqual(count);
   const seqs = await page.getByTestId('trace-row').allTextContents();
   expect(new Set(seqs).size).toBe(seqs.length);
@@ -34,8 +34,20 @@ test('execute, inspect, restore, switch and reconnect a run', async ({page, cont
 test('empty observatory guides a real regional task without starting a run',async({page})=>{
  let starts=0;page.on('request',r=>{if(r.method()==='POST'&&r.url().endsWith('/scenarios/run'))starts++;});
  await page.goto('/observatory');
+ await expect(page.getByLabel('개발·연구 도구 안내')).toContainText('실제 개인 판정');
  await expect(page.getByLabel('협업 관찰 시작 안내')).toContainText('추가 조회와 보완 확인');
  await expect(page.getByLabel('온라인 실행 그래프')).toHaveCount(0);
  await page.getByRole('link',{name:'지도에서 지역 업무 시작 →'}).click();
  await expect(page).toHaveURL(/neighborhoods/);expect(starts).toBe(0);
+});
+
+test('observatory explains failures and keeps API detail behind a disclosure',async({page})=>{
+ await page.route('**/runs',route=>route.fulfill({status:503,json:{detail:'private trace failure'}}));
+ await page.goto('/observatory');
+ const alert=page.getByRole('alert');
+ await expect(alert).toContainText('실행 이력을 불러오지 못했습니다');
+ await expect(page.getByText('시나리오를 실행하거나 이전 실행을 선택하세요.')).toHaveCount(0);
+ await expect(alert.locator('pre')).toBeHidden();
+ await alert.getByText('기술 오류 상세',{exact:true}).click();
+ await expect(alert).toContainText('private trace failure');
 });

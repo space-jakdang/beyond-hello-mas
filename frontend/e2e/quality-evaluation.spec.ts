@@ -39,14 +39,69 @@ test('quality errors and mode changes clear stale readiness',async({page})=>{
   const u=new URL(route.request().url());
   if(u.searchParams.get('source')==='current'){await route.fulfill({json:[]});return;}
   if(u.pathname.endsWith(id)){await route.fulfill({status:409,json:{detail:'incomplete'}});return;}
-  await route.fulfill({json:[{...brief,status:'failed'}]});
+  await route.fulfill({json:[{...brief,status:'future_status'}]});
  });
  await page.goto('/evaluation');const panel=page.getByTestId('quality-evaluation');
  await expect(panel.getByRole('alert')).toContainText('평가 자료를 읽지 못했습니다');
+ await expect(panel.getByRole('alert').locator('pre')).toBeHidden();await panel.getByText('기술 오류 상세',{exact:true}).click();await expect(panel.getByRole('alert').locator('pre')).toBeVisible();await expect(panel.getByRole('alert')).toContainText('incomplete');
+ await expect(panel.getByRole('combobox',{name:'품질 평가 자료',exact:true})).toContainText('상태 확인 필요');
  await expect(panel.getByLabel('기준답 준비 현황')).toHaveCount(0);
  await page.getByRole('combobox',{name:'평가 자료',exact:true}).selectOption('current');
  await expect(panel).toContainText('등록된 평가 자료가 없습니다');
  await expect(panel.getByRole('alert')).toHaveCount(0);
+});
+
+test('evaluation uses safe labels for unknown report modes and statuses',async({page})=>{
+ const summary={id,created_at:'2026-01-01T00:00:00Z',data_mode:'future_mode',llm_mode:'future_model',status:'future_status',evaluated_scenarios:1,schema_version:'future_suite',metrics:{},metadata:{},uncompleted:[],limitations:[],stage_reproducibility:{identical:null,repetitions:0},results:[]};
+ await page.route('**/reports**',route=>{
+  const u=new URL(route.request().url());
+  if(u.pathname==='/reports/quality')return route.fulfill({json:[]});
+  if(u.pathname==='/reports')return route.fulfill({json:[summary]});
+  return route.fulfill({json:summary});
+ });
+ await page.goto('/evaluation');
+ await expect(page.getByTestId('suite-id')).toHaveText(id);
+ await expect(page.locator('body')).toContainText('상태 확인 필요');
+ await expect(page.locator('body')).toContainText('자료 모드 확인 필요');
+ await expect(page.locator('body')).toContainText('모델 실행 방식 확인 필요');
+ await expect(page.locator('body')).toContainText('확인되지 않은 모드');
+ await expect(page.locator('body')).not.toContainText('현재 데이터·모델 모드에서 저장된 보고서');
+});
+
+test('evaluation subtools explain failures and keep technical messages collapsed',async({page})=>{
+ await page.route('**/policy-proposals',route=>route.fulfill({status:503,json:{detail:'private alternative failure'}}));
+ await page.route('**/reports/quality**',route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path==='/reports/quality')return route.fulfill({json:[brief]});
+  if(path.endsWith(id))return route.fulfill({json:detail});
+  return route.fulfill({status:503,json:{detail:'private quality job failure'}});
+ });
+ await page.goto('/evaluation');
+ const alternative=page.getByRole('region',{name:'정책 대안 품질'}).getByRole('alert');
+ await expect(alternative).toContainText('정책 대안 평가 정보를 불러오지 못했습니다');
+ await expect(page.getByText('저장된 정책 제안이 없습니다. 지역 업무를 먼저 실행하세요.')).toHaveCount(0);
+ await expect(alternative.locator('pre')).toBeHidden();
+ await alternative.getByText('기술 오류 상세',{exact:true}).click();
+ await expect(alternative.locator('pre')).toBeVisible();
+ const jobs=page.getByRole('region',{name:'평가 실행과 저장 이력'}).getByRole('alert');
+ await expect(jobs).toContainText('평가 실행 정보를 읽지 못했습니다');
+ await expect(jobs.locator('pre')).toBeHidden();
+ await jobs.getByText('기술 오류 상세',{exact:true}).click();
+ await expect(jobs.locator('pre')).toBeVisible();
+});
+
+test('evaluation report failures show a next step and hide server detail',async({page})=>{
+ await page.route('**/reports**',route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path==='/reports')return route.fulfill({status:503,json:{detail:'private report failure'}});
+  if(path==='/reports/quality')return route.fulfill({json:[]});
+  return route.continue();
+ });
+ await page.goto('/evaluation');
+ const alert=page.getByRole('alert').filter({hasText:'평가 결과를 불러오지 못했습니다'});
+ await expect(alert).toBeVisible();await expect(alert.locator('pre')).toBeHidden();
+ await expect(page.getByText(/평가 결과가 없습니다/)).toHaveCount(0);
+ await alert.getByText('기술 오류 상세',{exact:true}).click();await expect(alert.locator('pre')).toBeVisible();
 });
 
 test('classification shows errors and preserves abstentions in its denominator',async({page})=>{
