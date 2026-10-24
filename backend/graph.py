@@ -237,6 +237,8 @@ class GraphService:
             matching={'status':'needs_human','summary':'매칭을 완료하지 못했습니다. 담당자 확인이 필요합니다.','error_type':type(exc).__name__}
             if state['classification']['metadata'].get('matching_mode')=='deterministic-regional-1':
                 matching.update(matching_mode='deterministic-regional-1',model_calls=0)
+                rows=[{**r,'matching_mode':'deterministic-regional-1',
+                       'decision_evidence':{**r['decision_evidence'],'matching_mode':'deterministic-regional-1'}} for r in rows]
         workflow.update(assignments=rows,matching=matching,status='reviewed' if matching['status']=='reviewed' and workflow['statistics']['status']=='reviewed' else 'needs_human')
         self.regional_emit(state)('workflow-match','match','supervisor',matching)
         self.node_event(state,'match',{'status':matching['status'],'assignment_count':len(rows)},started)

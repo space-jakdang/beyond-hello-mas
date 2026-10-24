@@ -149,3 +149,16 @@ def test_deterministic_matching_keeps_empty_and_unreviewed_results_held(service)
         assert all(not row['recommendations'] and row['decision_evidence']['model_reason'] is None for row in rows)
         if status=='needs_human':assert all('계산하지 않았습니다' in row['decision_evidence']['selection_reason'] for row in rows)
     assert select_candidates([])[1]['status']=='needs_human'
+
+
+def test_deterministic_selector_failure_preserves_mode_and_holds_candidates(service,monkeypatch):
+    from tests.test_workflow_agents import run_task
+    monkeypatch.setattr('backend.tools.regional_resources.select_candidates',lambda *args:(_ for _ in ()).throw(ValueError('selector failed')))
+    run=run_task(service);proposal=service.approval(run.id)['proposal']
+    matching=proposal['workflow']['matching']
+    assert matching['status']=='needs_human' and matching['model_calls']==0
+    assert matching['matching_mode']=='deterministic-regional-1'
+    assert proposal['assignments'] and all(not r['recommendations'] for r in proposal['assignments'])
+    assert all(r['matching_mode']==r['decision_evidence']['matching_mode']=='deterministic-regional-1' for r in proposal['assignments'])
+    with service.store.connection() as db:
+        assert db.execute("SELECT COUNT(*) FROM llm_calls WHERE run_id=? AND role='workflow_matching'",(run.id,)).fetchone()[0]==0
