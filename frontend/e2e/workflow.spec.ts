@@ -52,11 +52,11 @@ test('regional workspace has responsive navigation and an explicit empty state',
 });
 
 
-test('map scope reaches Supervisor and missing data blocks new tasks',async({page,request})=>{
+test('map scope reaches the regional workflow and missing data blocks new tasks',async({page,request})=>{
  const data=await(await request.get('/analysis/groups')).json();
  const dong=data.neighborhoods.find((d:any)=>d.sgg==='32010');
  await page.goto('/neighborhoods?'+new URLSearchParams({region:'32010',dong:dong.dong_cd,sex:'F',age:'prime'}));
- await page.getByRole('link',{name:'이 동·집단을 Supervisor에게 분석 지시 →'}).click();
+ await page.getByRole('link',{name:'이 동·집단의 지역 업무 시작 →'}).click();
  await expect(page.getByLabel('분석 대상 동')).toHaveValue(dong.dong_cd);
  await expect(page.getByLabel('성별',{exact:true})).toHaveValue('F');
  await expect(page.getByLabel('집단',{exact:true})).toHaveValue('prime');
