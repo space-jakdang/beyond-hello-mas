@@ -80,7 +80,7 @@ class QualityGraph(GraphService):
         else:
             from backend.tools.regional_statistics import summary
             base=summary(state['classification'])
-            plan={'summary':'규칙 계산 기준선입니다. 지역 해석의 내용 검토는 수행하지 않았습니다.',
+            plan={'summary':'계산된 관측과 등록 조건의 검토 자료입니다. 지역 해석의 내용 검토는 수행하지 않았습니다.',
                   'priority_evidence_ids':[r['evidence_id'] for r in state['classification']['segments'] if r['evidence_id'] not in base['blocked_evidence_ids']][:5]}
             stats={'status':'reviewed','reason':'deterministic_bounds_only','review_mode':'rules','summary':base,'observations':[],
                    'blocked_evidence_ids':base['blocked_evidence_ids']}

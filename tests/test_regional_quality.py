@@ -87,6 +87,7 @@ def ratings_for(key):
 def test_blind_output_ratings_keep_missing_development_and_disagreement(recorded):
     frozen,report=recorded;public,key=packet(frozen,report)
     assert '"method":' not in json.dumps(public) and '"run_id":' not in json.dumps(public)
+    assert '규칙 계산 기준선' not in json.dumps(public,ensure_ascii=False) and '단일 분석가' not in json.dumps(public,ensure_ascii=False)
     empty=aggregate(frozen,report,key,{'reviewers':[],'ratings':[]})
     assert all(m['success_rate'] is None and m['missing']==2 for m in empty['methods'])
     data=ratings_for(key);summary=aggregate(frozen,report,key,data)

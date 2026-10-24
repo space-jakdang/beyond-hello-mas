@@ -14,7 +14,7 @@ def fake(role, payload):
     if role=='workflow_single':
         return {'action':'lookup' if not payload['observations'] and '추이' in payload['task']['goal'] else 'finish',
             'tool':'source_check' if payload['methodology']['period_role']!='observed month' else 'trend','reason':'fake: 동일 근거를 한 분석가가 자체 확인합니다.',
-            'plan':{'summary':'fake: 단일 분석가의 지역 조사 가설입니다.',
+            'plan':{'summary':'fake: 관측 근거와 자료 한계를 바탕으로 한 지역 조사 가설입니다.',
                     'priority_evidence_ids':[r['evidence_id'] for r in payload['facts'] if r['evidence_id'] not in payload['summary']['blocked_evidence_ids']][:5]}}
     if role == 'workflow_analyst':
         blocked=set(((payload.get('feedback') or {}).get('statistics') or {}).get('blocked_evidence_ids',[]))
