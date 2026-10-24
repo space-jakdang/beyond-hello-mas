@@ -28,18 +28,32 @@ test('future start retry reuses the same request and unavailable data is not rep
  await page.route('**/future/batches',route=>{expect(route.request().postDataJSON().sgg).toBe('11230');ids.push(route.request().postDataJSON().request_id);return route.fulfill({status:422,json:{detail:'baseline unavailable'}});});
  await page.route('**/future/batches/*',route=>route.fulfill({status:404,json:{detail:'not found'}}));
  await page.goto('/future');await page.getByRole('button',{name:'미래 시나리오 분석 시작',exact:true}).click();
- await expect(page.getByRole('alert')).toBeVisible();await page.getByRole('button',{name:'같은 요청 다시 확인'}).click();
- await expect(page.getByRole('alert')).toBeVisible();expect(ids).toHaveLength(2);expect(ids[0]).toBe(ids[1]);
+ const alert=page.getByRole('alert');await expect(alert).toContainText('분석 정보를 확인하지 못했습니다.');
+ const rawError=alert.getByText(/not found/);await expect(rawError).toBeHidden();await alert.getByText('오류 상세',{exact:true}).click();await expect(rawError).toBeVisible();
+ await page.getByRole('button',{name:'같은 요청 다시 확인'}).click();
+ await expect(alert).toContainText('분석 정보를 확인하지 못했습니다.');await expect(rawError).toBeHidden();expect(ids).toHaveLength(2);expect(ids[0]).toBe(ids[1]);
  await expect(page.getByLabel('기간별 분석 상태')).toHaveCount(0);
 });
 
 test('failed future result announces failure and keeps raw errors collapsed',async({page})=>{
- await page.route('**/future/batches/failed-batch',route=>route.fulfill({json:{id:'failed-batch',sgg:'11230',data_mode:'sample',llm_mode:'fake',months:['2026-10'],assumptions:[],seed:1,generator_version:'test',baseline_input_hash:'baseline',input_hash:'input',as_of:'2026-10-24',periods:[{ym:'2026-10',run_id:'failed-run',status:'failed'}]}}));
+ await page.route('**/future/batches/failed-batch',route=>route.fulfill({json:{id:'failed-batch',sgg:'11230',data_mode:'sample',llm_mode:'fake',months:['2026-10'],assumptions:[],seed:1,generator_version:'test',baseline_input_hash:'baseline',input_hash:'input',as_of:'2026-10-24',periods:[{ym:'2026-10',run_id:'failed-run',status:'failed'},{ym:'2026-11',run_id:'unknown-run',status:'unknown_state'}]}}));
  await page.route('**/runs/failed-run/overview',route=>route.fulfill({json:{run:{id:'failed-run',status:'failed',error:'private future trace',data_mode:'sample'},traces:[]}}));
  await page.goto('/future?batch=failed-batch&period=failed-run');
+ await expect(page.getByLabel('기간별 분석 상태').getByRole('button').filter({hasText:'2026-11'})).toContainText('상태 확인 필요');
+ await expect(page.getByLabel('기간별 분석 상태')).not.toContainText('unknown_state');
+ await expect(page.locator('p[role="status"]').filter({hasText:'기간 실행 종료'})).toContainText('1 / 3 기간 실행 종료');
  const alert=page.getByRole('alert');
  await expect(alert).toContainText('이 기간의 분석에 실패했습니다.');
  await expect(alert.getByText('private future trace',{exact:true})).toBeHidden();
  await alert.getByText('오류 내용',{exact:true}).click();
  await expect(alert.getByText('private future trace',{exact:true})).toBeVisible();
+});
+
+
+test('future result lookup explains failure and keeps server detail collapsed',async({page})=>{
+ await page.route('**/future/batches/lookup-error',route=>route.fulfill({json:{id:'lookup-error',sgg:'11230',data_mode:'sample',llm_mode:'fake',months:['2026-10'],assumptions:[],seed:1,generator_version:'test',baseline_input_hash:'baseline',input_hash:'input',as_of:'2026-10-24',periods:[{ym:'2026-10',run_id:'missing-run',status:'completed'}]}}));
+ await page.route('**/runs/missing-run/overview',route=>route.fulfill({status:503,json:{detail:'private upstream failure'}}));
+ await page.goto('/future?batch=lookup-error&period=missing-run');
+ const alert=page.getByRole('alert');await expect(alert).toContainText('선택한 기간의 결과를 가져오지 못했습니다.');
+ const raw=alert.getByText(/private upstream failure/);await expect(raw).toBeHidden();await alert.getByText('오류 상세',{exact:true}).click();await expect(raw).toBeVisible();
 });

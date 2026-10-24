@@ -26,12 +26,13 @@ test('policy page distinguishes credential, cached list, live detail and failed 
   const coverage={credentials_configured:true,status:'cached',fetched_at:'2026-10-20T00:00:00Z',stale:false,scopes:{central:0,seoul:1,gangnam:0,gangwon:0,chuncheon:0},source_count:1,limitation:'등록 정보 범위이며 자격·정원 미확인',last_attempt:{status:'success'}};
   await page.route('**/policies**',async route=>{
     const url=new URL(route.request().url());
-    if(url.pathname==='/policies/refresh') {coverage.last_attempt={status:'failed'};await route.fulfill({json:coverage});}
+    if(url.pathname==='/policies/refresh') {coverage.last_attempt={status:'failed',reason:'TimeoutError'};await route.fulfill({json:coverage});}
     else if(url.pathname==='/policies/fixture-policy') await route.fulfill({json:{status:'live',policy,checked_at:'2026-10-20T00:00:00Z',limitation:coverage.limitation}});
     else await route.fulfill({json:{items:url.searchParams.get('query')==='없는정책'?[]:[policy],total:url.searchParams.get('query')==='없는정책'?0:1,page:1,next_page:null,coverage}});
   });
   await page.goto('/policy');
-  await expect(page.getByText('설정됨',{exact:true})).toBeVisible();
+  await expect(page.getByText('연결 설정됨',{exact:true})).toBeVisible();
+  await expect(page.getByText('저장된 목록',{exact:true})).toBeVisible();
   await page.getByLabel('관할',{exact:true}).selectOption('seoul');
   await page.getByLabel('정책 검색',{exact:true}).fill('돌봄');
   const searched=page.waitForRequest(r=>r.url().includes('/policies?')&&new URL(r.url()).searchParams.get('query')==='돌봄');
@@ -44,10 +45,12 @@ test('policy page distinguishes credential, cached list, live detail and failed 
   await expect(page.getByLabel('정책 상세')).toContainText('정부24 최신 상세 확인');
   await expect(page.getByRole('link',{name:'공식 안내 원문 열기'})).toHaveAttribute('href','https://www.gov.kr/');
   await page.getByRole('button',{name:'정부24 목록 갱신'}).click();
-  await expect(page.getByRole('alert')).toContainText('최근 갱신 실패');
+  const refreshAlert=page.getByRole('alert');await expect(refreshAlert).toContainText('기존 저장 목록은 계속 확인할 수 있습니다.');
+  const refreshReason=refreshAlert.getByText(/TimeoutError/);await expect(refreshReason).toBeHidden();
+  await refreshAlert.getByText('조회 오류 상세',{exact:true}).click();await expect(refreshReason).toBeVisible();
   await page.getByLabel('정책 검색',{exact:true}).fill('없는정책');
   await page.getByRole('button',{name:'검색',exact:true}).click();
-  await expect(page.getByText('조회된 정책이 없습니다.',{exact:false})).toBeVisible();
+  await expect(page.getByText('저장된 목록에서 이 조건에 맞는 정책을 찾지 못했습니다.',{exact:false})).toBeVisible();
   await page.setViewportSize({width:390,height:844});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.getByRole('link',{name:'정책 조사 지시하기'}).click();
@@ -75,4 +78,25 @@ test('runtime status can retry a failed diagnostic without starting work',async(
  await page.goto('/');await expect(page.getByRole('alert')).toContainText('자료 준비 상태를 확인하지 못했습니다');
  failed=false;await page.getByRole('button',{name:'서버 상태 다시 확인'}).click();
  await expect(page.getByRole('complementary',{name:'서버 준비 상태'})).toContainText('합성 시연 자료');
+});
+
+
+test('policy search explains a missing snapshot and keeps API detail collapsed',async({page})=>{
+ const coverage={credentials_configured:false,status:'unavailable',fetched_at:null,stale:true,scopes:{central:null,seoul:null,gangnam:null,gangwon:null,chuncheon:null},source_count:null,limitation:'정부24 등록 정책 범위이며 개인 자격·정원은 미확인',last_attempt:null};
+ let firstSearch=true;
+ await page.route('**/policies**',route=>{
+  const url=new URL(route.request().url());
+  if(url.pathname==='/policies/refresh')return route.fulfill({json:coverage});
+  if(firstSearch){firstSearch=false;return route.fulfill({json:{items:[],total:0,page:1,next_page:null,coverage}});}
+  return route.fulfill({status:503,json:{detail:'private gateway failure'}});
+ });
+ await page.goto('/policy');
+ await expect(page.getByText('연결 설정 필요',{exact:true})).toBeVisible();
+ await expect(page.getByRole('region',{name:'정책 검색 결과'})).toContainText('저장된 정책 목록이 없어 결과를 확인할 수 없습니다.');
+ await expect(page.getByRole('button',{name:'정부24 목록 갱신'})).toBeDisabled();
+ await expect(page.locator('body')).not.toContainText('GOV24_SERVICE_KEY');
+ await page.getByRole('button',{name:'검색',exact:true}).click();
+ const alert=page.getByRole('alert');await expect(alert).toContainText('정책 정보를 불러오지 못했습니다.');
+ const raw=alert.getByText(/private gateway failure/);await expect(raw).toBeHidden();
+ await alert.getByText('오류 상세',{exact:true}).click();await expect(raw).toBeVisible();
 });
