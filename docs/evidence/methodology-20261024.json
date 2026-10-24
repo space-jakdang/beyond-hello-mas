@@ -3,7 +3,7 @@
   "recorded_on": "2026-10-24",
   "scope": "regional_interpretation_and_conditional_catalog_candidates",
   "mode": "sample/fake",
-  "behavior_commit": "85b14db335849f4f846e40beb1832ec7e3c9df9d",
+  "behavior_commit": "3bb10711c55f0fc4d16d911d03bdbb60eaf36ecf",
   "code_dirty": false,
   "input_fixture": "eval/fixtures/regional-quality-tasks.json",
   "dataset_hash": "a23a330e0b813e7a845017800e15d63e8c0d72cf4fe9ec2f6adc79ca5f7dab87",
@@ -17,12 +17,12 @@
   "file_hashes": {
     "backend/prompts/workflow_analyst.txt": "031d94bb729da431b6d538a6cb80aac1695b16a8e4d904abd901f383de84ed25",
     "backend/prompts/workflow_statistics.txt": "309a1dd203d86defae80ce76719e7ce9ae1d00c7c6acdd6f276ba04ce00361af",
-    "backend/prompts/workflow_single.txt": "f22d324a192812eb2196f02a57964dd9809dd33a4907e47bf9414bb085c7082e",
+    "backend/prompts/workflow_single.txt": "b5f9360a0701018d0a3038aaf15672fff3902426b11f3558c38ddf54b347d351",
     "backend/agents/workflow.py": "dae6d9264ec7fb7e55ff20560b0ac03a4bd538e83d67adc1529e9bcc0e2e5c2b",
     "backend/agents/workflow_single.py": "8aadfd978f9b07d73093366211fbd6f2cec5293896bd4766875f5d2a094f9fc5",
     "backend/tools/regional_resources.py": "14bd02170716cb058252d4994ad550799dfee7abd8633fc58a830f6f3610fc91",
     "backend/tools/matching.py": "2772ef504d546887d31dacf5e8a42e021027c65ab26422893eb1cd5acb2efaf9",
-    "eval/run_regional_quality.py": "c1d3bbbcb0d7ad14e5df7c847cfad6ecd7ac6537cafaed537d1f1703a22e26bd"
+    "eval/run_regional_quality.py": "3510719f258e268f6b0b9469437366c469823d55df70c30355cfca61af31ad18"
   },
   "methods": [
     {
