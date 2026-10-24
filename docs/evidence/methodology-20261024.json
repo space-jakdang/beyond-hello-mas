@@ -1,0 +1,69 @@
+{
+  "version": "methodology-software-evidence-1",
+  "recorded_on": "2026-10-24",
+  "scope": "regional_interpretation_and_conditional_catalog_candidates",
+  "mode": "sample/fake",
+  "behavior_commit": "85b14db335849f4f846e40beb1832ec7e3c9df9d",
+  "code_dirty": false,
+  "input_fixture": "eval/fixtures/regional-quality-tasks.json",
+  "dataset_hash": "a23a330e0b813e7a845017800e15d63e8c0d72cf4fe9ec2f6adc79ca5f7dab87",
+  "source": "synthetic",
+  "cases": 2,
+  "source_families": 2,
+  "inference_repetitions": 1,
+  "saved_report_reuse_checks": 1,
+  "additional_calls_on_report_reuse": 0,
+  "file_hashes_scope": "listed_files_only_not_full_environment",
+  "file_hashes": {
+    "backend/prompts/workflow_analyst.txt": "031d94bb729da431b6d538a6cb80aac1695b16a8e4d904abd901f383de84ed25",
+    "backend/prompts/workflow_statistics.txt": "309a1dd203d86defae80ce76719e7ce9ae1d00c7c6acdd6f276ba04ce00361af",
+    "backend/prompts/workflow_single.txt": "f22d324a192812eb2196f02a57964dd9809dd33a4907e47bf9414bb085c7082e",
+    "backend/agents/workflow.py": "dae6d9264ec7fb7e55ff20560b0ac03a4bd538e83d67adc1529e9bcc0e2e5c2b",
+    "backend/agents/workflow_single.py": "8aadfd978f9b07d73093366211fbd6f2cec5293896bd4766875f5d2a094f9fc5",
+    "backend/tools/regional_resources.py": "14bd02170716cb058252d4994ad550799dfee7abd8633fc58a830f6f3610fc91",
+    "backend/tools/matching.py": "2772ef504d546887d31dacf5e8a42e021027c65ab26422893eb1cd5acb2efaf9",
+    "eval/run_regional_quality.py": "c1d3bbbcb0d7ad14e5df7c847cfad6ecd7ac6537cafaed537d1f1703a22e26bd"
+  },
+  "methods": [
+    {
+      "method": "rules",
+      "cases": 2,
+      "source_runs": 2,
+      "calls": 0,
+      "known_cost_usd": 0,
+      "unknown_cost_runs": 0
+    },
+    {
+      "method": "single",
+      "cases": 2,
+      "source_runs": 2,
+      "calls": 2,
+      "known_cost_usd": 0.0,
+      "unknown_cost_runs": 0
+    },
+    {
+      "method": "mas",
+      "cases": 2,
+      "source_runs": 2,
+      "calls": 4,
+      "known_cost_usd": 0.0,
+      "unknown_cost_runs": 0
+    }
+  ],
+  "independent_reviewers": 0,
+  "independent_quality": "not_evaluated",
+  "live_integration": "not_run_for_this_revision",
+  "policy_research_and_design": "not_in_comparison",
+  "external_transfer": "not_evaluated",
+  "field_effects": "not_evaluated",
+  "limitations": [
+    "Two development fixtures, not the preregistered independent test set.",
+    "Fake model calls and zero cost do not measure paid model quality or production cost.",
+    "No run text, private inputs, raters or ledger databases included."
+  ],
+  "demo_source_hashes": {
+    "scripts/prepare_methodology_demo.py": "636e22ea70e1cebf55ec2a6e21c3fa7a1dc4ce2b01f1227093d01f4f39843eef",
+    "tests/test_methodology_demo.py": "c883c9d7f218e395c00c36239a8ad8cb50f492fbeefdef3394008850c43bef79",
+    "frontend/e2e/methodology-demo.spec.ts": "225d37bfac14b80e61f3c15500751dc8a5db94a8e237d65e013cf79bc2d95f21"
+  }
+}

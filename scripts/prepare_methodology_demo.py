@@ -48,7 +48,7 @@ def prepare(service):
 
 def main():
     settings=Settings(_env_file=None,data_mode='sample',llm_mode='fake',resource_catalog='fixture',llm_max_calls=4,
-                      openai_api_key=None,GOV24_SERVICE_KEY='',person_mcp_mode='stub')
+                      person_mcp_mode='stub',**{'openai_api_key':None,'GOV24_SERVICE_KEY':''})
     result=prepare(GraphService(EventStore(settings.runtime_dir/'events.sqlite3'),settings))
     print(json.dumps(result,ensure_ascii=False))
 
