@@ -46,7 +46,7 @@ def test_statistics_holds_and_catalog_time_are_enforced(service):
     assert all(r['allocation_performed'] is False and r['remaining_capacity'] is None for r in result)
 
 
-def test_regional_candidate_conditions_reach_saved_evidence_and_model_context(service,monkeypatch):
+def test_regional_candidate_conditions_reach_saved_evidence_without_a_matching_model(service,monkeypatch):
     from tests.test_workflow_agents import run_task
     resources=[r.model_copy(update={'eligibility_tags':['resident']}) for r in load_catalog(service.settings.catalog_path)]
     monkeypatch.setattr('backend.graph.load_catalog',lambda path:resources)
@@ -59,15 +59,20 @@ def test_regional_candidate_conditions_reach_saved_evidence_and_model_context(se
             assert candidate['condition_checks']['eligibility:resident']=='unknown'
             presented=next(c for c in row['decision_evidence']['presented_candidates'] if c['id']==candidate['id'])
             assert presented['unknown_conditions']==candidate['unknown_conditions']
-    import json
     with service.store.connection() as db:
-        call=json.loads(db.execute("SELECT body FROM llm_calls WHERE run_id=? AND role='workflow_matching'",(run.id,)).fetchone()[0])
-    assert all(c[call['input']['candidate_columns'].index('candidate_status')]=='conditional' for row in call['input']['choices'] for c in row['candidates'])
+        assert db.execute("SELECT COUNT(*) FROM llm_calls WHERE run_id=? AND role='workflow_matching'",(run.id,)).fetchone()[0]==0
+    assert proposal['workflow']['matching']['model_calls']==0
 
 
-def test_graph_matching_uses_statistics_and_model_is_constrained(service,monkeypatch):
+def test_legacy_graph_matching_uses_statistics_and_model_is_constrained(service,monkeypatch):
     from tests.test_workflow_agents import run_task
     import backend.agents.llm as module
+    import backend.tools.regional_task as task_module
+    original_assess=task_module.assess
+    def legacy(*args):
+        result=original_assess(*args);result['metadata'].pop('matching_mode')
+        return result
+    monkeypatch.setattr(task_module,'assess',legacy)
     run=run_task(service);p=service.approval(run.id)['proposal']
     assert p['assignments']
     assert all(r['as_of']=='2026-10-21' for r in p['assignments'])
@@ -114,11 +119,11 @@ def test_decision_evidence_records_observation_filters_and_actual_choice(service
         presented={c['id'] for c in evidence['presented_candidates']}
         assert {c['id'] for c in row['recommendations']}<=presented
         assert evidence['unknown_conditions']==['individual_eligibility','application_acceptance','remaining_capacity']
-        if row['recommendations']:assert evidence['model_reason']
+        if row['recommendations']:assert evidence['selection_reason'] and evidence['model_reason'] is None
+        assert [c['id'] for c in evidence['presented_candidates']]==[c['id'] for c in row['recommendations']]
     with service.store.connection() as db:
-        import json
-        calls=[json.loads(r[0]) for r in db.execute("SELECT body FROM llm_calls WHERE run_id=? AND role='workflow_matching'",(run.id,))]
-    assert calls and calls[0]['input']['choices']  # Actual supplied model context already persisted.
+        assert db.execute("SELECT COUNT(*) FROM llm_calls WHERE run_id=? AND role='workflow_matching'",(run.id,)).fetchone()[0]==0
+    assert proposal['workflow']['matching']['matching_mode']=='deterministic-regional-1'
 
 
 def test_statistical_profiles_reach_matching_without_changing_verified_filters(service,monkeypatch):
@@ -127,11 +132,33 @@ def test_statistical_profiles_reach_matching_without_changing_verified_filters(s
     def capture(run_id,sim_ts,role,payload):
         if role=='workflow_matching':
             seen.append(payload)
-            assert 'profiles' not in payload['statistics']['summary']['policy_needs']
-            assert payload['choices'][0]['statistical_context']['need_basis']=='index_proxy_only'
         return original(run_id,sim_ts,role,payload)
     monkeypatch.setattr(service.agents,'call',capture)
     run=run_task(service);p=service.approval(run.id)['proposal']
-    assert seen
+    assert not seen and p['workflow']['matching']['status']=='reviewed'
     profiles={r['evidence_id']:r for r in p['workflow']['statistics']['summary']['policy_needs']['profiles']}
     assert all({k:v for k,v in r['decision_evidence']['statistical_context'].items() if k!='insight'}==profiles[r['evidence_id']] for r in p['assignments'])
+
+
+def test_deterministic_matching_keeps_empty_and_unreviewed_results_held(service):
+    from backend.tools.regional_resources import select_candidates
+    assessment=assess(service.settings,task())
+    for status in ('reviewed','needs_human'):
+        rows,metadata=select_candidates(candidates(assessment,{'status':status},[]))
+        assert metadata['status']=='needs_human' and metadata['model_calls']==0
+        assert all(not row['recommendations'] and row['decision_evidence']['model_reason'] is None for row in rows)
+        if status=='needs_human':assert all('계산하지 않았습니다' in row['decision_evidence']['selection_reason'] for row in rows)
+    assert select_candidates([])[1]['status']=='needs_human'
+
+
+def test_deterministic_selector_failure_preserves_mode_and_holds_candidates(service,monkeypatch):
+    from tests.test_workflow_agents import run_task
+    monkeypatch.setattr('backend.tools.regional_resources.select_candidates',lambda *args:(_ for _ in ()).throw(ValueError('selector failed')))
+    run=run_task(service);proposal=service.approval(run.id)['proposal']
+    matching=proposal['workflow']['matching']
+    assert matching['status']=='needs_human' and matching['model_calls']==0
+    assert matching['matching_mode']=='deterministic-regional-1'
+    assert proposal['assignments'] and all(not r['recommendations'] for r in proposal['assignments'])
+    assert all(r['matching_mode']==r['decision_evidence']['matching_mode']=='deterministic-regional-1' for r in proposal['assignments'])
+    with service.store.connection() as db:
+        assert db.execute("SELECT COUNT(*) FROM llm_calls WHERE run_id=? AND role='workflow_matching'",(run.id,)).fetchone()[0]==0

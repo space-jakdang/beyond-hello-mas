@@ -23,6 +23,7 @@ test('conditional regional candidates show partial ages and pending eligibility 
  await expect(item).toContainText('지원 자격 확인 필요');
  await item.locator('.decision-evidence > summary').click();
  await expect(item.locator('.decision-evidence')).toContainText('일부 연령만 해당: 25–29세');
+ await expect(item.locator('.decision-evidence')).toContainText('도구의 계산 근거');
  delete row.recommendations[0].candidate_status;
  delete row.decision_evidence.presented_candidates.find((c:any)=>c.id===row.recommendations[0].id).candidate_status;
  await page.reload();await page.getByRole('tab',{name:'자원 제안'}).click();

@@ -11,6 +11,8 @@ test('a sufficient regional summary reaches review without a fabricated tool rou
  const traces=await(await request.get(`/runs/${run.id}/traces?limit=1000`)).json();
  const items=Array.isArray(traces)?traces:traces.traces;
  expect(items.filter((t:any)=>t.kind==='llm_call'&&t.payload.role==='workflow_statistics')).toHaveLength(1);
+ expect(items.filter((t:any)=>t.kind==='llm_call'&&t.payload.role==='workflow_matching')).toHaveLength(0);
+ expect(overview.review.proposal.workflow.matching.matching_mode).toBe('deterministic-regional-1');
  await page.goto(`/workspace?run=${run.id}`);await page.getByRole('tab',{name:'통계 근거'}).click();
  await expect(page.locator('.stat-observation')).toHaveCount(0);
 });
