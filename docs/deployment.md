@@ -1,5 +1,7 @@
 # 배포 준비 상태와 검증 관문
 
+실제 지역 자료를 사용하는 비공개 단일 서버 구성은 [상주 서비스 운영 안내](private-service.md)를 따릅니다. 입력 패키지 검증·영속 SQLite·단일 worker·접근 제한을 함께 준비하며, 아래 Vercel 서버리스 경로와 별도 구성입니다.
+
 저장소에는 이제 Vercel FastAPI 진입점, UI 빌드, 같은 origin의 정적 프런트/API 구성이 있습니다. 실제 Vercel Preview 배포는 아직 검증되지 않았으며, SQLite·파일·BackgroundTasks의 durable 실행도 지원하지 않습니다. 설정 및 환경변수는 [Vercel 설정 안내](vercel-deployment.md)를 참고하세요.
 
 ## 확인된 플랫폼 조건

@@ -14,5 +14,5 @@ test('admin screening and mandatory handoff reach the operator console',async({p
   await expect(page.getByTestId('run-status')).toHaveText('완료');
   const handoff=await page.getByTestId('run-id').innerText();
   await page.goto('/console');
-  await expect(page.getByTestId(`alert-${handoff}-human_handoff`)).toContainText('담당자 인계');
+  await expect(page.getByTestId(`alert-${handoff}-human_handoff`)).toContainText('담당자 확인 요청');
 });

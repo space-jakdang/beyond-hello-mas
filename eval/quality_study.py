@@ -7,7 +7,7 @@ from pathlib import Path
 from statistics import mean
 from pydantic import Field, model_validator
 from backend.tools.indicators import digest
-from eval.quality_contracts import Contract, load_frozen, resolve_labels
+from eval.quality_contracts import Contract, load_frozen, resolve_labels, stage_scope
 from eval.quality_metrics import Predictions, classification, validate_predictions
 from eval.quality_matching import matching
 
@@ -91,12 +91,12 @@ def compare_study(frozen,labels,body,case_ids=None):
     selected=[c for c in dataset.cases if case_ids is None or c.id in case_ids]
     groups={}
     for case in selected:
-        groups.setdefault((case.source,case.methodology,case.split,case.region,case.period),[]).append(case)
+        groups.setdefault((case.source,case.methodology,case.split,case.region,case.period,stage_scope(case)),[]).append(case)
     dev_regions=set(study.development_regions)|{c.region for c in dataset.cases if c.split!='test'}
     known_dev=('강남','춘천','gangnam','chuncheon')
     outputs=[]
     independent={r['case_id']:int(r['value']) for r in refs['references'] if r['policy_id'] is None and r['independent'] and r['state']=='resolved'}
-    for (source,methodology,split,region,period),members in groups.items():
+    for (source,methodology,split,region,period,scale),members in groups.items():
         ids={c.id for c in members};arms=[];correct={};rankings={}
         for arm in study.arms:
             p=arm.predictions;by_id={r.case_id:r for r in p.predictions}
@@ -127,7 +127,7 @@ def compare_study(frozen,labels,body,case_ids=None):
                     'confidence_interval':None})
         external=bool(study.development_regions) and source=='observed' and split=='test' and region not in dev_regions and not any(k in region.lower() for k in known_dev)
         temporal=source=='observed' and split=='test' and all(c.id in study.timing for c in members)
-        outputs.append({'source':source,'methodology':methodology,'split':split,'region':region,'period':period,
+        outputs.append({'source':source,'methodology':methodology,'stage_scale':scale,'split':split,'region':region,'period':period,
             'case_count':len(members),'timed_cases':sum(c.id in study.timing for c in members),'family_count':len({c.family_id for c in members}),
             'transfer_scope':'declared_external_test' if external else 'synthetic_robustness' if source=='synthetic' else 'development_history_unconfirmed' if source=='observed' and split=='test' and not study.development_regions and region not in dev_regions and not any(k in region.lower() for k in known_dev) else 'development_revalidation',
             'temporal_scope':'declared_prospective_test' if temporal else 'not_evaluated',

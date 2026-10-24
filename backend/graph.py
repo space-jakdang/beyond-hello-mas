@@ -210,29 +210,38 @@ class GraphService:
                 [t['payload']['observation'] for t in self.store.traces(state['run_id'],limit=1000)
                  if t['kind']=='agent_message' and t['agent']=='statistics' and 'observation' in t['payload']])
         workflow['statistics']=stats;workflow['status']=stats['status']
-        if stats.get('revised_plan'):workflow['analysis']=stats['revised_plan']
+        if stats['status']=='reviewed' and stats.get('revised_plan'):workflow['analysis']=stats['revised_plan']
         self.node_event(state,'statistics',stats,started)
         return {'workflow':workflow}
 
     def workflow_match(self,state):
-        from backend.tools.regional_resources import candidates
+        from backend.tools.regional_resources import candidates,select_candidates
         from backend.agents.workflow_matching import select
         started=time.monotonic();workflow=dict(state['workflow']);rows=[]
         cached=next((t['payload']['candidates'] for t in self.store.traces(state['run_id'],limit=1000)
                      if t['kind']=='agent_message' and t['payload'].get('result_kind')=='workflow_candidates'),None)
         try:
             if time.time()>=state['workflow_deadline']:raise ValueError('deadline')
-            from backend.app.contracts import Resource
-            frozen=state['classification'].get('catalog_snapshot')
-            resources=[Resource.model_validate(r) for r in frozen] if frozen is not None else load_catalog(self.settings.catalog_path)
-            rows=cached if cached is not None else candidates(state['classification'],workflow['statistics'],resources)
+            if cached is None:
+                from backend.app.contracts import Resource
+                frozen=state['classification'].get('catalog_snapshot')
+                resources=[Resource.model_validate(r) for r in frozen] if frozen is not None else load_catalog(self.settings.catalog_path)
+                rows=candidates(state['classification'],workflow['statistics'],resources)
+            else:rows=cached
             self.regional_emit(state)('workflow-candidates','statistics','match',{'result_kind':'workflow_candidates','candidates':rows})
-            rows,matching=select(self.agents,state['run_id'],state['scenario']['sim_time'],rows,workflow['statistics'])
+            rows,matching=select_candidates(rows) if state['classification']['metadata'].get('matching_mode')=='deterministic-regional-1' else select(self.agents,state['run_id'],state['scenario']['sim_time'],rows,workflow['statistics'])
             if time.time()>=state['workflow_deadline']:raise ValueError('deadline')
         except Exception as exc:
             if not rows:rows=candidates(state['classification'],{'status':'needs_human'},[])
             rows=[{**r,'recommendations':[],'shortfall':3,'uncovered_needs':r['needs'],'reason':'matching_unavailable','status':'needs_human'} for r in rows]
             matching={'status':'needs_human','summary':'매칭을 완료하지 못했습니다. 담당자 확인이 필요합니다.','error_type':type(exc).__name__}
+            if state['classification']['metadata'].get('matching_mode')=='deterministic-regional-1':
+                matching.update(matching_mode='deterministic-regional-1',model_calls=0)
+                rows=[{**r,'matching_mode':'deterministic-regional-1',
+                       'decision_evidence':{**r['decision_evidence'],'matching_mode':'deterministic-regional-1'}} for r in rows]
+        if state['classification']['metadata'].get('policy_gap_version')=='policy-gap-1':
+            from backend.tools.regional_resources import policy_gap
+            rows=[{**row,'policy_gap':policy_gap(row,state['scenario']['payload'].get('policy_research_requested') is True)} for row in rows]
         workflow.update(assignments=rows,matching=matching,status='reviewed' if matching['status']=='reviewed' and workflow['statistics']['status']=='reviewed' else 'needs_human')
         self.regional_emit(state)('workflow-match','match','supervisor',matching)
         self.node_event(state,'match',{'status':matching['status'],'assignment_count':len(rows)},started)
@@ -338,7 +347,8 @@ class GraphService:
     def regional_policy_node(self, state):
         started=time.monotonic()
         proposal=dict(state['proposal'])
-        gaps=[a for a in proposal['assignments'] if a.get('shortfall',0)>0 and (not proposal.get('workflow_version') or a.get('catalog_filter_performed'))]
+        current=(proposal.get('assessment') or {}).get('metadata',{}).get('policy_gap_version')=='policy-gap-1'
+        gaps=[a for a in proposal['assignments'] if a.get('policy_gap',{}).get('research_needed')] if current else [a for a in proposal['assignments'] if a.get('shortfall',0)>0 and (not proposal.get('workflow_version') or a.get('catalog_filter_performed'))]
         scopes={'central'}
         jurisdiction={'11230':('seoul','gangnam'),'32010':('gangwon','chuncheon')}
         unsupported=any(a['dong_cd'][:5] not in jurisdiction for a in gaps)
@@ -350,6 +360,8 @@ class GraphService:
         remaining=max(0,limit-calls)
         task={'goal':'지역 집단 자원 부족을 보완할 정책 후보를 조사하세요. 개인 자격·정원·배정은 확정하지 마세요.',
               'scopes':sorted(scopes),'query':'','max_steps':max(1,remaining-2 if proposal.get('workflow_version') and remaining>=5 else remaining)}
+        if current:
+            task['goal']='필요 가설과 명시된 조사 사유에 따라 정책 후보를 확인하세요. 후보 수로 정책 부재를 추정하지 말고 개인 자격·정원·배정을 확정하지 마세요. 조사 사유: '+', '.join(sorted({reason for row in gaps for reason in row['policy_gap']['research_reasons']}))
         if proposal.get('workflow_version'):
             task['goal']+=' 검색 후 적합한 후보의 상세 원문을 확인하고 근거를 반환하세요. 욕구 가설: '+', '.join(sorted({n for a in gaps for n in a.get('needs',[])}))+'; 기준일: '+proposal['task']['as_of']
             task['goal']+=' 요청 집단(관측 모집단과 동등함을 뜻하지 않음): '+json.dumps({k:proposal['task'].get(k) for k in ('sgg','sex','age_group','ym','dong_cd')},ensure_ascii=False)
@@ -372,6 +384,13 @@ class GraphService:
             'search_complete_within_scope':result.get('search_complete_within_scope',False),'search_scope':result.get('search_scope'),
             'gap_count':len(gaps),'task':task,'coverage':result.get('coverage'),'steps':result.get('steps',0),'eligibility_verified':False,'remaining_capacity':None,
             'allocation_performed':False,'human_review_required':True}
+        if current:
+            from backend.tools.regional_resources import policy_gap
+            proposal['policy_research']['research_request_count']=len(gaps)
+            proposal['policy_research']['gap_count_definition']='segments_requiring_research_not_verified_field_gaps'
+            proposal['policy_research']['research_reasons']=sorted({reason for row in gaps for reason in row['policy_gap']['research_reasons']})
+            proposal['assignments']=[{**row,'policy_gap':policy_gap(row,state['scenario']['payload'].get('policy_research_requested') is True,proposal['policy_research'])} if row['policy_gap']['research_needed'] else row for row in proposal['assignments']]
+            proposal['workflow']={**proposal['workflow'],'assignments':proposal['assignments']}
         proposal.pop('snapshot_version',None);proposal['snapshot_version']=digest(proposal)
         return {'proposal':proposal}
 
@@ -492,7 +511,11 @@ class GraphService:
                 return 'approval'
             builder.add_node('policy_alternatives',self.policy_alternatives_node)
             builder.add_edge('policy_alternatives','approval')
-            builder.add_conditional_edges('workflow_proposal',lambda s:'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and any(a.get('catalog_filter_performed') and a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else after_research(s))
+            def workflow_research(s):
+                if s['classification']['metadata'].get('policy_gap_version')=='policy-gap-1':
+                    return 'regional_policy' if (s['scenario']['payload'].get('research_gaps') is True or s['scenario']['payload'].get('policy_research_requested') is True) and any(a.get('policy_gap',{}).get('research_needed') for a in s['proposal']['assignments']) else after_research(s)
+                return 'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and any(a.get('catalog_filter_performed') and a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else after_research(s)
+            builder.add_conditional_edges('workflow_proposal',workflow_research)
             builder.add_node('regional_prepare',self.regional_prepare)
             builder.add_node('regional_analyst',lambda s:self.regional_step(s,'analyze'))
             builder.add_node('regional_reviewer',lambda s:self.regional_step(s,'review'))
@@ -531,9 +554,17 @@ class GraphService:
             self.once(db, state, 'approval-alert', 'alert', alert.model_dump(mode='json'))
             self.update_run(db, state['run_id'], status='awaiting_approval')
 
+    def check_evaluation(self,payload):
+        if payload.get('evaluation_protocol') and (payload['evaluation_protocol'],payload.get('evaluation_method'),payload.get('evaluation_input_hash'))!=(getattr(self,'evaluation_protocol',None),getattr(self,'evaluation_method',None),getattr(self,'evaluation_input_hash',None)):
+            raise ValueError('resume evaluation with its recorded method and frozen inputs')
+
     def drive(self, run_id, initial=None):
         if self.store.get_run(run_id).llm_mode != self.settings.llm_mode:
             raise ValueError('restore the original LLM_MODE before resuming this run')
+        with self.store.connection() as db:
+            saved=db.execute('SELECT scenario FROM workflows WHERE run_id=?',(run_id,)).fetchone()
+        payload=json.loads(saved[0])['payload'] if saved else {}
+        self.check_evaluation(payload)
         config = {'configurable': {'thread_id': run_id}}
         with self.lock(run_id), self.graph() as graph, tracing_context(enabled=False):
             run=self.store.get_run(run_id)
@@ -573,6 +604,7 @@ class GraphService:
         return self.store.get_run(run_id)
 
     def register(self, scenario):
+        self.check_evaluation(scenario.payload)
         if 'revision' in scenario.payload:raise ValueError('use the revision endpoint for linked reruns')
         if scenario.payload.get('workflow_version'):
             from backend.tools.regional_task import task_from

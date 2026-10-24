@@ -1,0 +1,10 @@
+import {percent} from './ClassificationQuality';
+export type WorkflowQualityData={mode:string;report_hash:string;evaluation_complete:boolean;methods:{method:string;case_count:number;family_count:number;resolved:number;missing:number;disagreement:number;not_independent:number;success_rate:number|null;family_success_rate:number|null;major_error_cases:number;mean_edits:number|null;mean_task_seconds:number|null;edit_observations:number;time_observations:number}[];paired:{baseline:string;challenger:string;case_count:number;paired_resolved:number;family_count:number;family_success_delta:number|null}[];limitations:string[]};
+const names:Record<string,string>={rules:'규칙 계산 기준선',single:'단일 분석가 자체 확인',mas:'분석가·통계 검토 협업'};
+export function WorkflowQuality({data}:{data:WorkflowQualityData}){
+ return <section aria-label="실행에 연결된 지역 판단 비교"><h3>실행에 연결된 지역 판단 비교</h3><p>{data.mode==='fake'?'정해진 테스트 응답의 계약 검증입니다. 실제 모델 품질은 미평가입니다.':'기록된 지역 해석·조건부 자원 후보의 내용 평정입니다.'} 정책 조사·설계 전체와 현장 효과는 비교 범위에 포함하지 않습니다.</p>
+ {data.methods.map(row=><article className="card" key={row.method}><h4>{names[row.method]||row.method}</h4><p>독립 합의 {row.resolved} / {row.case_count}사례 · {row.family_count}원천 계열 · 미평정 {row.missing} · 미해결 이견 {row.disagreement} · 비독립 {row.not_independent}</p>
+ <p>내용 성공률 {percent(row.success_rate)} · 계열별 동일 가중 성공률 {percent(row.family_success_rate)}</p><p>독립 합의 항목의 중대 오류 {row.major_error_cases}건 · 수정 관찰 {row.edit_observations}건 / 평균 {row.mean_edits??'미기록'}회 · 시간 관찰 {row.time_observations}건 / 평균 {row.mean_task_seconds??'미기록'}초</p></article>)}
+ {data.paired.map(row=><p key={row.baseline}>{names[row.baseline]} → {names[row.challenger]} · 짝지은 평정 {row.paired_resolved}/{row.case_count} · 계열별 성공률 차이 {row.family_success_delta===null?'미평가':`${(row.family_success_delta*100).toFixed(1)}%p`}</p>)}
+ <p>독립 사례·실제 실행의 사전 평가 관문은 별도입니다. 평가 완료·채택 승인으로 취급하지 않습니다.</p><ul>{data.limitations.map(text=><li key={text}>{text}</li>)}</ul><details><summary>비교 실행 버전</summary><p style={{overflowWrap:'anywhere'}}>{data.report_hash}</p></details></section>;
+}

@@ -9,6 +9,7 @@ from eval.grounding_contracts import load_grounding
 from eval.quality_matching import matching
 from eval.quality_study import load_study
 from eval.policy_design_quality import load as load_policy_design_quality
+from eval.rate_regional_quality import load as load_workflow_quality
 
 
 def quality_root(settings, source):
@@ -63,15 +64,16 @@ def quality_body(folder, mode, report_id, region=None, period=None, methodology=
         raise HTTPException(409,'policy evaluation incomplete or invalid')
     try:
         study=load_study(folder,frozen,labels,ids)
+        workflow_quality=load_workflow_quality(folder,frozen,ids)
     except (ValueError, KeyError, TypeError, AttributeError, OSError):
         raise HTTPException(409, 'quality study incomplete or invalid')
     refs = [r for r in report['references'] if r['case_id'] in ids]
     counts = {state: sum(r['state'] == state for r in refs) for state in ('missing', 'unknown', 'disagreement', 'resolved')}
     return {'id': str(report_id), 'schema_version': '6', 'dataset': dataset.id, 'version': dataset.version,
         'dataset_hash': report['dataset_hash'], 'label_hash': report['label_hash'],
-        'data_mode': mode, 'status': 'partial' if (scores and any(g['reference_count'] for g in scores['groups'])) or (resource_scores and any(r['judged_count'] for r in resource_scores['rows'])) or (policy_scores and any(r['judged_count'] for r in policy_scores['rows'])) or (design_scores and any(m['state'] in ('evaluated','disagreement') for r in design_scores['rows'] for m in r['rubric'].values())) or (grounding and grounding['rows']) or (study and any(a['classification']['reference_count'] for g in study['groups'] for a in g['arms'])) else 'not_evaluated', 'metrics': None,
+        'data_mode': mode, 'status': 'partial' if (scores and any(g['reference_count'] for g in scores['groups'])) or (resource_scores and any(r['judged_count'] for r in resource_scores['rows'])) or (policy_scores and any(r['judged_count'] for r in policy_scores['rows'])) or (design_scores and any(m['state'] in ('evaluated','disagreement') for r in design_scores['rows'] for m in r['rubric'].values())) or (grounding and grounding['rows']) or (study and any(a['classification']['reference_count'] for g in study['groups'] for a in g['arms'])) or (workflow_quality and any(m['resolved'] for m in workflow_quality['methods'])) else 'not_evaluated', 'metrics': None,
         'model': scores['model'] if scores else None, 'execution_status': 'predictions_imported' if scores else 'not_run',
-        'classification': scores, 'matching': resource_scores,'policy_matching':policy_scores,'policy_design':design_scores, 'study':study, 'grounding': grounding,
+        'classification': scores, 'matching': resource_scores,'policy_matching':policy_scores,'policy_design':design_scores, 'study':study, 'workflow_quality':workflow_quality, 'grounding': grounding,
         'filters': {field: sorted({getattr(c, field) for c in dataset.cases}) for field in ('region', 'period', 'methodology', 'source')},
         'readiness': {'cases': len(cases), 'reference_items': len(refs), **counts,
             'independent_resolved': sum(r['independent'] and r['state'] == 'resolved' for r in refs)},

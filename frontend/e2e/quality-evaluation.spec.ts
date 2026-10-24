@@ -3,6 +3,19 @@ const id='00000000-0000-4000-8000-000000000001';
 const readiness={cases:1,reference_items:2,missing:2,unknown:0,disagreement:0,resolved:0,independent_resolved:0};
 const brief={id,dataset:'평가 준비 예제',version:'1',status:'not_evaluated',readiness};
 const detail={...brief,dataset_hash:'input-version',label_hash:'label-version',filters:{region:['샘플지역'],period:['2026-01'],methodology:['v1'],source:['synthetic']},cases:[{id:'a',region:'샘플지역',neighborhood:'예제동',period:'2026-01',methodology:'v1',source:'synthetic',references:[{policy_id:null,state:'missing',independent:false,review_count:0,adjudicated:false,provenance:[]}]}],limitations:['실제 지역 성능이 아닙니다.']};
+
+test('recorded regional comparison preserves missing independent ratings and unvalidated priorities',async({page})=>{
+ const workflow_quality={mode:'fake',report_hash:'recorded-version',evaluation_complete:false,methods:['rules','single','mas'].map(method=>({method,case_count:2,family_count:1,resolved:0,missing:2,disagreement:0,not_independent:0,success_rate:null,family_success_rate:null,major_error_cases:0,mean_edits:null,mean_task_seconds:null,edit_observations:0,time_observations:0})),paired:[{baseline:'single',challenger:'mas',case_count:2,paired_resolved:0,family_count:0,family_success_delta:null}],limitations:['외부 전이 미평가']};
+ const classification={model:'fake-v1',method:'mas',version:'regional-quality-1',prediction_hash:'frozen',groups:[{source:'synthetic',methodology:'regional-workflow-1',stage_scale:'S1:base',priority_criterion_status:'not_established',state:'not_evaluated',input_cases:2,reference_count:0,missing_labels:2,unknown_labels:0,non_independent_labels:0,valid_predictions:0,missing_predictions:0,macro_f1:null,priority_recall:null,priority_precision:null,priority_support:0,priority_flagged:0,flag_rate:null,coverage:null,mae:null,confusion:Array.from({length:5},()=>[0,0,0,0,0,0]),per_grade:[],errors:[]}]};
+ await page.route('**/reports/quality**',route=>route.fulfill({json:new URL(route.request().url()).pathname.endsWith(id)?{...detail,workflow_quality,classification}:[brief]}));
+ await page.setViewportSize({width:390,height:844});await page.goto('/evaluation');
+ const panel=page.getByRole('region',{name:'실행에 연결된 지역 판단 비교'});
+ await expect(panel).toContainText('실제 모델 품질은 미평가');await expect(panel).toContainText('독립 합의 0 / 2사례');
+ await expect(panel).toContainText('내용 성공률 미평가');await expect(panel).toContainText('짝지은 평정 0/2');
+ const grades=page.getByRole('region',{name:'동네 등급 분류 품질'});
+ await expect(grades).toContainText('공통 우선 기준');await expect(grades).not.toContainText('4–5등급 재현율');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBeTruthy();
+});
 test('quality readiness is distinct from successful execution and works on mobile',async({page})=>{
  await page.route('**/reports/quality**',async route=>{
   const u=new URL(route.request().url());
@@ -26,14 +39,69 @@ test('quality errors and mode changes clear stale readiness',async({page})=>{
   const u=new URL(route.request().url());
   if(u.searchParams.get('source')==='current'){await route.fulfill({json:[]});return;}
   if(u.pathname.endsWith(id)){await route.fulfill({status:409,json:{detail:'incomplete'}});return;}
-  await route.fulfill({json:[{...brief,status:'failed'}]});
+  await route.fulfill({json:[{...brief,status:'future_status'}]});
  });
  await page.goto('/evaluation');const panel=page.getByTestId('quality-evaluation');
  await expect(panel.getByRole('alert')).toContainText('평가 자료를 읽지 못했습니다');
+ await expect(panel.getByRole('alert').locator('pre')).toBeHidden();await panel.getByText('기술 오류 상세',{exact:true}).click();await expect(panel.getByRole('alert').locator('pre')).toBeVisible();await expect(panel.getByRole('alert')).toContainText('incomplete');
+ await expect(panel.getByRole('combobox',{name:'품질 평가 자료',exact:true})).toContainText('상태 확인 필요');
  await expect(panel.getByLabel('기준답 준비 현황')).toHaveCount(0);
  await page.getByRole('combobox',{name:'평가 자료',exact:true}).selectOption('current');
  await expect(panel).toContainText('등록된 평가 자료가 없습니다');
  await expect(panel.getByRole('alert')).toHaveCount(0);
+});
+
+test('evaluation uses safe labels for unknown report modes and statuses',async({page})=>{
+ const summary={id,created_at:'2026-01-01T00:00:00Z',data_mode:'future_mode',llm_mode:'future_model',status:'future_status',evaluated_scenarios:1,schema_version:'future_suite',metrics:{},metadata:{},uncompleted:[],limitations:[],stage_reproducibility:{identical:null,repetitions:0},results:[]};
+ await page.route('**/reports**',route=>{
+  const u=new URL(route.request().url());
+  if(u.pathname==='/reports/quality')return route.fulfill({json:[]});
+  if(u.pathname==='/reports')return route.fulfill({json:[summary]});
+  return route.fulfill({json:summary});
+ });
+ await page.goto('/evaluation');
+ await expect(page.getByTestId('suite-id')).toHaveText(id);
+ await expect(page.locator('body')).toContainText('상태 확인 필요');
+ await expect(page.locator('body')).toContainText('자료 모드 확인 필요');
+ await expect(page.locator('body')).toContainText('모델 실행 방식 확인 필요');
+ await expect(page.locator('body')).toContainText('확인되지 않은 모드');
+ await expect(page.locator('body')).not.toContainText('현재 데이터·모델 모드에서 저장된 보고서');
+});
+
+test('evaluation subtools explain failures and keep technical messages collapsed',async({page})=>{
+ await page.route('**/policy-proposals',route=>route.fulfill({status:503,json:{detail:'private alternative failure'}}));
+ await page.route('**/reports/quality**',route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path==='/reports/quality')return route.fulfill({json:[brief]});
+  if(path.endsWith(id))return route.fulfill({json:detail});
+  return route.fulfill({status:503,json:{detail:'private quality job failure'}});
+ });
+ await page.goto('/evaluation');
+ const alternative=page.getByRole('region',{name:'정책 대안 품질'}).getByRole('alert');
+ await expect(alternative).toContainText('정책 대안 평가 정보를 불러오지 못했습니다');
+ await expect(page.getByText('저장된 정책 제안이 없습니다. 지역 업무를 먼저 실행하세요.')).toHaveCount(0);
+ await expect(alternative.locator('pre')).toBeHidden();
+ await alternative.getByText('기술 오류 상세',{exact:true}).click();
+ await expect(alternative.locator('pre')).toBeVisible();
+ const jobs=page.getByRole('region',{name:'평가 실행과 저장 이력'}).getByRole('alert');
+ await expect(jobs).toContainText('평가 실행 정보를 읽지 못했습니다');
+ await expect(jobs.locator('pre')).toBeHidden();
+ await jobs.getByText('기술 오류 상세',{exact:true}).click();
+ await expect(jobs.locator('pre')).toBeVisible();
+});
+
+test('evaluation report failures show a next step and hide server detail',async({page})=>{
+ await page.route('**/reports**',route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path==='/reports')return route.fulfill({status:503,json:{detail:'private report failure'}});
+  if(path==='/reports/quality')return route.fulfill({json:[]});
+  return route.continue();
+ });
+ await page.goto('/evaluation');
+ const alert=page.getByRole('alert').filter({hasText:'평가 결과를 불러오지 못했습니다'});
+ await expect(alert).toBeVisible();await expect(alert.locator('pre')).toBeHidden();
+ await expect(page.getByText(/평가 결과가 없습니다/)).toHaveCount(0);
+ await alert.getByText('기술 오류 상세',{exact:true}).click();await expect(alert.locator('pre')).toBeVisible();
 });
 
 test('classification shows errors and preserves abstentions in its denominator',async({page})=>{

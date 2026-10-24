@@ -92,6 +92,7 @@ def group_analysis(settings,week=None,card_age="20s"):
     for segment in result['segments']:
         segment['priority_group_applied']=False
         segment['exploratory_replay']=False
+        segment['exploratory_stage']=None
         if combined or segment['index_name'] not in ('S1','v3') or segment['ym'] not in (None,selected_week[:7]):continue
         signal=selected.get((segment['sgg'],segment['sex']))
         segment['weekly']=signal
@@ -99,6 +100,7 @@ def group_analysis(settings,week=None,card_age="20s"):
             segment['exploratory_replay']=segment['ym'] is None
             segment['priority_group_applied']=card_age=='20s' and segment['sex']=='M'
             segment['stage']=youth_stage(segment['level_band'],[m['signal'] for m in signal['metrics'].values()],segment['priority_group_applied'])
+            segment['exploratory_stage']=segment['stage']
     for dong in result['dongs']:
         dong['stage']=max((s['stage'] for s in result['segments'] if s['ym']==dong['ym'] and s['dong_cd']==dong['dong_cd'] and s['preferred'] and s['stage'] is not None),default=None)
     result['metadata'].update(card_signals_applied=not combined,selected_week=selected_week,card_age=card_age,

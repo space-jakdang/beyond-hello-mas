@@ -93,7 +93,7 @@ def sensitivity(assessment):
 
 def policy_needs(assessment):
     """Describe selected-area needs; a segment count is not a resident count."""
-    from backend.tools.regional_resources import needs_for, NEEDS
+    from backend.tools.regional_resources import need_profile
     groups={}
     for row in assessment['segments']:
         key=(row['sgg'],row['sex'],row['age_group'],row['index_name'],row['source_period'],digest(row['source_bands']))
@@ -104,25 +104,24 @@ def policy_needs(assessment):
         valid=[r for r in rows if r['stage'] is not None and r['value'] is not None and isfinite(r['value'])]
         stages=[r['stage'] for r in valid];n=len(valid);counts=Counter();pairs=Counter();cohort_id=digest(key)
         for row in rows:
-            observed=row in valid;needs=needs_for(row) if observed else []
+            observed=row in valid;profile=need_profile(row);needs=profile['needs'] if observed else []
             counts.update(needs)
             for i,first in enumerate(needs):
                 for second in needs[i+1:]:pairs[(first,second)]+=1
-            components={k:v for k,v in (row.get('components') or {}).items() if k in (*NEEDS,'activity_deficit') and type(v) in (int,float) and isfinite(v)} if observed else {}
             profiles.append({'evidence_id':row['evidence_id'],'cohort_id':cohort_id,'dong_nm':row['dong_nm'],'comparable_segments':n,
                 'priority_midrank':(sum(s<row['stage'] for s in stages)+.5*sum(s==row['stage'] for s in stages))/n if observed and n>=3 else None,
-                'priority_review':row['stage']>=4 if observed else None,'base_stage_stable':stable_by_id[row['evidence_id']],
-                'needs':needs,'measured_components':components,
-                'need_basis':'observed_components_and_provisional_mapping' if components else 'index_proxy_only' if needs else 'insufficient_evidence',
-                'needed_data':(['요인별 독립 측정'] if not components else [])+['대상 인구 분모','기존 서비스 이용·수용량'],
+                'priority_review':None,'priority_criterion_status':'not_established','base_stage_stable':stable_by_id[row['evidence_id']],
+                **profile,'needs':needs,'need_basis':profile['need_basis'] if observed else 'insufficient_evidence',
+                'measured_components':{},
                 'estimated_people':None})
         cohorts.append({'cohort_id':cohort_id,'sgg':key[0],'sex':key[1],'age_group':key[2],'index_name':key[3],
             'source_period':key[4],'total_segments':len(rows),'observed_segments':n,'missing_segments':len(rows)-n,
-            'priority_segments':sum(s>=4 for s in stages),'priority_share':sum(s>=4 for s in stages)/n if n else None,
+            'priority_segments':None,'priority_share':None,'priority_criterion_status':'not_established',
             'need_counts':dict(sorted(counts.items())),
             'joint_needs':[{'needs':list(pair),'segments':count} for pair,count in sorted(pairs.items())]})
-    return {'version':'policy-needs-1','cohorts':cohorts,'profiles':profiles,'population_estimate':None,
+    return {'version':'policy-needs-2','cohorts':cohorts,'profiles':profiles,'population_estimate':None,
         'limitations':['선택한 동·집단의 기술 통계이며 주민 유병률·개인 판정·인과 원인이 아닙니다.',
             '상대 위치는 같은 척도·집단·기간의 등급 중간순위이며 위험 확률이 아닙니다. 3개 미만이면 산출하지 않습니다.',
-            '요인별 양의 값→필요 매핑은 잠정 규칙입니다. 지수만 있으면 관계 지원 가설로 제한합니다.',
+            '집단별 우선 검토 기준은 미확정입니다. 청년 기본 단계는 1~3이며 공통 4~5 비율로 우선순위가 낮다고 판단하지 않습니다.',
+            '관측 요인과 욕구는 다릅니다. 원천 요인 정의·욕구별 근거가 없으면 매핑하지 않으며 청년 지수는 관계 지원 조사 가설로만 사용합니다.',
             '임계값 민감도는 ±0.01 지수 변형 결과이며 보정된 불확실성이 아닙니다.']}

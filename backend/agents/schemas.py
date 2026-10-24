@@ -55,6 +55,8 @@ SCHEMAS.update(regional_planner=RegionalDecision, regional_audit=RegionalAudit)
 from backend.agents.workflow import AnalystPlan,StatisticsDecision
 from backend.agents.workflow_matching import MatchingPlan
 SCHEMAS.update(workflow_analyst=AnalystPlan,workflow_statistics=StatisticsDecision,workflow_matching=MatchingPlan)
+from backend.agents.workflow_single import SingleDecision
+SCHEMAS['workflow_single']=SingleDecision
 
 from backend.policy.designer import DesignDecision
 SCHEMAS["policy_design"] = DesignDecision

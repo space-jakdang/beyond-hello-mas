@@ -7,7 +7,7 @@ export const colors=['#b8c3c0','#d7e9ed','#96c9cf','#eac767','#df884d','#b84446'
 const regionName=(code:string)=>code==='11230'?'강남구':code==='32010'?'춘천시':code;
 const stageName=(stage:number|null)=>stage===null?'결측':`${stage}단계`;
 
-export function MapView({data,dongs,segments,selected,onSelect,summaries}:{summaries?:Record<string,{label:string;color:string}>;data:Pick<Analysis,'geometry'|'geography'>;dongs:Dong[];segments:Pick<Segment,'dong_cd'|'stage'>[];selected:string;onSelect:(id:string)=>void}){
+export function MapView({data,dongs,segments,selected,onSelect,summaries,nullLabel,missingLabel}:{summaries?:Record<string,{label:string;color:string}>;nullLabel?:string;missingLabel?:string;data:Pick<Analysis,'geometry'|'geography'>;dongs:Dong[];segments:Pick<Segment,'dong_cd'|'stage'>[];selected:string;onSelect:(id:string)=>void}){
   const [zoom,setZoom]=useState(1);
   const features=data.geometry.features.filter(f=>dongs.some(d=>d.dong_cd===f.properties.dong_cd));
   const polygons=(g:Geometry)=>g.type==='Polygon'?[g.coordinates]:g.coordinates;
@@ -22,14 +22,14 @@ export function MapView({data,dongs,segments,selected,onSelect,summaries}:{summa
   const project=(p:number[])=>[20+(660-width*scale)/2+(p[0]*ratio-xmin)*scale,20+(460-height*scale)/2+(-p[1]-ymin)*scale];
   return <><div className="toolbar"><button onClick={()=>setZoom(z=>Math.min(4,z+.5))} disabled={zoom===4} aria-label="지도 확대">＋</button><button onClick={()=>setZoom(z=>Math.max(1,z-.5))} disabled={zoom===1} aria-label="지도 축소">−</button><button onClick={()=>setZoom(1)}>전체 보기</button><span>확대 {zoom}× · 확대 후 스크롤로 이동</span></div>
     <div className="map-scroll" tabIndex={0} aria-label="동별 지도 이동 영역"><svg viewBox="0 0 700 500" style={{width:`${zoom*100}%`}} aria-label={geographic?'동별 분석 지도':'합성 동 격자'}>
-      {features.map(f=>{const code=f.properties.dong_cd,stage=stageOf(segments.filter(s=>s.dong_cd===code));
+      {features.map(f=>{const code=f.properties.dong_cd,rows=segments.filter(s=>s.dong_cd===code),stage=stageOf(rows),label=summaries?.[code]?.label??(rows.length?(stage===null?nullLabel??stageName(stage):stageName(stage)):missingLabel??stageName(stage));
         const path=polygons(f.geometry).flatMap(p=>p.map(r=>r.map((v,i)=>`${i?'L':'M'}${project(v).join(',')}`).join(' ')+'Z')).join(' ');
         // Labels are approximate anchors; exact identity is also available in the selectable table.
         const rings=polygons(f.geometry).map(p=>p[0].slice(0,-1));
         const area=(r:number[][])=>Math.abs(r.reduce((sum,p,i)=>{const q=r[(i+1)%r.length];return sum+p[0]*q[1]-q[0]*p[1];},0));
         const ring=rings.reduce((a,b)=>area(a)>=area(b)?a:b);
         const center=project([(Math.min(...ring.map(p=>p[0]))+Math.max(...ring.map(p=>p[0])))/2,(Math.min(...ring.map(p=>p[1]))+Math.max(...ring.map(p=>p[1])))/2]);
-        return <g key={code}><path d={path} fill={summaries?.[code]?.color??colors[stage??0]} fillRule="evenodd" stroke={selected===code?'#142f36':'#fff'} strokeWidth={selected===code?3:1} vectorEffect="non-scaling-stroke" tabIndex={0} role="button" aria-label={`${f.properties.dong_nm} ${summaries?.[code]?.label??stageName(stage)}`} aria-pressed={selected===code} onClick={()=>onSelect(code)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(code);}}}><title>{f.properties.dong_nm} · {summaries?.[code]?.label??stageName(stage)}</title></path>{geographic&&<text className="map-label" x={center[0]} y={center[1]} textAnchor="middle">{f.properties.dong_nm}</text>}</g>;
+        return <g key={code}><path d={path} fill={summaries?.[code]?.color??colors[stage??0]} fillRule="evenodd" stroke={selected===code?'#142f36':'#fff'} strokeWidth={selected===code?3:1} vectorEffect="non-scaling-stroke" tabIndex={0} role="button" aria-label={`${f.properties.dong_nm} ${label}`} aria-pressed={selected===code} onClick={()=>onSelect(code)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(code);}}}><title>{f.properties.dong_nm} · {label}</title></path>{geographic&&<text className="map-label" x={center[0]} y={center[1]} textAnchor="middle">{f.properties.dong_nm}</text>}</g>;
       })}
     </svg></div></>;
 }
