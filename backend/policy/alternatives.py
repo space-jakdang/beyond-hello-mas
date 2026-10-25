@@ -88,7 +88,7 @@ def context_for(dong,scope,proposals):
             'sources':list(sources.values()),'limits':['예산·정원·효과는 미확인','정책 부재를 증명한 것이 아닙니다.']}
 
 
-def research(designer,owner_id,run_id,context):
+def research(designer,owner_id,run_id,context,deadline=None):
     if context.get('gap_contract_version')=='policy-gap-1' and (not any((row.get('policy_gap') or {}).get('research_needed') for row in context['matching']) or
             (context['sources'] and not any(row['uncovered_needs'] for row in context['matching']))):
         context['research_steps']=[{'status':'existing_snapshot_reused' if context['sources'] else 'not_requested','purpose':'operating_alternatives_not_slot_filling','absence_established':False,
@@ -105,6 +105,10 @@ def research(designer,owner_id,run_id,context):
     targets=[g for g in context['target_groups'] if g in focus] or context['target_groups']
     observations=[];sources={source['policy_id']:source for source in context['sources']}
     for query in queries:
+        if deadline is not None and time.time()>=deadline:raise ValueError('deadline')
+        if context.get('design_version')=='pinpoint-1':
+            with designer.store.connection() as db:batch=db.execute('SELECT body FROM regional_batches WHERE id=?',(owner_id,)).fetchone()
+            if batch and json.loads(batch[0])['cancelled']:raise ValueError('cancelled')
         args={'local_scope':{'11230':'gangnam','32010':'chuncheon'}[context['scope']['sgg']],
               'query':query,'target_group':', '.join(group_label(g) for g in targets)}
         cache_key=digest({'arguments':args,'as_of':context['scope'].get('as_of')})
@@ -162,10 +166,10 @@ def model_context(context):
     return view
 
 
-def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
+def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None,deadline=None):
     if scope.get('policy_context_version')=='regional-policy-2':
         from backend.policy.pinpoint import generate as pinpoint_generate
-        return pinpoint_generate(designer,owner_id,run_id,scope,dongs,proposals,contexts)
+        return pinpoint_generate(designer,owner_id,run_id,scope,dongs,proposals,contexts,deadline=deadline)
     results=[]
     for dong in sorted(dongs,key=lambda d:d['dong_cd']):
         with designer.store.connection() as db:
@@ -244,7 +248,7 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
 
 def failed_run(service,run_id,scenario):
     payload=scenario['payload']
-    if payload.get('policy_proposal_version')!='three-1':return
+    if payload.get('policy_proposal_version') not in ('three-1','regional-policy-2'):return
     task=payload['task']
     if payload.get('workflow_version')=='regional-workflow-2':
         from backend.tools.neighborhoods import group_analysis_v4
@@ -260,6 +264,7 @@ def failed_run(service,run_id,scenario):
         known={r.dong_cd:r.dong_nm for r in rows if r.sgg==task['sgg'] and (not task.get('dong_cd') or r.dong_cd==task['dong_cd'])}
         scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],
                'target_groups':[task['sex']+'/'+task['age_group']],'synthetic_future':bool(task.get('future_id'))}
+    if payload.get('policy_context_version'):scope.update(policy_context_version=payload['policy_context_version'],selected_week=task.get('card_week'))
     service.policy_designer.propose(run_id,run_id,scope,[{'dong_cd':k,'dong_nm':v} for k,v in known.items()],[])
 
 
@@ -285,12 +290,17 @@ def complete_batch(service,body):
     task=body['task'];scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],
                             'target_groups':[c['sex']+'/'+c.get('source_age_band',c['age_group']) for c in body['children']],
                             'selected_week':task.get('card_week'),'synthetic_future':False}
-    sets=service.policy_designer.propose(owner,identifier,scope,body['dongs'],proposals)
+    if body.get('policy_context_version'):scope['policy_context_version']=body['policy_context_version']
+    sets=service.policy_designer.propose(owner,identifier,scope,body['dongs'],proposals,deadline=time.time()+120) if body.get('policy_context_version') else service.policy_designer.propose(owner,identifier,scope,body['dongs'],proposals)
     with service.store.connection(write=True) as db:
         latest=json.loads(db.execute('SELECT body FROM regional_batches WHERE id=?',(owner,)).fetchone()[0])
         service.update_run(db,identifier,status='cancelled' if latest['cancelled'] else 'completed',ended_at=utcnow())
         if latest['cancelled']:return
         latest['policy_proposals']={'owner_id':owner,'dong_count':len(sets),'fallback_count':sum(any(a['generation_mode']=='template_fallback' for a in s['alternatives']) for s in sets),'status':'completed_with_fallback' if any(a['generation_mode']=='template_fallback' for s in sets for a in s['alternatives']) else 'completed'}
+        if body.get('policy_context_version'):
+            holds=sum(s.get('status')=='needs_evidence' for s in sets)
+            latest['policy_proposals'].update(evidence_hold_count=holds,reuse_count=sum(s.get('status')=='reuse_existing' for s in sets),generation_rule='conditional_three',
+                actual_counts={s['dong_cd']:len(s['alternatives']) for s in sets},status='completed_with_evidence_hold' if holds else 'completed')
         db.execute('UPDATE regional_batches SET body=? WHERE id=?',(json.dumps(latest,ensure_ascii=False),owner))
 
 

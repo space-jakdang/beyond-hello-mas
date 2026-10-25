@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import sys
+import time
 from typing import Literal
 
 from mcp import ClientSession, StdioServerParameters
@@ -11,7 +12,7 @@ from mcp.client.stdio import stdio_client
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from backend.app.config import ROOT
 from backend.policy.service import SCOPES, Scope, LIMITATION
-from backend.policy.research_contracts import ResearchNeed,NeedReview,MaterialPolicyError,evidence_hold,regional_briefing,latest_details,validate_reviews,catalog_policy
+from backend.policy.research_contracts import ResearchNeed,NeedReview,MaterialPolicyError,evidence_hold,regional_briefing,latest_details,validate_reviews,catalog_policy,visible_policy_fields
 
 
 class PolicyTask(BaseModel):
@@ -20,7 +21,7 @@ class PolicyTask(BaseModel):
     scopes:list[Scope]=Field(default_factory=lambda:SCOPES.copy(),min_length=1,max_length=5)
     query:str=Field(default='',max_length=200)
     max_steps:int=Field(default=6,ge=1,le=10)
-    research_version:Literal['regional-research-1'] | None = None
+    research_version:Literal['regional-research-1','regional-research-2'] | None = None
     needs:list[ResearchNeed]=Field(default_factory=list,max_length=50)
     regional_profiles:list[dict]=Field(default_factory=list,max_length=47)
     statistical_notes:list[dict]=Field(default_factory=list,max_length=5)
@@ -42,11 +43,12 @@ class PolicyEvidence(BaseModel):
 
 class PolicyDecision(BaseModel):
     model_config=ConfigDict(extra='forbid')
-    action:Literal['policy_coverage','policy_refresh','policy_search','policy_detail','policy_details','finish']
+    action:Literal['policy_coverage','policy_refresh','policy_search','policy_detail','policy_details','policy_field','finish']
     query:str
     page:int
     policy_id:str | None
     policy_ids:list[str]=Field(default_factory=list,max_length=5)
+    detail_field:Literal['support','eligibility','criteria','application','deadline','contact','agency'] | None = None
     recommendations:list[PolicyEvidence]=Field(max_length=5)
     reason:str
     need_reviews:list[NeedReview]=Field(default_factory=list,max_length=50)
@@ -104,6 +106,32 @@ class PolicyAgent:
         self.store,self.settings,self.agents=store,settings,agents
         with store.connection() as db:
             db.execute('CREATE TABLE IF NOT EXISTS policy_steps (run_id TEXT NOT NULL REFERENCES runs(id), step INTEGER NOT NULL, body TEXT NOT NULL, PRIMARY KEY(run_id,step))')
+            db.execute('CREATE TABLE IF NOT EXISTS policy_alternative_research (owner_id TEXT NOT NULL,cache_key TEXT NOT NULL,body TEXT NOT NULL,PRIMARY KEY(owner_id,cache_key))')
+
+    def frozen_tool(self,owner,tool,args):
+        def read(key):
+            with self.store.connection() as db:
+                row=db.execute('SELECT body FROM policy_alternative_research WHERE owner_id=? AND cache_key=?',(owner,key)).fetchone()
+            return json.loads(row[0]) if row else None
+        def save(key,result):
+            with self.store.connection(write=True) as db:
+                db.execute('INSERT OR IGNORE INTO policy_alternative_research VALUES (?,?,?)',(owner,key,json.dumps(result,ensure_ascii=False)))
+                return json.loads(db.execute('SELECT body FROM policy_alternative_research WHERE owner_id=? AND cache_key=?',(owner,key)).fetchone()[0])
+        if tool in ('policy_detail','policy_details'):
+            ids=args['policy_ids'] if tool=='policy_details' else [args['policy_id']]
+            identities={pid:digest(['regional-research-2','policy_detail',pid]) for pid in ids}
+            known={pid:read(key) for pid,key in identities.items()};missing=[pid for pid in ids if known[pid] is None]
+            result={}
+            if missing:
+                result=self.call_tool(tool,{'policy_ids':missing} if tool=='policy_details' else {'policy_id':missing[0]})
+                rows=result.get('items',[]) if tool=='policy_details' else [result]
+                for pid in missing:
+                    detail=next((r for r in rows if (r.get('policy') or {}).get('id')==pid),None)
+                    if detail is None:detail={'status':result.get('status','not_found'),'policy':None,'rejected_result':result}
+                    known[pid]=save(identities[pid],detail)
+            return {**result,'status':'complete','items':[known[pid] for pid in ids]} if tool=='policy_details' else known[ids[0]]
+        fingerprint=digest(['regional-research-2',tool,args]);cached=read(fingerprint)
+        return cached if cached is not None else save(fingerprint,self.call_tool(tool,args))
 
     async def remote(self,tool,args):
         env={'DATA_MODE':self.settings.data_mode,'LLM_MODE':'fake',
@@ -150,9 +178,10 @@ class PolicyAgent:
             view.append(entry)
         task_view=task.model_dump()
         if task.research_version:
-            task_view['regional_profiles']=regional_briefing(task.regional_profiles)
+            from backend.context.analysis import model_briefing
+            task_view['regional_profiles']=model_briefing(regional_briefing(task.regional_profiles))
             details=latest_details(observations)
-            for entry in view:
+            for entry,source_observation in zip(view,observations):
                 rows=entry['result'].get('items',[]) if entry['action']['action']=='policy_details' else [entry['result']] if entry['action']['action']=='policy_detail' else []
                 for row in rows:
                     if row.get('policy'):
@@ -164,9 +193,14 @@ class PolicyAgent:
                             continue
                         row['policy'].update({k:original[k] for k in ('id','title','scope') if k in original})
                         row['conditions']=compact(detail.get('conditions'))
-                        row['policy'].update({k:str(original.get(k,''))[:800] for k in ('support','eligibility','criteria','application','deadline','contact','agency')})
+                        row['policy']['field_view']='excerpts; request policy_field for the complete frozen field'
+                        row['policy'].update({k:str(original.get(k,'') or '')[:200] for k in ('support','eligibility','criteria','application','deadline','contact','agency')})
+                if entry['action']['action']=='policy_field':
+                    raw=source_observation['result']
+                    policy=(details.get(raw['policy_id']) or {}).get('policy')
+                    entry['result']=dict(raw) if policy and raw.get('source_hash')==digest(policy) else {**raw,'status':'superseded','value':None}
         payload={'task':task_view,'observations':view,'steps_remaining':remaining,
-                 'tools':['policy_coverage','policy_refresh','policy_search','policy_detail','policy_details','finish']}
+                 'tools':['policy_coverage','policy_refresh','policy_search','policy_detail','policy_details','finish']+(['policy_field'] if task.research_version else [])}
         prompt=(ROOT/'backend/prompts/policy_decision.txt').read_text()
         def fits():
             return len(json.dumps({'prompt':prompt,'payload':payload,'schema':PolicyDecision.model_json_schema()},ensure_ascii=False).encode())<=self.settings.llm_max_input_bytes
@@ -176,17 +210,25 @@ class PolicyAgent:
                 search['result']['items'].pop(0)
                 search['result']['model_items_omitted']=True
             elif len(view)>1:
-                index=next((i for i,o in enumerate(view) if o['action']['action'] not in ('policy_detail','policy_details')),None)
+                index=next((i for i,o in enumerate(view) if o['action']['action'] not in ('policy_detail','policy_details','policy_field')),None)
                 if index is None:raise ValueError('policy_context_limit')
                 view.pop(index)
             else:
                 raise ValueError('policy_context_limit')
         return payload
 
-    def run(self,run_id,sim_ts,task):
+    def run(self,run_id,sim_ts,task,deadline=None):
         task=PolicyTask.model_validate(task)
         with self.store.connection() as db:
             observations=[json.loads(r[0]) for r in db.execute('SELECT body FROM policy_steps WHERE run_id=? ORDER BY step',(run_id,))]
+            batches=db.execute("SELECT 1 FROM sqlite_master WHERE name='regional_batch_children'").fetchone()
+            parent=db.execute('SELECT batch_id FROM regional_batch_children WHERE run_id=?',(run_id,)).fetchone() if batches else None
+        owner=parent[0] if parent else run_id
+        def stopped():
+            if parent:
+                with self.store.connection() as db:row=db.execute('SELECT body FROM regional_batches WHERE id=?',(owner,)).fetchone()
+                if not row or json.loads(row[0])['cancelled']:return 'cancelled'
+            return 'deadline' if deadline is not None and time.time()>=deadline else None
         def finish(status,recommendations=()):
             result=self.finish(status,list(recommendations),observations)
             if task.research_version:
@@ -195,10 +237,12 @@ class PolicyAgent:
             return result
         limit=min(task.max_steps,self.settings.llm_max_calls)
         for step in range(len(observations),limit):
+            if reason:=stopped():return finish(reason)
             try:payload=self.model_payload(task,observations,limit-step)
             except (ValueError,KeyError,TypeError):return finish('context_input_limit')
             try:decision=self.agents.call(run_id,sim_ts,'policy_decision',payload)
-            except ValueError:return finish('model_unavailable_or_budget')
+            except ValueError:return finish(stopped() or 'model_unavailable_or_budget')
+            if reason:=stopped():return finish(reason)
             if decision.action=='finish':
                 try:
                     result=finish('completed',self.recommendations(decision,observations,task))
@@ -208,7 +252,7 @@ class PolicyAgent:
                         reviews=[]
                         for review in decision.need_reviews:
                             need=needs[review.need_id]
-                            try:reviews+=validate_reviews([review],task.model_copy(update={'needs':[need]}),result,observations)
+                            try:reviews+=validate_reviews([review],task.model_copy(update={'needs':[need]}),result,observations,visible_policy_fields(payload))
                             except MaterialPolicyError as exc:reviews.append(evidence_hold(need,str(exc)))
                         result['need_reviews']=reviews
                         result['status']='needs_evidence' if any(r['decision']=='needs_evidence' for r in reviews) else 'completed'
@@ -220,15 +264,25 @@ class PolicyAgent:
             if decision.action!='policy_coverage' and any(o['action']['action']==decision.action and o['arguments']==args for o in observations):
                 return finish('repeated_action')
             self.store.append_trace(run_id,sim_ts,'tool_call',{'step':step,'tool':decision.action,'arguments':args},'policy')
-            result=self.call_tool(decision.action,args)
+            if reason:=stopped():return finish(reason)
+            if decision.action=='policy_field':
+                policy=latest_details(observations)[args['policy_id']]['policy'];value=policy.get(args['field'])
+                result={'policy_id':args['policy_id'],'field':args['field'],'value':value if isinstance(value,str) else None,
+                    'frozen':True,'source_hash':digest(policy),'status':'available' if isinstance(value,str) and value else 'missing'}
+            else:result=self.frozen_tool(owner,decision.action,args) if task.research_version=='regional-research-2' else self.call_tool(decision.action,args)
             observation={'action':action,'arguments':args,'result':result}
             with self.store.connection(write=True) as db:
                 db.execute('INSERT INTO policy_steps VALUES (?,?,?)',(run_id,step,json.dumps(observation,ensure_ascii=False)))
                 self.store._trace(db,run_id,sim_ts,'tool_result',{'step':step,'tool':decision.action,'result':result},'policy')
             observations.append(observation)
+            if reason:=stopped():return finish(reason)
         return finish('step_limit')
 
     def arguments(self,decision,observations,task):
+        if decision.action=='policy_field':
+            detail=latest_details(observations).get(decision.policy_id)
+            if not task.research_version or not detail or not detail.get('policy') or not decision.detail_field:raise ValueError('unobserved_policy_field')
+            return {'policy_id':decision.policy_id,'field':decision.detail_field}
         if decision.action=='policy_search':
             if len(decision.query)>200 or not 1<=decision.page<=10000:raise ValueError('invalid_search')
             return {'scopes':task.scopes,'query':decision.query,'page':decision.page,'per_page':5}

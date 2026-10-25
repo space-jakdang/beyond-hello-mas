@@ -215,7 +215,7 @@ def test_research_worker_model_input_and_saved_tools_preserve_evidence(tmp_path,
             need_reviews=[row] if action=='finish' else [],reason='scripted contract fixture')
     monkeypatch.setattr(graph.policy_agent,'call_tool',tool)
     monkeypatch.setattr(graph.agents,'call',call)
-    run=graph.register(Scenario(id='regional-research',type='policy',sim_time=sim,payload=task.model_dump(mode='json')))
+    run=graph.register(Scenario(id='regional-research',type='policy',sim_time=sim,payload={'goal':'내부 작업 검증용 실행'}))
     output=graph.policy_agent.run(run.id,sim,task)
     assert output['research_version']=='regional-research-1' and output['status']=='completed'
     assert output['need_reviews'][0]['guidance'][0]['application']=='방문 신청'
@@ -229,7 +229,7 @@ def test_research_worker_model_input_and_saved_tools_preserve_evidence(tmp_path,
     visible=final['observations'][-1]['result']['policy']
     assert visible['support']==policy['support'] and visible['eligibility']==policy['eligibility']
     original=task.regional_profiles[0]['facts'][0]
-    shown=final['task']['regional_profiles']['areas'][0]['facts'][0]
+    shown=dict(zip(final['task']['regional_profiles']['fact_columns'],final['task']['regional_profiles']['areas'][0]['facts'][0]))
     assert all(shown[k]==original.get(k) for k in ('source','source_table','source_items','source_dimensions','geography_code','geography_version','published_at'))
     before=len(calls)
     assert graph.policy_agent.run(run.id,sim,task)==output and len(calls)==before
@@ -320,7 +320,7 @@ def test_research_worker_preserves_valid_need_when_another_policy_target_is_inva
             need_reviews=[row,second_row] if action=='finish' else [])
     monkeypatch.setattr(graph.policy_agent,'call_tool',tool)
     monkeypatch.setattr(graph.agents,'call',call)
-    run=graph.register(Scenario(id='mixed-research',type='policy',sim_time=sim,payload=task.model_dump(mode='json')))
+    run=graph.register(Scenario(id='mixed-research',type='policy',sim_time=sim,payload={'goal':'내부 작업 검증용 실행'}))
     output=graph.policy_agent.run(run.id,sim,task)
     reviews={r['need_id']:r for r in output['need_reviews']}
     assert output['status']=='needs_evidence'
@@ -360,7 +360,7 @@ def test_catalog_only_fake_research_completes_without_filling_recommendation_slo
     sim='2026-10-24T09:00:00+09:00'
     for index,(gaps,expected) in enumerate((([], 'reuse_existing'),(['야간 운영 미제공'],'adapt_existing'))):
         task.needs[0].verified_gaps=gaps
-        run=graph.register(Scenario(id=f'catalog-research-{index}',type='policy',sim_time=sim,payload=task.model_dump(mode='json')))
+        run=graph.register(Scenario(id=f'catalog-research-{index}',type='policy',sim_time=sim,payload={'goal':'내부 작업 검증용 실행'}))
         output=graph.policy_agent.run(run.id,sim,task)
         assert output['status']=='completed' and output['recommendations']==[]
         assert not output['search_complete_within_scope'] and not output['all_policies_known']
@@ -418,7 +418,7 @@ def test_research_failures_keep_per_need_holds_and_safe_termination_reasons(tmp_
                     if case=='evidence' else [],need_reviews=[held] if action=='finish' else [],reason='bounded failure fixture')
         monkeypatch.setattr(graph.agents,'call',call)
         monkeypatch.setattr(graph.policy_agent,'call_tool',lambda *args:{'status':'error','error':'TimeoutError'})
-        run=graph.register(Scenario(id='research-failure-'+case,type='policy',sim_time=sim,payload=task.model_dump(mode='json')))
+        run=graph.register(Scenario(id='research-failure-'+case,type='policy',sim_time=sim,payload={'goal':'내부 작업 검증용 실행'}))
         output=graph.policy_agent.run(run.id,sim,current)
         assert output['status']==expected and output['research_version']=='regional-research-1'
         assert output['recommendations']==[] and not output['allocation_performed']

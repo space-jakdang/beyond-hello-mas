@@ -110,6 +110,7 @@ class PolicyDesigner:
             self.store._trace(db,run_id,sim_ts,'agent_message',{'sender':'policy_design','recipient':'supervisor','result_kind':'policy_design','result':result},'policy_design')
         return result
 
-    def propose(self,owner_id,run_id,scope,dongs,proposals):
+    def propose(self,owner_id,run_id,scope,dongs,proposals,deadline=None):
         from backend.policy.alternatives import generate
+        if deadline is not None:return generate(self,owner_id,run_id,scope,dongs,proposals,deadline=deadline)
         return generate(self,owner_id,run_id,scope,dongs,proposals)

@@ -50,7 +50,13 @@ def model_observations(items):
     result=[]
     for observation in items:
         view=dict(observation)
-        if observation['tool']=='policy_insights':
+        if observation['tool']=='regional_profile':
+            from backend.context.analysis import model_briefing
+            view=model_briefing({**observation,'areas':observation['areas'][:3]})
+            view['unshown_dongs']=[a['dong_cd'] for a in observation['areas'][3:]]
+        elif observation['tool']=='regional_comparison':
+            view={**observation,'comparisons':observation['comparisons'][:12],'omitted_comparisons':max(0,len(observation['comparisons'])-12)}
+        elif observation['tool']=='policy_insights':
             view={'tool':'policy_insights','version':observation['version'],'result_reference':'summary.insights'}
         elif observation['tool']=='sensitivity':
             view={**observation,'item_columns':['evidence_id','stages','base_stage_stable'],'items':[[i['evidence_id'],i['stages'],i['base_stage_stable']] for i in observation['items']]}
@@ -122,9 +128,12 @@ def analyze(agents,run_id,sim_ts,assessment,feedback=None):
 
 def context_payload(assessment,plan=None):
     if 'regional_context' not in assessment:return {}
-    from backend.context.analysis import briefing
+    from backend.context.analysis import briefing,model_briefing
     codes={r['dong_cd'] for r in assessment['segments'] if not plan or not plan['priority_evidence_ids'] or r['evidence_id'] in plan['priority_evidence_ids']}
-    return {'regional_context':briefing(assessment['regional_context'],codes)}
+    available=sorted(codes)
+    view=model_briefing(briefing(assessment['regional_context'],set(available[:3])))
+    view['available_dongs']=available;view['unshown_dongs']=available[3:]
+    return {'regional_context':view}
 
 
 def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadline,cached_observations=()):

@@ -2,6 +2,9 @@
 from backend.context.contracts import fact_dict,METRICS
 from backend.tools.indicators import digest
 
+FACT_COLUMNS=('fact_id','metric','value','unit','reference_year','geography_level','geography_code','geography_version',
+              'population','age_definition','sex','source','source_table','source_items','source_dimensions','published_at','status','reason')
+
 
 def checked_fact(fact):
     parsed=fact_dict({k:v for k,v in fact.items() if k!='fact_id'})
@@ -32,8 +35,7 @@ def briefing(profiles,dong_codes=None):
     selected=[{**p,'facts':[checked_fact(fact) for fact in p['facts']]} for p in selected]
     return {'version':'regional-context-review-1','areas':[{'dong_cd':p['request']['dong_cd'],
         'dong_nm':p.get('identity',{}).get('dong_nm'),'status':p['status'],'input_hash':p['input_hash'],
-        'facts':[{k:f[k] for k in ('fact_id','metric','value','unit','reference_year','geography_level','geography_code','geography_version',
-            'population','age_definition','sex','source','source_table','source_items','source_dimensions','published_at','status','reason')} for f in p['facts']],
+        'facts':[{k:f[k] for k in FACT_COLUMNS} for f in p['facts']],
         'rates':rates(p),'questions':['확인 필요: '+METRICS[f['metric']][0] for f in p['facts'] if f['status']!='observed'],
         'limitations':p.get('limitations',[])} for p in selected],
         'claim_limits':['지역 구성은 서비스 필요·참여 장벽·인과 원인의 관측이 아닙니다.','조회 시점 자료의 과거 가용성과 경계 동일성은 별도 확인이 필요합니다.']}
@@ -75,3 +77,12 @@ def validate_notes(notes,assessment,shown=None,extra_fact_ids=()):
     for note in notes:
         if not note['fact_ids'] or not set(note['fact_ids'])<=known:raise ValueError('unobserved regional context reference')
     return notes
+
+
+def model_briefing(value):
+    result={**value,'areas':[]}
+    columns=list(FACT_COLUMNS)
+    result['fact_columns']=columns
+    for area in value['areas']:
+        result['areas'].append({**area,'facts':[[fact[k] for k in columns] for fact in area['facts']]})
+    return result

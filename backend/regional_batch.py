@@ -27,6 +27,7 @@ class BatchRequest(BaseModel):
     source_age_band:str='all'
     week:date | Literal['all']='all'
     card_age:Literal['all','20s','30s']='all'
+    policy_context_version:Literal['regional-policy-2'] | None = None
 
     @model_validator(mode='after')
     def versioned_scope(self):
@@ -40,6 +41,7 @@ class BatchRequest(BaseModel):
 def initialize(store):
     with store.connection() as db:
         db.executescript('''
+        CREATE TABLE IF NOT EXISTS regional_context_snapshots (owner_id TEXT PRIMARY KEY,body TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS regional_batches (id TEXT PRIMARY KEY, body TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS regional_batch_children (
             run_id TEXT PRIMARY KEY REFERENCES runs(id), batch_id TEXT NOT NULL REFERENCES regional_batches(id),
@@ -59,6 +61,7 @@ def read(service,identifier):
 
 def create(service,request):
     identifier=str(request.request_id);intent=request.model_dump(mode='json',exclude={'request_id'})
+    if request.policy_context_version is None:intent.pop('policy_context_version',None)
     if request.workflow_version=='regional-workflow-1':
         intent.pop('workflow_version',None);intent.pop('source_age_band',None)
     try:
@@ -77,6 +80,11 @@ def create(service,request):
     body={'id':identifier,'intent':intent,'data_mode':service.settings.data_mode,'llm_mode':service.settings.llm_mode,
           'task':task.model_dump(mode='json'),'source':source,'children':[],'cancelled':False,'policy_proposal_version':'three-1',
           'dongs':[{'dong_cd':k,'dong_nm':v} for k,v in sorted(dongs.items()) if not task.dong_cd or k==task.dong_cd]}
+    if request.policy_context_version:
+        from backend.context.orchestration import freeze
+        body['policy_context_version']=request.policy_context_version
+        body['policy_proposal_version']=request.policy_context_version
+        body['regional_context']=freeze(service,identifier,body['task'],body['dongs'],deadline=time.time()+120)
     prepared=[]
     catalog=[r.model_dump(mode="json") for r in load_catalog(service.settings.catalog_path)]
     for sex in (['M','F'] if request.sex=='all' else [request.sex]):
@@ -87,8 +95,12 @@ def create(service,request):
                 body['children'].append({'sex':sex,'age_group':age,'run_id':None,'status':'no_observation'});continue
             assessment=assess(service.settings,single,source_data=(rows,source))
             assessment['catalog_snapshot']=catalog
+            if request.policy_context_version:
+                assessment['regional_context']=body['regional_context']
+                assessment['metadata']['policy_context_version']=request.policy_context_version
             scenario=Scenario(id='regional-workflow-batch',type='monthly',sim_time=f'{task.ym}-01T09:00:00+09:00',
                               payload={'statistics_version':'2','workflow_version':'regional-workflow-1','research_gaps':True,'policy_proposal_version':'batch-child','task':single.model_dump(mode='json')})
+            if request.policy_context_version:scenario=scenario.model_copy(update={'payload':{**scenario.payload,'policy_context_version':request.policy_context_version}})
             run=service.new_run(scenario,str(uuid4())).model_copy(update={'status':'pending'})
             prepared.append((run,scenario,assessment))
             body['children'].append({'sex':sex,'age_group':age,'run_id':run.id})
@@ -137,6 +149,11 @@ def create_v4(service,request,identifier,intent):
           'workflow_version':VERSION,'task':body_task,'source':source,'children':[],'cancelled':False,
           'policy_proposal_version':'three-1',
           'dongs':[{'dong_cd':code,'dong_nm':name} for code,name in sorted(dongs.items())]}
+    if request.policy_context_version:
+        from backend.context.orchestration import freeze
+        body['policy_context_version']=request.policy_context_version
+        body['policy_proposal_version']=request.policy_context_version
+        body['regional_context']=freeze(service,identifier,body['task'],body['dongs'],deadline=time.time()+120)
     prepared=[]
     catalog=[row.model_dump(mode='json') for row in load_catalog(service.settings.catalog_path)]
     sexes=['M','F'] if request.sex=='all' else [request.sex]
@@ -149,10 +166,14 @@ def create_v4(service,request,identifier,intent):
                 continue
             assessment=assess(service.settings,single,source_data=data)
             assessment['catalog_snapshot']=catalog
+            if request.policy_context_version:
+                assessment['regional_context']=body['regional_context']
+                assessment['metadata']['policy_context_version']=request.policy_context_version
             scenario=Scenario(id='regional-workflow-batch-v4',type='monthly',
                 sim_time=f'{single.as_of.isoformat()}T09:00:00+09:00',
                 payload={'statistics_version':'3','workflow_version':VERSION,'research_gaps':True,
                          'policy_proposal_version':'batch-child','task':single.model_dump(mode='json')})
+            if request.policy_context_version:scenario=scenario.model_copy(update={'payload':{**scenario.payload,'policy_context_version':request.policy_context_version}})
             run=service.new_run(scenario,str(uuid4())).model_copy(update={'status':'pending'})
             prepared.append((run,scenario,assessment))
             body['children'].append({'sex':sex,'age_group':age,'source_age_band':age,'run_id':run.id})
@@ -175,7 +196,7 @@ def create_v4(service,request,identifier,intent):
 def public(service,body):
     children=[{**c,'status':service.store.get_run(c['run_id']).status if c['run_id'] else 'no_observation'} for c in body['children']]
     pending=sum(c['status'] in ('pending','running') for c in children)
-    return {**body,'children':children,'status':('cancelling' if any(c['status']=='running' for c in children) else 'cancelled') if body['cancelled'] else 'running' if pending or body.get('policy_proposal_version') and not body.get('policy_proposals') else 'completed_with_fallback' if body.get('policy_proposals',{}).get('fallback_count') else 'completed_with_gaps' if any(c['status'] in ('failed','no_observation') for c in children) else 'completed',
+    return {**body,'children':children,'status':('cancelling' if any(c['status']=='running' for c in children) else 'cancelled') if body['cancelled'] else 'running' if pending or body.get('policy_proposal_version') and not body.get('policy_proposals') else 'completed_with_evidence_hold' if body.get('policy_proposals',{}).get('evidence_hold_count') else 'completed_with_fallback' if body.get('policy_proposals',{}).get('fallback_count') else 'completed_with_gaps' if any(c['status'] in ('failed','no_observation') for c in children) else 'completed',
             'finished':len(children)-pending,'total':len(children),'failed_count':sum(c['status']=='failed' for c in children),'no_observation_count':sum(c['status']=='no_observation' for c in children)}
 
 
