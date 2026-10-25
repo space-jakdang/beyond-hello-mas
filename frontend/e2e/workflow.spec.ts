@@ -195,7 +195,7 @@ test('all cohort batch survives reload and opens a single cohort result',async({
  await page.getByRole('button',{name:'지역 분석 요청'}).click();
  const batch=page.getByRole('region',{name:'전체 집단 업무',exact:true});
  await expect(batch).toContainText('8 / 8집단',{timeout:60000});
- const first=page.url();await page.reload();await expect(batch.locator('tbody tr')).toHaveCount(8);
+ const first=page.url();await page.reload();await expect(batch.getByRole('table',{name:'요청 집단별 진행 상황',exact:true}).locator('tbody tr')).toHaveCount(8);
  await page.getByRole('button',{name:'지역 분석 요청'}).click();await expect(page.getByRole('button',{name:'지역 분석 요청'})).toBeEnabled();await expect(page).toHaveURL(first);
  await batch.getByRole('button',{name:'집단 결과 보기'}).first().click();
  await expect(page.getByTestId('workflow-status')).toContainText('승인 대기');

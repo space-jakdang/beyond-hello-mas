@@ -179,3 +179,7 @@ regional-workflow-2는 입력 스키마 4와 판정 버전 seohee-region-2026102
 ### v4 업무 요청
 
 단일 업무는 `/scenarios/run`에 `workflow_version=regional-workflow-2`와 `task`의 `sgg`, `sex`, `source_age_band`, `as_of`, `card_week`를 보낸다. `card_week`는 2025년 월요일 관측 주여야 한다. 이 입력만으로 2025년 기간 집계를 월 관측으로 바꾸지 않으며 결과 행의 `ym`은 비어 있고 실행 참조용 월만 task에 남는다. 전체 업무는 `/regional/batches`에서 같은 `workflow_version`·`task`와 `sex=all`, `source_age_band=all`을 사용한다. v4 배치에서는 과거의 `age_group`, `week`, `card_age` 선택자를 함께 보내지 않는다.
+
+## 현행 화면의 정책 대응
+
+새 지역 업무 화면은 v3/v4 자료 선택과 별도로 `policy_context_version=regional-policy-2`를 지정합니다. 위의 항상 세 대안·실패 시 기본 구상안 설명은 이 선택이 없는 이전 계약에 적용합니다. 현행 정책 대응은 [지역 정보·필요별 판단·화면과 보고서](regional-context.md)를 따르며, 기존 정책 활용과 확인된 설계 필요의 3안, 근거 부족의 0안을 구별합니다. 자료의 원천 연령·단계·카드 기준 주 의미는 바꾸지 않습니다.

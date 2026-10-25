@@ -86,3 +86,13 @@ def model_briefing(value):
     for area in value['areas']:
         result['areas'].append({**area,'facts':[[fact[k] for k in columns] for fact in area['facts']]})
     return result
+
+
+def short_fact_references(payload,profiles):
+    import json
+    aliases={'R'+str(i+1):identifier for i,identifier in enumerate(sorted({f['fact_id'] for p in profiles for f in p.get('facts',[])}))}
+    encoded=json.dumps(payload,ensure_ascii=False)
+    for short,canonical in aliases.items():encoded=encoded.replace(json.dumps(canonical),json.dumps(short))
+    view=json.loads(encoded)
+    view['regional_reference_note']='Use short R identifiers exactly for regional fact references; the server restores canonical IDs.'
+    return view,aliases
