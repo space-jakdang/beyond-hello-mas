@@ -6,7 +6,7 @@ import pyarrow.parquet as pq
 import pytest
 
 from backend.app.config import Settings
-from backend.tools import segments_v4
+from backend.tools import card_alarm_v4, segments_v4
 from scripts import export_seohee_v4
 
 BANDS = segments_v4.SOURCE_AGE_BANDS["강남"]
@@ -50,6 +50,18 @@ def fixture_source(root):
         writer = csv.DictWriter(f, fieldnames=fields)
         writer.writeheader()
         writer.writerows(structural)
+    card_path = detections / "card_alarm_weekly.csv"
+    card_fields = ["지역", "성", "연령대", "주", "V배", "N배", "V단계", "N단계", "경보", "약기준", "강기준"]
+    card_rows = [
+        {"지역": region, "성": sex, "연령대": age, "주": "07/07", "V배": "", "N배": "",
+         "V단계": "0.0", "N단계": "0.0", "경보": "0", "약기준": "0.95", "강기준": "0.90"}
+        for region in ("강남", "춘천") for sex in SEX.values() for age in card_alarm_v4.CARD_AGE_BANDS
+    ]
+    with card_path.open("w", encoding="utf-8-sig", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=card_fields)
+        writer.writeheader()
+        writer.writerows(card_rows)
+
     geography = root / "data/geography"
     geography.mkdir(parents=True)
     boundary_bytes = b"synthetic boundary fixture"
@@ -59,18 +71,20 @@ def fixture_source(root):
         "subset_sha256": hashlib.sha256(boundary_bytes).hexdigest(),
     }
     (geography / "manifest.json").write_text(json.dumps(geography_metadata))
-    return source, [feature], stage_path, structure_path, geography_metadata
+    return source, [feature], stage_path, structure_path, card_path, geography_metadata
 
 
 def test_v4_export_preserves_status_age_and_source_and_round_trips(tmp_path, monkeypatch):
-    source, features, stage_path, structure_path, geography_metadata = fixture_source(tmp_path)
-    before = (stage_path.read_bytes(), structure_path.read_bytes())
+    source, features, stage_path, structure_path, card_path, geography_metadata = fixture_source(tmp_path)
+    before = (stage_path.read_bytes(), structure_path.read_bytes(), card_path.read_bytes())
     monkeypatch.setattr(export_seohee_v4, "ROOT", tmp_path)
     monkeypatch.setattr(export_seohee_v4, "boundaries", lambda: ({"features": features}, geography_metadata))
     destination = tmp_path / "data/local/release"
 
     rows = export_seohee_v4.export(source, destination)
     loaded, metadata = segments_v4.load_segments(Settings(data_mode="local", input_root=destination))
+    cards, card_metadata = card_alarm_v4.load(Settings(data_mode="local", input_root=destination))
+    manifest = json.loads((destination / "local/import.json").read_text())
 
     assert len(rows) == len(loaded) == 12
     assert all(row.dong_nm == "개포3동" and row.source_dong_name == "일원2동" for row in rows)
@@ -82,9 +96,10 @@ def test_v4_export_preserves_status_age_and_source_and_round_trips(tmp_path, mon
     assert all(row.base_stage is None for row in rows if row.source_stage <= 0)
     assert all(row.base_stage == row.source_stage for row in rows if row.source_stage > 0)
     assert all(row.structural_risk_ratio == 1.5 for row in rows if row.source_age_band in ("40대", "50대", "60대", "70대+"))
-    assert (stage_path.read_bytes(), structure_path.read_bytes()) == before
+    assert (stage_path.read_bytes(), structure_path.read_bytes(), card_path.read_bytes()) == before
+    assert len(cards) == 24 and all(row.baseline_status == "unavailable" for row in cards)
+    assert card_metadata["sha256"] == manifest["artifact_hashes"]["seohee/card_alarm_weekly.csv"]
     assert metadata["dataset_version"] == segments_v4.DATASET_VERSION
-    manifest = json.loads((destination / "local/import.json").read_text())
     assert manifest["input_schema_version"] == 4
     assert manifest["generator"] == "scripts.export_seohee_v4:1"
     assert manifest["geography_version"] == "test-geography-1"
@@ -92,7 +107,7 @@ def test_v4_export_preserves_status_age_and_source_and_round_trips(tmp_path, mon
 
 
 def test_v4_export_rejects_missing_and_duplicate_cells_without_output(tmp_path, monkeypatch):
-    source, features, stage_path, _, geography_metadata = fixture_source(tmp_path)
+    source, features, stage_path, _, _, geography_metadata = fixture_source(tmp_path)
     monkeypatch.setattr(export_seohee_v4, "ROOT", tmp_path)
     monkeypatch.setattr(export_seohee_v4, "boundaries", lambda: ({"features": features}, geography_metadata))
     lines = stage_path.read_text(encoding="utf-8-sig").splitlines()
@@ -118,17 +133,24 @@ def test_v4_reader_rejects_checksum_changes(tmp_path):
     )
     path = tmp_path / "local/segments-v4.parquet"
     segments_v4.write_segments(path, [row], "local", {})
+    manifest = {
+        "input_schema_version": 4, "dataset_version": segments_v4.DATASET_VERSION,
+        "data_mode": "local", "artifact_hashes": {"segments-v4.parquet": hashlib.sha256(path.read_bytes()).hexdigest()},
+    }
+    (tmp_path / "local/import.json").write_text(json.dumps(manifest))
     table = pq.read_table(path)
     changed = table.to_pylist()
     changed[0]["population"] = 601
     pq.write_table(pa.Table.from_pylist(changed).replace_schema_metadata(table.schema.metadata), path)
+    manifest["artifact_hashes"]["segments-v4.parquet"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    (tmp_path / "local/import.json").write_text(json.dumps(manifest))
     with pytest.raises(ValueError, match="checksum"):
         segments_v4.load_segments(Settings(data_mode="local", input_root=tmp_path))
 
 
 
 def test_v4_export_detects_source_change_during_build(tmp_path, monkeypatch):
-    source, features, stage_path, _, geography_metadata = fixture_source(tmp_path)
+    source, features, stage_path, _, _, geography_metadata = fixture_source(tmp_path)
     monkeypatch.setattr(export_seohee_v4, "ROOT", tmp_path)
     monkeypatch.setattr(export_seohee_v4, "boundaries", lambda: ({"features": features}, geography_metadata))
     read_csv = export_seohee_v4.read_csv
@@ -148,14 +170,14 @@ def test_v4_export_detects_source_change_during_build(tmp_path, monkeypatch):
 
 
 def test_v4_export_rejects_public_destination(tmp_path, monkeypatch):
-    source, _, _, _, _ = fixture_source(tmp_path)
+    source, _, _, _, _, _ = fixture_source(tmp_path)
     monkeypatch.setattr(export_seohee_v4, "ROOT", tmp_path)
     with pytest.raises(ValueError, match="destination must be under"):
         export_seohee_v4.export(source, tmp_path / "data/releases/public")
 
 
 def test_v4_export_detects_source_change_before_activation(tmp_path, monkeypatch):
-    source, features, stage_path, _, geography_metadata = fixture_source(tmp_path)
+    source, features, stage_path, _, _, geography_metadata = fixture_source(tmp_path)
     monkeypatch.setattr(export_seohee_v4, "ROOT", tmp_path)
     monkeypatch.setattr(export_seohee_v4, "boundaries", lambda: ({"features": features}, geography_metadata))
     write_segments = export_seohee_v4.write_segments
