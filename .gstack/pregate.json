@@ -2,6 +2,7 @@
   "dependencies": {
     ".env.example": ["tests/test_regional_context_service.py"],
     "backend/prompts/workflow_analyst.txt": ["tests/test_context_analysis.py", "tests/test_workflow_agents.py"],
-    "backend/prompts/workflow_statistics.txt": ["tests/test_context_analysis.py", "tests/test_workflow_agents.py"]
+    "backend/prompts/workflow_statistics.txt": ["tests/test_context_analysis.py", "tests/test_workflow_agents.py"],
+    "backend/prompts/policy_decision.txt": ["tests/test_regional_research.py", "tests/test_policy_agent.py"]
   }
 }
