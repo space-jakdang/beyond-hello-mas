@@ -1,0 +1,25 @@
+{
+  "version": "pinpoint-contract-cases-1",
+  "data": "synthetic_only",
+  "cases": [
+    {"id":"existing_sufficient","change":"reuse","expected_status":"reuse_existing","expected_alternatives":0,"review_rejected":false},
+    {"id":"individual_conditions_unknown","change":"personal_unknown","expected_status":"reuse_existing","expected_alternatives":0,"review_rejected":false},
+    {"id":"verified_operating_gap","change":"adapt","expected_status":"draft","expected_alternatives":3,"review_rejected":false},
+    {"id":"completed_scoped_search","change":"new_design","expected_status":"draft","expected_alternatives":3,"review_rejected":false},
+    {"id":"search_incomplete","change":"incomplete_search","expected_status":"needs_evidence","expected_alternatives":0,"review_rejected":true},
+    {"id":"critical_target_missing","change":"missing_eligibility","expected_status":"needs_evidence","expected_alternatives":0,"review_rejected":true},
+    {"id":"stale_detail","change":"stale","expected_status":"needs_evidence","expected_alternatives":0,"review_rejected":true},
+    {"id":"regional_context_missing","change":"missing_context","expected_status":"needs_evidence","expected_alternatives":0,"review_rejected":true}
+  ],
+  "rubric": {
+    "regional_grounding":"지역 사실을 정확히 쓰며 이름만 바꾼 문장과 구별하는가",
+    "existing_policy_use":"적합한 기존 사업을 활용하고 중복 설계를 피하는가",
+    "problem_to_means":"관측·가설·운영 선택의 연결이 설명되는가",
+    "operation":"대상·접점·후속 관리·역할·비용 질문이 구체적인가",
+    "distinctness":"세 안의 수단과 운영 방식에 실질적 차이가 있는가",
+    "uncertainty":"누락·검색 범위·정원·개인 자격·효과의 미확인을 구분하는가"
+  },
+  "independent_rating":"not_evaluated",
+  "paid_model_comparison":"not_run",
+  "limitations":["스크립트 모델의 계약 검사이며 실제 모델 품질·현장 효과 점수가 아닙니다.","독립 평정과 기존 흐름 대비 품질 비교는 별도 입력·예산·평정 기록이 필요합니다."]
+}

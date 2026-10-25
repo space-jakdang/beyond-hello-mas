@@ -61,6 +61,12 @@
     "scripts/run_selected.py": [
       "tests/test_regional_policy_exports.py",
       "frontend/e2e/regional-context.spec.ts"
+    ],
+    "frontend/src/AlternativeQuality.tsx": [
+      "frontend/e2e/alternative-quality.spec.ts"
+    ],
+    "eval/fixtures/pinpoint-policy-cases.json": [
+      "tests/test_pinpoint_acceptance.py"
     ]
   },
   "runner": "uv run python -m scripts.run_selected {files}"

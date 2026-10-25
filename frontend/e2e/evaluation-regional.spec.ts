@@ -56,6 +56,7 @@ test('workflow evaluation separates synthetic contracts from unmeasured field qu
  const reports=await(await request.get('/reports?source=sample')).json();
  const report=reports.find((r:any)=>r.schema_version==='5');expect(report).toBeTruthy();
  await page.goto('/evaluation');await page.getByRole('combobox',{name:'평가 실행'}).selectOption(report.id);
+ await expect(page.getByTestId('suite-id')).toHaveText(report.id);
  await expect(page.getByTestId('suite-count')).toHaveText('36');
  await expect(page.getByRole('tabpanel')).toContainText('실제 지역 분류 타당성: 미측정');
  await page.getByRole('tab',{name:'자원 적합성'}).click();
