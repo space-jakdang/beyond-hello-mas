@@ -194,6 +194,8 @@ class PolicyAgent:
                         row['policy'].update({k:original[k] for k in ('id','title','scope') if k in original})
                         row['conditions']=compact(detail.get('conditions'))
                         row['policy']['field_view']='excerpts; request policy_field for the complete frozen field'
+                        row['policy'].pop('support_preview',None)
+                        row['policy'].pop('eligibility_preview',None)
                         row['policy'].update({k:str(original.get(k,'') or '')[:200] for k in ('support','eligibility','criteria','application','deadline','contact','agency')})
                 if entry['action']['action']=='policy_field':
                     raw=source_observation['result']
@@ -209,6 +211,12 @@ class PolicyAgent:
             if search:
                 search['result']['items'].pop(0)
                 search['result']['model_items_omitted']=True
+            elif task.research_version and (excerpts:=[(row['policy'],key) for observation in view
+                    for row in (observation['result'].get('items',[]) if observation['action']['action']=='policy_details' else [observation['result']] if observation['action']['action']=='policy_detail' else [])
+                    if row.get('policy') for key in ('support','eligibility','criteria','application','deadline','contact','agency')
+                    if len(row['policy'].get(key,'') or '')>40]):
+                policy,key=max(excerpts,key=lambda entry:len(entry[0][entry[1]]))
+                policy[key]=policy[key][:max(40,len(policy[key])//2)]
             elif len(view)>1:
                 index=next((i for i,o in enumerate(view) if o['action']['action'] not in ('policy_detail','policy_details','policy_field')),None)
                 if index is None:raise ValueError('policy_context_limit')

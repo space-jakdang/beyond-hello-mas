@@ -12,7 +12,7 @@ from backend.context.contracts import ContextRequest
 
 def context_for_region(dong,scope,proposals):
     context=context_for(dong,scope,proposals);profiles=[];reviews=[]
-    seen={};versions={};conflicts=set();unverifiable=set()
+    seen={};versions={};conflicts=set();unverifiable=set();reviewed_ids=set()
     def observe(policy):
         pid=policy.get('id')
         if not pid:return
@@ -23,9 +23,12 @@ def context_for_region(dong,scope,proposals):
         if policy not in versions.setdefault(pid,[]):versions[pid].append(deepcopy(policy))
     evidence_ids={f['evidence_id'] for f in context['facts']}
     for proposal in proposals:
+        stats=proposal.get('workflow',{}).get('statistics',{})
+        if stats.get('status')=='reviewed':reviewed_ids.update(r['evidence_id'] for r in proposal['assessment']['segments'] if r['evidence_id'] not in stats.get('blocked_evidence_ids',[]))
         profile=proposal['assessment'].get('regional_context',{}).get(dong['dong_cd'])
         if profile:profiles.append(profile)
         reviews.extend(r for r in proposal.get('policy_research',{}).get('need_reviews',[]) if set(r['evidence_ids']) and set(r['evidence_ids'])<=evidence_ids)
+    for fact in context['facts']:fact['usable_for_design']=fact['evidence_id'] in reviewed_ids
     if any(not p.get('input_hash') for p in profiles):raise ValueError('regional snapshot missing input hash')
     if len({p['input_hash'] for p in profiles})>1:raise ValueError('conflicting frozen regional snapshots')
     by_id={}
@@ -57,7 +60,7 @@ def context_for_region(dong,scope,proposals):
             elif policy.get('agency'):sources[policy['id']]['agency']=policy['agency']
     context['sources']=list(sources.values())
     context.update(design_version='pinpoint-1',regional_profile=profiles[0] if profiles else None,
-                   need_reviews=reviews,missing_groups=sorted(set(scope['target_groups'])-{f['target_group'] for f in context['facts'] if observed_problem(f)}))
+                   need_reviews=reviews,missing_groups=sorted(set(scope['target_groups'])-{f['target_group'] for f in context['facts'] if observed_problem(f) and f.get('usable_for_design',True)}))
     if unverifiable:context['source_provenance_gaps']=sorted(unverifiable)
     if conflicts:
         context['source_conflicts']=sorted(conflicts)
@@ -77,7 +80,7 @@ def validate(output,context):
     for key in ('strategy','proposed_service','delivery_model'):
         if len({a[key].strip().casefold() for a in items})!=3:raise ValueError('substantively distinct alternatives required')
     if any('target_group' not in f for f in context['facts']):raise ValueError('missing problem target group')
-    facts={f['evidence_id']:f for f in context['facts'] if observed_problem(f)}
+    facts={f['evidence_id']:f for f in context['facts'] if observed_problem(f) and f.get('usable_for_design',True)}
     region={f['fact_id']:f for f in (context.get('regional_profile') or {}).get('facts',[]) if f['status']=='observed'}
     needs={r['need_id']:r for r in context['need_reviews'] if r['decision'] in ('adapt_existing','new_design_needed')}
     sources={s['policy_id']:s for s in context['sources']}
@@ -200,6 +203,7 @@ def generate(designer,owner,run_id,scope,dongs,proposals,contexts=None,deadline=
         elif design_needs:
             try:
                 if deadline is not None and time.time()>=deadline:raise ValueError('deadline')
+                if not any(observed_problem(f) and f.get('usable_for_design',True) for f in context['facts']):raise ValueError('regional_analysis_unreviewed')
                 if not any(f['status']=='observed' for f in (context.get('regional_profile') or {}).get('facts',[])):raise ValueError('regional_context_unavailable')
                 if not contexts:context=research(designer,owner,run_id,context,deadline=deadline)
                 if not any(any(s.get('fields',{}).get(k) for k in ('support','eligibility','criteria')) for s in context['sources']):raise ValueError('substantive_policy_source_unavailable')
@@ -241,7 +245,7 @@ def generate(designer,owner,run_id,scope,dongs,proposals,contexts=None,deadline=
                 status='draft';reason=None;mode='llm' if designer.settings.llm_mode=='live' else 'fixture'
             except Exception as exc:
                 code=str(exc) if isinstance(exc,ValueError) else ''
-                reason={'LLM call or cost budget exceeded':'budget_exhausted','LLM input budget exceeded':'context_input_limit','pinpoint_context_limit':'context_input_limit'}.get(code,code if code in ('regional_context_unavailable','substantive_policy_source_unavailable','information_request_limit','design_evidence_missing','cancelled','deadline') else 'design_model_or_validation_unavailable')
+                reason={'LLM call or cost budget exceeded':'budget_exhausted','LLM input budget exceeded':'context_input_limit','pinpoint_context_limit':'context_input_limit'}.get(code,code if code in ('regional_context_unavailable','substantive_policy_source_unavailable','information_request_limit','design_evidence_missing','regional_analysis_unreviewed','cancelled','deadline') else 'design_model_or_validation_unavailable')
         for index,item in enumerate(output['alternatives']):
             item.update(id=str(uuid5(NAMESPACE_URL,owner+':'+dong['dong_cd']+':pinpoint:'+str(index))),generation_mode=mode,
                 evidence_status='concept_only' if mode=='fixture' else 'supported',status='draft',review_status='pending',allocation_performed=False,
@@ -251,7 +255,7 @@ def generate(designer,owner,run_id,scope,dongs,proposals,contexts=None,deadline=
                 claim_limits={'local_need':'hypothesis_only','feasibility':'not_evaluated','effectiveness':'not_evaluated','field_gap':'not_evaluated',
                     'operating_roles':'proposed_only','venue':'not_confirmed','budget':'not_approved','capacity':'not_confirmed'})
         body={**output,**dong,'owner_id':owner,'scope':scope,'status':status,'fallback_reason':reason,'generation_mode':mode,
-            'input_version':digest(context),'created_at':utcnow().isoformat(),'review_revision':0,'human_review_required':True,
+            'input_version':digest(context),'generation_run_id':run_id if status=='draft' else None,'model_input_hash':digest(view) if status=='draft' else None,'created_at':utcnow().isoformat(),'review_revision':0,'human_review_required':True,
             'data_mode':designer.settings.data_mode,'llm_mode':designer.settings.llm_mode,'allocation_performed':False,'budget_approved':False,'evidence':context,
             'response_decisions':context['need_reviews'],'missing_groups':context['missing_groups'],'proposal_version':'regional-policy-2'}
         body['version']=digest(body)

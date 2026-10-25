@@ -167,7 +167,7 @@ def test_frozen_context_aggregation_preserves_review_and_official_source_identit
         'id':'G1','title':'공식 관계 사업','support':'관계 활동 제공','eligibility':'지역 주민',
         'agency':'공식 확인 기관','application':None,'contact':None,
         'supportConditions':{'서비스ID':'G1','JA0110':19,'JA0111':34,'JA0101':'Y','JA0102':'Y'}}]
-    proposal={'task':{'sex':'F','age_group':'youth'},'assessment':{
+    proposal={'task':{'sex':'F','age_group':'youth'},'workflow':{'statistics':{'status':'reviewed','blocked_evidence_ids':[]}},'assessment':{
         'segments':[{'dong_cd':c['dong_cd'],'evidence_id':'E1','stage':2,'value':.5,
                      'index_name':'S1','source_period':'2025-09','source_bands':{'concept':['19–34']}}],
         'regional_context':{c['dong_cd']:c['regional_profile']},'metadata':{'policy_gap_version':'policy-gap-1'}},
