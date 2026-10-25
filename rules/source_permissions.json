@@ -1271,5 +1271,20 @@
       "sha256": "36c6e4853eac8ea39e2730ddc140f02e0f501a95a6d8785bc0edea825304bb62",
       "permission": "MAS local only"
     }
+  ],
+  "derived_artifacts": [
+    {
+      "dataset_version": "runtime-package-v2/seohee-region-20261025-1",
+      "artifacts": [
+        "local/segments-v4.parquet",
+        "local/seohee/card_alarm_weekly.csv",
+        "local/resources-v3.csv",
+        "local/import.json",
+        "manifest.json"
+      ],
+      "classification": "private runtime package; not for public release",
+      "permission": "preserve source permissions; confirm all sources before server transfer",
+      "person_level_data": false
+    }
   ]
 }

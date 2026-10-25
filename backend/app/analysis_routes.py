@@ -16,7 +16,7 @@ def analysis_router(settings):
     def get_groups(week: date | Literal['all'] | None=None, card_age: Literal['20s','30s','all']='20s',
                    workflow_version: Literal['regional-workflow-1','regional-workflow-2','current'] | None=None):
         version=workflow_version or 'regional-workflow-1'
-        if version=='current':version='regional-workflow-2' if settings.data_mode=='local' else 'regional-workflow-1'
+        if version=='current':version=settings.regional_workflow_version or ('regional-workflow-2' if settings.data_mode=='local' else 'regional-workflow-1')
         try:
             if version=='regional-workflow-2':
                 from backend.tools.neighborhoods import group_analysis_v4

@@ -7,9 +7,8 @@ import secrets
 import uvicorn
 from starlette.responses import Response
 
-from backend.app.config import Settings
 from backend.app.main import create_app
-from scripts.runtime_package import restore
+from scripts.runtime_package import restore, settings_from_package
 from scripts.serve_private import prepare
 
 
@@ -29,7 +28,7 @@ def main():
     package = os.environ.get('RUNTIME_INPUT_PACKAGE')
     if not package:
         raise ValueError('RUNTIME_INPUT_PACKAGE required')
-    settings = Settings(_env_file=None, data_mode='local', resource_catalog='v3', input_root=restore(package))
+    settings = settings_from_package(restore(package))
     if settings.evaluation_id is not None:
         raise ValueError('hosted service requires the existing runtime ledger; clear EVALUATION_ID')
     expected = b'Basic ' + base64.b64encode(f'{username}:{password}'.encode())

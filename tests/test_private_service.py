@@ -83,21 +83,25 @@ sys.exit(1)
     assert result.returncode == 0, result.stderr.decode()
 
 
-def test_entrypoint_binds_only_loopback_one_worker(tmp_path, monkeypatch):
+@pytest.mark.parametrize(('version', 'workflow'), [(1, 'regional-workflow-1'), (2, 'regional-workflow-2')])
+def test_entrypoint_binds_only_loopback_one_worker(tmp_path, monkeypatch, version, workflow):
     import sys
     import uvicorn
     import backend.app.main
     import scripts.serve_private as entry
     cfg = settings(tmp_path)
     monkeypatch.setattr(entry, 'Settings', lambda: cfg)
-    monkeypatch.setattr('scripts.runtime_package.verify', lambda _: {'provenance': {'permission_status': 'private_contest_use_confirmed'}})
+    monkeypatch.setattr('scripts.runtime_package.verify', lambda _: {
+        'version': version, 'provenance': {'permission_status': 'private_contest_use_confirmed'}})
     app = object()
-    monkeypatch.setattr(backend.app.main, 'create_app', lambda: app)
+    configs = []
+    monkeypatch.setattr(backend.app.main, 'create_app', lambda config: configs.append(config) or app)
     calls = []
     monkeypatch.setattr(uvicorn, 'run', lambda *args, **kwargs: calls.append((args, kwargs)))
     monkeypatch.setattr(sys, 'argv', ['serve_private', '--port', '8123'])
     entry.main()
     assert calls == [((app,), {'host':'127.0.0.1', 'port':8123, 'workers':1})]
+    assert configs[0].regional_workflow_version == workflow
 
 
 def test_hosted_entrypoint_requires_authentication_and_a_mounted_disk(tmp_path, monkeypatch):
