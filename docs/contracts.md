@@ -1,5 +1,7 @@
 # 데이터 계약 v1
 
+v1은 기존 API 객체와 segments-v3 입력을 설명한다. 2026-10-25 지역 자료의 입력·상태·연령 계약은 아래 스키마 4 절을 적용하며 API Segment 스키마를 소급 변경하지 않는다.
+
 정의: `backend/app/contracts.py`. 전달 형식은 JSON이며 생성된 `frontend/src/contracts.schema.json`을 공유합니다. Segment와 Resource는 `schema_version="2"`, 나머지 객체는 `schema_version="1"`을 가지며 정의되지 않은 최상위 필드를 거부합니다.
 
 - Segment: 2025-07~12 월, 통계청 시군구 5자리/동 8자리 문자열, 동 이름, 연령 구간, 좌표/CRS/출처, 지표/버전, 거주인구, 사각 플래그. `10s/20s/30s/40s/50s/60plus`는 임시 연령 계약입니다. 실제 소스 매핑은 데이터 로더 구현 시 확인합니다. 결측 지표는 null이며 위험 0으로 변환하지 않습니다.
@@ -112,3 +114,16 @@ v3 자원은 단계 범위, 체납연계, 제공 자료의 확인/주의 상태,
 ### 지역 조건부 후보 출력
 
 지역 `candidates()`는 공유 `match(..., regional_ages=...)` 호출에서만 조건부 검사를 선택한다. 공개 `MatchRequest`와 개인 경로는 이 인자를 받지 않으며 엄격한 자격·전체 연령 포괄 검증을 유지한다. 지역 후보의 `candidate_status`는 `matched`(등록 조건 일치) 또는 `conditional`(추가 확인)이고, 확정 자격 불일치는 제외 사유 `eligibility_mismatch:<tag>`로 남는다. `condition_checks`는 검사별 pass/fail/unknown, `unknown_conditions`는 확인할 조건이다. `source_age_ranges`는 원천 구간 합집합, `eligible_age_ranges`는 자원 대상과의 실제 교집합이며 `age_coverage` full/partial을 함께 제공한다. 부분 포괄은 전체 집단의 자격 확인이 아니다. 공유 필터의 지역 분기는 `regional-candidates-1` 정책 버전과 실제 원천 연령 구간을 포함한 입력 해시를 사용한다. `resource-decision-2` / `regional-decision-2`로 새 결과를 구별하며 과거 출력은 이 필드 없이 조회된다. 접수·정원·개인 자격과 실제 배정은 여전히 미확인이다.
+
+
+## 2026-10-25 지역 입력 계약 (스키마 4)
+
+이 계약은 새 입력 artifact segments-v4.parquet에 적용한다. 기존 API의 Segment.schema_version과 segments-v3.parquet 계약은 과거 실행 호환을 위해 유지한다. v4 데이터는 입력 버전 4, 판정 버전 seohee-region-20261025-1로 식별한다.
+
+- 기본키는 데이터 버전, 지역·동 코드, 성별, source_age_band의 조합이다. 표시용 frame은 화면 분류이며 원천 연령 범위를 대체하지 않는다. 원천 범위가 합쳐진 집단은 source_bands에 각각 기록한다.
+- source_stage는 원천값을 보존한다. -1은 근거 부족, 0은 인구 기준 보류, 1~5는 산출된 단계다. assessment_status는 assessed, small_population_hold, insufficient_evidence, observation_missing 중 하나로 사유를 구분한다. 보류·근거 부족·누락 행에 유효 단계를 채우지 않는다.
+- base_stage, 선택 관측 주의 card_alarm, final_stage, priority_group, priority_rank, 설명 근거, 판정 버전, 입력 해시와 실제 관측기간을 별도 보존한다. 단계는 유효한 경우 1~5 또는 null이며 순위는 단계가 아니다. v4 단계에서 기존 S1 같은 연속 지수를 만들지 않는다.
+- 입력 전달일과 관측기간을 구별한다. 관측기간은 입력 manifest의 연도로 해석하며 서버 현재 연도로 날짜를 만들지 않는다. 기간 집계를 월별 관측으로 복제하지 않는다.
+- 새 운영 실행은 v4 입력과 지원하는 workflow 버전을 명시적으로 선택한다. 입력이 없거나 버전·해시가 맞지 않으면 오류/보류로 처리하고 v3·sample로 자동 대체하지 않는다. 이미 저장된 v3 실행과 승인·평가 결과는 재계산하지 않는다.
+
+지역 단계는 집단 수준 조사 우선순위로만 해석한다. 개인의 고립 여부, 서비스 필요 또는 진단을 뜻하지 않는다.
