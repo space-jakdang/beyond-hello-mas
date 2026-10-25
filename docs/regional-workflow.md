@@ -64,7 +64,7 @@ Supervisor → 지역 분석가 → 통계 분석가 → 자원 매칭 → Super
 
 ## 통계 도구
 
-`backend.tools.regional_statistics.run_tool`은 summary/trend/source_check/sensitivity만 받는다. summary는 선택 관할 내 같은 지수·집단·원천기간·연령 범위의 동 분포다. trend는 개별 동의 실제 관측 월만 사용하며 월이 끊기거나 연령 범위가 달라지면 변화량은 null이다. sensitivity는 S1/v3 기본 지수 ±0.01의 단계 변화이며 주간 신호 가산이나 통계적 신뢰구간을 뜻하지 않는다. 비청년 지수는 민감도 미측정이다.
+`backend.tools.regional_statistics.run_tool`은 summary/trend/source_check/sensitivity/policy_insights와 지역 문맥 도구 regional_profile/regional_comparison을 받는다. 통계 검토에서 지역 도구는 미리 첨부한 regional_context가 있을 때만 선택할 수 있다. [지역 정보 계약](regional-context.md)을 참고한다. summary는 선택 관할 내 같은 지수·집단·원천기간·연령 범위의 동 분포다. trend는 개별 동의 실제 관측 월만 사용하며 월이 끊기거나 연령 범위가 달라지면 변화량은 null이다. sensitivity는 S1/v3 기본 지수 ±0.01의 단계 변화이며 주간 신호 가산이나 통계적 신뢰구간을 뜻하지 않는다. 비청년 지수는 민감도 미측정이다.
 
 ## 담당자 보완 요청
 
@@ -141,7 +141,7 @@ Supervisor → 지역 분석가 → 통계 분석가 → 자원 매칭 → Super
 
 ## 정보 추가와 최종 재검토 v2
 
-새 관측의 `review_contract_version=statistics-review-2`는 충분한 summary만으로 검토를 마칠 수 있다. 이미 포함된 policy_insights 재조회는 거절하고 새 정보가 필요한 추이·출처·민감도만 조회한다. 출처 확인 도구는 저장된 원천 범위를 확인하며 외부 출처의 독립 검증이 아니다.
+새 관측의 `review_contract_version=statistics-review-2`는 충분한 summary만으로 검토를 마칠 수 있다. 이미 포함된 policy_insights 재조회는 거절하고 새 정보가 필요한 추이·출처·민감도를 조회한다. 미리 첨부한 regional_context가 있으면 지역 프로필·비교도 조회할 수 있다. 출처 확인 도구는 저장된 원천 범위를 확인하며 외부 출처의 독립 검증이 아니다.
 
 최초 검토는 최대4판단·서로 다른 도구3회다. 보완은1회만 허용하고, 수정된 분석을 통계 모델에 실제로 다시 전달해 최종 검토1회를 수행한다. 최종 검토는 finish 또는 human만 가능하다. 추가 수정/조회·미해결 차단 근거·예산/시간/호출 한도 부족·모델 실패는 보류한다. ID 일치만으로 reviewed를 부여하지 않는다. `initial_plan`, `revised_plan`, `review_history`와 실제 호출 장부를 보존하며, `revision_check=final_statistics_review`는 최종 검토를 통과한 경우만 기록한다. 과거 버전 출력은 재계산하지 않고 버전 필드가 없는 복구 경로는 기존 규칙을 유지한다. 분석·통계·매칭의 같은 120초 경계를 확인하고 실행별 호출·비용 한도를 공유하며 자동 증액하지 않는다. 정책 후속의 개별 timeout까지 포함한 전체 업무의 120초 완료 보장은 아니다. 검토 단계 호출 감소와 전체 정책 작성 비용·추천 품질은 별도로 측정한다.
 

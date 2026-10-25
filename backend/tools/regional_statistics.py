@@ -69,6 +69,9 @@ def source_check(assessment):
 
 
 def run_tool(name,settings,assessment):
+    if name in ('regional_profile','regional_comparison'):
+        from backend.context.analysis import context_tool
+        return context_tool(name,assessment)
     if name=='summary':return summary(assessment)
     if name=='trend':return trend(settings,assessment)
     if name=='source_check':return source_check(assessment)
