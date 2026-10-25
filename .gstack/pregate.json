@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    ".env.example": ["tests/test_regional_context_service.py"]
+  }
+}

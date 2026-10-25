@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     )
     policy_timeout_seconds: float = Field(default=10,gt=0,le=30)
     policy_max_pages: int = Field(default=30,ge=1,le=100)
+    kosis_api_key: SecretStr | None = None
+    regional_reference_year: int = Field(default=2020,ge=2000,le=2100)
     evaluation_id: UUID | None = None
     resource_catalog: Literal["fixture", "curated", "v3"] = "fixture"
     openai_api_key: SecretStr | None = None

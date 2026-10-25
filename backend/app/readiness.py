@@ -1,5 +1,6 @@
 """Read-only deployment diagnostics; never expose paths, keys, or source records."""
 import os
+import sqlite3
 from fastapi import APIRouter
 from backend.tools.neighborhoods import group_analysis
 from backend.tools.catalog import load_catalog
@@ -12,6 +13,23 @@ def inspect(settings):
               'single_instance_required': True, 'durability_verified': False,
               'analysis': {'status': 'unavailable', 'reason': 'analysis_inputs_missing_or_invalid'},
               'catalog': {'status': 'unavailable', 'reason': 'catalog_missing_or_invalid'}, 'warnings': []}
+    configured=bool(settings.kosis_api_key and settings.kosis_api_key.get_secret_value().strip())
+    result['regional_context']={'provider':'synthetic_fixture' if settings.data_mode=='sample' else 'kosis',
+        'status':'synthetic_fixture' if settings.data_mode=='sample' else 'not_checked' if configured else 'credentials_missing',
+        'credentials_configured':configured,'reference_year':settings.regional_reference_year}
+    if settings.data_mode=='local' and configured:
+        from backend.context.service import ContextService
+        try:
+            attempt=ContextService(settings).last_attempt()
+            if attempt and attempt['data_mode']=='local' and attempt['request']['reference_year']==settings.regional_reference_year:
+                from datetime import datetime,timezone
+                age=(datetime.now(timezone.utc)-datetime.fromisoformat(attempt['at'])).total_seconds()
+                if attempt['status'] not in ('ready','partial','unavailable'):raise ValueError('invalid history status')
+                result['regional_context']['last_attempt']=attempt
+                if 0<=age<86400:
+                    result['regional_context'].update(status=attempt['status'],scope='last_requested_region')
+        except (OSError,ValueError,TypeError,KeyError,sqlite3.Error):
+            result['regional_context']['reason']='history_inputs_missing_or_invalid'
     if settings.data_mode == 'sample':
         result['warnings'].append('합성 데이터 모드입니다. 실제 동·지도는 승인된 실제 자료와 DATA_MODE=local 설정이 필요합니다.')
     if temporary:

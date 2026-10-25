@@ -11,6 +11,7 @@ from backend.tools.neighborhoods import boundaries
 METRICS = {
     'total_population': ('총인구', 'persons'),
     'total_households': ('총가구', 'households'),
+    'general_households': ('일반가구', 'households'),
     'one_person_households': ('1인가구', 'households'),
     'senior_population': ('65세 이상 인구', 'persons'),
     'youth_population': ('19–34세 인구', 'persons'),
@@ -54,6 +55,9 @@ class ContextFact(Contract):
     age_definition: Nonempty = 'all_ages'
     sex: Literal['all', 'M', 'F'] = 'all'
     source: Literal['kosis', 'synthetic_fixture']
+    source_table: str | None = None
+    source_items: list[str] = Field(default_factory=list,max_length=8)
+    source_dimensions: list[str] = Field(default_factory=list,max_length=8)
     source_url: HttpUrl
     source_hash: str = Field(pattern=r'^[0-9a-f]{64}$')
     fetched_at: WallTime
