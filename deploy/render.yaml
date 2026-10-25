@@ -9,7 +9,6 @@ services:
     buildCommand: uv sync --frozen --no-dev && npm --prefix frontend ci && npm --prefix frontend run build
     startCommand: .venv/bin/python -m scripts.serve_hosted
     healthCheckPath: /healthz
-    maxShutdownDelaySeconds: 120
     disk:
       name: regional-state
       mountPath: /var/lib/beyond-hello
