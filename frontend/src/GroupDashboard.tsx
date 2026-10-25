@@ -4,6 +4,7 @@ import {AllGroups} from './AllGroups';
 import {MapView,colors} from './Neighborhoods';
 import {Analysis,stageOf} from './neighborhoodData';
 import {ageBandName,flagName,metricName,periodName,ratioName,signalName,sourceBandsText,weeklyMetricName} from './groupCopy';
+import {isRegionalGroupsV4,RegionalGroupsV4,RegionalGroupsV4Data} from './RegionalGroupsV4';
 type Metric={value:number;baseline:number|null;ratio:number|null;signal:string};
 type Weekly={week:string;sgg:string;sex:string;age_band:string;metrics:Record<string,Metric>};
 export type Group={ym:string|null;sgg:string;dong_cd:string;dong_nm:string;sex:string;age_group:string;index_name:string;value:number|null;stage:number|null;base_stage?:number|null;stage_scale?:string;reachable_base_stages?:number[];exploratory_stage?:number|null;preferred:boolean;source_bands:Record<string,string[]>;source_period:string;source_file:string;flags:string[];priority_group_applied:boolean;exploratory_replay:boolean;weekly?:Weekly};
@@ -14,13 +15,27 @@ const regionName=(code:string)=>code==='11230'?'강남구':'춘천시';
 
 export function GroupDashboard({embedded=false}:{embedded?:boolean}){
   const read=()=>{const result:Record<string,string>={};new URLSearchParams(embedded?'':location.search).forEach((value,key)=>{result[key]=value;});return result;};
-  const [selection,setSelection]=useState<Record<string,string>>(read),[data,setData]=useState<GroupData>(),[error,setError]=useState(''),[refresh,setRefresh]=useState(0),[loading,setLoading]=useState(false);
+  const [selection,setSelection]=useState<Record<string,string>>(read),[data,setData]=useState<GroupData|RegionalGroupsV4Data>(),[error,setError]=useState(''),[refresh,setRefresh]=useState(0),[loading,setLoading]=useState(false);
   useEffect(()=>{if(embedded)return;const restore=()=>setSelection(read());window.addEventListener('popstate',restore);return()=>window.removeEventListener('popstate',restore);},[embedded]);
-  useEffect(()=>{let active=true;setLoading(true);setError('');const q=new URLSearchParams({card_age:selection.card_age??'all',week:selection.week??'all'});
-    api<GroupData>('/analysis/groups?'+q).then(d=>{if(active)setData(d);}).catch(e=>{if(active)setError(String(e));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};
-  },[selection.week,selection.card_age,refresh]);
+  const requestedVersion=selection.workflow_version==='regional-workflow-1'?'regional-workflow-1':selection.workflow_version==='regional-workflow-2'?'regional-workflow-2':Object.keys(selection).includes('card_age')||['youth','midlife','prime','elderly'].includes(selection.age)?'regional-workflow-1':'current';
+  useEffect(()=>{let active=true;setLoading(true);setError('');const q=new URLSearchParams({workflow_version:requestedVersion,week:selection.card_week??selection.week??'all'});
+    if(requestedVersion!=='regional-workflow-2')q.set('card_age',selection.card_age??'all');
+    api<GroupData|RegionalGroupsV4Data>('/analysis/groups?'+q).then(d=>{if(active)setData(d);}).catch(e=>{if(active)setError(String(e));}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};
+  },[requestedVersion,selection.week,selection.card_week,selection.card_age,refresh]);
   if(error)return <div role="alert">{error}<button onClick={()=>{setSelection({});if(!embedded)history.replaceState(null,'','/neighborhoods');setRefresh(n=>n+1);}}>집단 분석 다시 불러오기</button></div>;
-  if(!data)return <p>8집단 분석을 불러오는 중입니다.</p>;
+  if(!data)return <p>지역 집단 분석을 불러오는 중입니다.</p>;
+  const loadedData=data;
+  function choose(patch:Record<string,string>){
+    const isV4=isRegionalGroupsV4(loadedData),region=selection.region??'11230';
+    const defaults:Record<string,string>=isV4?{workflow_version:'regional-workflow-2',region,sex:selection.sex??'all',source_age_band:selection.source_age_band??'all',dong:selection.dong??'',week:selection.week??loadedData.metadata.selected_week,card_week:selection.card_week??loadedData.metadata.selected_week}:{workflow_version:'regional-workflow-1',region,sex:selection.sex??'all',age:selection.age??'all',dong:selection.dong??'',month:selection.month??'',basis:selection.basis??'preferred',week:selection.week??loadedData.metadata.selected_week,card_age:selection.card_age??loadedData.metadata.card_age};
+    const next={...defaults,...patch};
+    if(patch.region)next.dong=loadedData.neighborhoods.find(d=>d.sgg===patch.region)?.dong_cd??'';
+    if(!isV4&&patch.week&&patch.week!=='all')next.month=patch.week.slice(0,7);
+    if(isV4){next.source_age_band=patch.source_age_band??selection.source_age_band??'all';next.card_week=patch.card_week??patch.week??selection.card_week??loadedData.metadata.selected_week;next.workflow_version='regional-workflow-2';}
+    if(!isV4&&loadedData.period_aggregate)delete next.month;
+    setSelection(next);if(!embedded)history.pushState(null,'','/neighborhoods?'+new URLSearchParams(next));
+  }
+  if(isRegionalGroupsV4(data))return <RegionalGroupsV4 data={data} selection={selection} onSelect={choose}/>;
   const region=['11230','32010'].includes(selection.region)?selection.region:'11230';
   const sex=selection.sex==='M'?'M':selection.sex==='F'?'F':'all',age=selection.age in names?selection.age:'all';
   const month=data.months.includes(selection.month)?selection.month:(data.months.includes(data.metadata.selected_week.slice(0,7))?data.metadata.selected_week.slice(0,7):data.months.at(-1));
@@ -37,9 +52,9 @@ export function GroupDashboard({embedded=false}:{embedded?:boolean}){
   const contextAge=age==='all'?'전체 연령집단':names[age];
   const contextPeriod=data.period_aggregate?'월별 관측이 아닌 기간 집계 자료 포함':month?`${periodName(month)} 기준`:'자료 기간 확인 필요';
   const selectedSummary=age==='all'?null:panels.map(p=>`${p.sex==='M'?'남성':'여성'} ${p.chosen?`${metricName(p.chosen.index_name)} · 우선 확인 ${stageName(p.chosen.stage)}`:'자료 없음'}`).join(' · ');
-  function choose(patch:Record<string,string>){const next:Record<string,string>={region,sex,age,dong,month:month??'',basis,week:selection.week??data!.metadata.selected_week,card_age:selection.card_age??data!.metadata.card_age,...patch};if(patch.region)next.dong=data!.neighborhoods.find(d=>d.sgg===patch.region)?.dong_cd??'';if(patch.week&&patch.week!=='all')next.month=patch.week.slice(0,7);if(data!.period_aggregate)delete next.month;setSelection(next);if(!embedded)history.pushState(null,'','/neighborhoods?'+new URLSearchParams(next));}
   return <section className="neighborhoods" aria-label="8집단 분석">
     <p className="mode-banner">{data.data_mode==='sample'?'합성 데모 자료 · 실제 위치가 아닌 격자':'실제 지역 자료 · 행정동 경계'} · {regionName(region)} · {contextSex} · {contextAge} · {contextPeriod} · 단계는 자료 안에서 먼저 확인할 순서이며 개인 진단이나 위험률이 아닙니다.</p>
+    <p className="mode-banner">기존 v3 분석 화면입니다. 2026-10-25 최신 원천 연령·주간 근거 자료를 반영하지 않은 과거 버전으로 표시합니다.</p>
     <p className="muted">강남과 춘천은 지표와 연령 범위가 달라 수치와 단계를 직접 비교할 수 없습니다.</p>
     <div className="toolbar"><label>지역 <select value={region} onChange={e=>choose({region:e.target.value})}><option value="11230">강남구</option><option value="32010">춘천시</option></select></label>
     <label>성별 <select value={sex} onChange={e=>choose({sex:e.target.value})}><option value="M">남성</option><option value="F">여성</option><option value="all">전체 성별</option></select></label>

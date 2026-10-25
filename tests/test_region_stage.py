@@ -58,3 +58,19 @@ def test_v3_sample_and_api_are_repeatable(monkeypatch):
     assert len(data['segments'])==2256 and data['coverage']['matched']==47
     assert data['metadata']['rule_version']=='seohee-region-2'
     assert not data['period_aggregate']
+
+
+def test_groups_current_selects_local_v4_without_changing_legacy_default(monkeypatch):
+    from fastapi.testclient import TestClient
+    from backend.app.main import create_app
+    import backend.app.analysis_routes as analysis_routes
+    import backend.tools.neighborhoods as neighborhoods
+    monkeypatch.setattr(analysis_routes,'group_analysis',lambda *args:{'version':'v3'})
+    monkeypatch.setattr(neighborhoods,'group_analysis_v4',lambda *args:{'version':'v4'})
+    with TestClient(create_app(Settings(_env_file=None,data_mode='local'))) as client:
+        assert client.get('/analysis/groups').json()['version']=='v3'
+        assert client.get('/analysis/groups?workflow_version=current').json()['version']=='v4'
+        assert client.get('/analysis/groups?workflow_version=regional-workflow-1').json()['version']=='v3'
+        assert client.get('/analysis/groups?workflow_version=regional-workflow-2').json()['version']=='v4'
+    with TestClient(create_app(Settings(_env_file=None,data_mode='sample'))) as client:
+        assert client.get('/analysis/groups?workflow_version=current').json()['version']=='v3'
