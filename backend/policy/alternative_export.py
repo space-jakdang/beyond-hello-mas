@@ -12,6 +12,10 @@ FONT=Path(__file__).resolve().parents[1]/'assets/fonts/NanumGothic-Regular.ttf'
 MODES={'llm':'모델 작성','fixture':'테스트 작성','template_fallback':'기본 구상안','mixed':'모델·구상안 혼합'}
 STATES={'pending':'검토 대기','approved':'정책안 검토 승인','rejected':'반려'}
 EVIDENCE={'supported':'지역·참고 근거 연결','partial':'일부 근거 연결','concept_only':'근거 보완 필요'}
+ASSESSMENTS={'assessed':'판정 가능','small_population_hold':'소규모 인구 보류 (0)','insufficient_evidence':'판정 근거 부족 (−1)'}
+ALARMS={'baseline_unavailable':'기준선 없음 · 신호 미산출','none':'경보 없음','weak':'약한 경보','strong':'강한 경보'}
+
+def ratio(value):return '기준선 없음' if value is None else f'{value:.3f}배'
 
 
 def group_label(value):
@@ -30,7 +34,16 @@ def sections(body,alternative_id=None):
         (2,'지역 및 통계 근거')]
     for fact in body['evidence']['facts']:
         if fact.get('methodology_version')=='regional-workflow-2':
-            evidence=f"{fact['target_group']} · 원천 연령 {fact['source_age_band']} · 단계 {fact['final_stage_label'] or '미산출'} · 상태 {fact['assessment_status']} · 카드 {fact['card_alarm_status']} ({fact['card_week']}, 원천 {', '.join(fact['card_source_age_bands'] or [])}) · 연속 지수 미산출 · 근거 {fact['evidence_id']}"
+            card_rows=fact.get('card_evidence') or []
+            card_detail='; '.join(f"{row['source_age_band']} V {ratio(row['v_ratio'])}/{row['v_stage']}단계, N {ratio(row['n_ratio'])}/{row['n_stage']}단계" for row in card_rows) or '세부 신호 없음'
+            source_stage=f"{fact.get('source_stage_label') or '원천 단계 확인 필요'} ({fact.get('source_stage') if fact.get('source_stage') is not None else '미기록'})"
+            final_stage=f"{fact.get('final_stage_label') or '미산출'} ({fact.get('final_stage') if fact.get('final_stage') is not None else '미산출'})"
+            partial=any(row['baseline_status']=='observed' for row in card_rows) and any(row['baseline_status']=='unavailable' for row in card_rows)
+            card_status=ALARMS.get(fact['card_alarm_status'],fact['card_alarm_status'])
+            if partial:card_status='부분 기준선 · '+card_status
+            evidence=(f"{group_label(fact['target_group'])} · 원천 연령 {fact['source_age_band']} · 표시 틀 {fact.get('frame') or '설명용'} · 원천 단계 {source_stage} · 기본 단계 {fact.get('base_stage') if fact.get('base_stage') is not None else '산출 안 함'} · "
+                      f"카드 경보 {card_status} ({fact['card_week']}, 원천 {', '.join(fact['card_source_age_bands'] or [])}; {card_detail}) · 최종 단계 {final_stage} · 조정 {fact.get('stage_adjustment', 0)}단계 · "
+                      f"동별 확인 순서 {fact.get('priority_rank') or '미기록'} · 상태 {ASSESSMENTS.get(fact['assessment_status'],fact['assessment_status'])} · 연속 지수 미산출 · 근거 {fact['evidence_id']}")
         else:
             evidence=f"{fact['target_group']} · {fact['index_name']} · 값 {fact['value'] if fact['value'] is not None else '결측'} · 단계 {fact['stage'] if fact['stage'] is not None else '보류'} · 원천 기간 {fact['source_period']} · 근거 {fact['evidence_id']}"
         result.append((0,evidence))

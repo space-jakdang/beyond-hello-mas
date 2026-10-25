@@ -170,10 +170,13 @@ def test_v4_assessed_stage_can_ground_policy_alternatives_without_continuous_val
     from types import SimpleNamespace
     from backend.policy.alternatives import generate
 
-    target='M/20대';evidence_id='v4-evidence'
+    target='F/60대+';evidence_id='v4-evidence'
     context={'dong_nm':'개포3동','target_groups':[target],'facts':[{'evidence_id':evidence_id,'target_group':target,'stage':2,'value':None,
-        'methodology_version':'regional-workflow-2','assessment_status':'assessed','source_age_band':'20대',
-        'final_stage_label':'관심','card_week':'2025-12-15','card_source_age_bands':['20대'],'card_alarm_status':'none'}],
+        'methodology_version':'regional-workflow-2','assessment_status':'assessed','source_age_band':'60대+',
+        'frame':'노년','source_stage':2,'source_stage_label':'관심','base_stage':2,'final_stage':2,'stage_adjustment':0,'priority_rank':7,
+        'final_stage_label':'관심','card_week':'2025-12-15','card_source_age_bands':['60대','70대+'],'card_alarm_status':'none',
+        'card_evidence':[{'source_age_band':'60대','baseline_status':'observed','v_ratio':1.1234,'n_ratio':None,'v_stage':1,'n_stage':0,'alarm_stage':0},
+                         {'source_age_band':'70대+','baseline_status':'unavailable','v_ratio':None,'n_ratio':None,'v_stage':0,'n_stage':0,'alarm_stage':0}]}],
         'analyses':[],'statistics':[],'matching':[],'sources':[],'gap_contract_version':None}
     calls=[]
 
@@ -194,6 +197,12 @@ def test_v4_assessed_stage_can_ground_policy_alternatives_without_continuous_val
     assert result['generation_mode']=='fixture'
     assert result['alternatives'][0]['problem_evidence_ids']==[evidence_id]
     assert result['evidence']['facts'][0]['value'] is None
-    from backend.policy.alternative_export import sections
+    from backend.policy.alternative_export import sections,render_pdf,render_docx
     evidence_lines=[line for _,line in sections(result) if '연속 지수 미산출' in line]
-    assert len(evidence_lines)==1 and '원천 연령 20대' in evidence_lines[0] and '2025-12-15' in evidence_lines[0] and '원천 20대' in evidence_lines[0]
+    assert len(evidence_lines)==1 and all(value in evidence_lines[0] for value in ('여성 60대+','원천 연령 60대+','노년','기본 단계 2','2025-12-15','V 1.123배/1단계','N 기준선 없음/0단계','부분 기준선','동별 확인 순서 7'))
+    from io import BytesIO
+    from pypdf import PdfReader
+    from zipfile import ZipFile
+    pdf='\n'.join(page.extract_text() for page in PdfReader(BytesIO(render_pdf(sections(result)))).pages)
+    with ZipFile(BytesIO(render_docx(sections(result)))) as archive:docx=archive.read('word/document.xml').decode()
+    assert 'V 1.123배/1단계' in pdf and 'N 기준선 없음/0단계' in docx and '부분 기준선' in pdf and '2025-12-15' in docx

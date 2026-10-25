@@ -92,7 +92,7 @@ test('map scope reaches the regional analysis request and missing data blocks ne
  await expect(page.getByRole('tabpanel').locator('tbody tr')).toHaveCount(1);
  await page.getByText(/에이전트 진행 기록 ·/).click();
  await expect(page.getByLabel('실행별 에이전트 상호작용')).toContainText('지역 분석가 → 통계 분석가');
- await page.route('**/analysis/groups',r=>r.fulfill({status:503,body:'자료 없음'}));
+ await page.route('**/analysis/groups*',r=>r.fulfill({status:503,body:'자료 없음'}));
  await page.goto('/workspace');
  await expect(page.getByRole('button',{name:'지역 분석 요청'})).toBeDisabled();
  await expect(page.getByRole('alert')).toContainText('지역 자료를 불러오지 못해 분석 요청을 중지했습니다');
@@ -105,7 +105,7 @@ test('index explains feedback and period aggregates are not labelled observed mo
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
  const data=await(await request.get('/analysis/groups')).json();
  data.period_aggregate=true;data.months=[];
- await page.route('**/analysis/groups',r=>r.fulfill({json:data}));
+ await page.route('**/analysis/groups*',r=>r.fulfill({json:data}));
  await page.goto('/workspace');
  await expect(page.getByLabel('실행 기준 월')).toHaveValue(data.metadata.selected_week.slice(0,7));
  await expect(page.getByText('해당 월의 관측값이 아닙니다.',{exact:false})).toBeVisible();
@@ -170,6 +170,21 @@ test('unknown statistical reason codes use plain language and stay in details',a
  await expect(rawReason).toBeHidden();
  await panel.getByText('통계 검토 상태 코드',{exact:true}).click();
  await expect(rawReason).toBeVisible();
+});
+
+test('v4 workflow result keeps source status and weekly card evidence',async({page,request})=>{
+ const base=await(await request.get('/analysis/groups')).json(),dong=base.neighborhoods.find((d:any)=>d.sgg==='32010');
+ const week='2025-12-15',row={evidence_id:'v4-test',dong_cd:dong.dong_cd,dong_nm:dong.dong_nm,sex:'F',age_group:'60대+',stage:-1,stage_label:'판정 근거 부족',index_name:'source-stage',value:null,source_period:'2025',source_bands:{dong_stage_age:['60대+']},source_age_band:'60대+',source_stage:-1,source_stage_label:'판정 근거 부족',assessment_status:'insufficient_evidence',base_stage:null,final_stage:null,final_stage_label:'판정 근거 부족',card_alarm_status:'baseline_unavailable',card_week:week,card_source_age_bands:['60대'],card_evidence:[{source_age_band:'60대',baseline_status:'unavailable',v_ratio:null,n_ratio:null,v_stage:0,n_stage:0,alarm_stage:0}],stage_adjustment:0,priority_rank:1};
+ const proposal={workflow_version:'regional-workflow-2',snapshot_version:'v4-test',task:{sgg:'32010',ym:'2025-12',as_of:'2026-10-25',sex:'F',age_group:'60대+',source_age_band:'60대+',card_week:week,goal:'근거 확인'},assessment:{segments:[row],period_aggregate:true,methodology_version:'v4-test',metadata:{input_hash:'fixture',synthetic_future:false}},workflow:{status:'reviewed',analysis:{summary:'집단 근거를 확인합니다.'},statistics:{status:'reviewed',reason:'',summary:{total:1,observed:0,missing:1,missing_rate:1,stage_counts:{'-1':1,'0':0},distributions:[{sgg:'32010',sex:'F',source_age_band:'60대+',n:1,assessment_counts:{insufficient_evidence:1},stage_counts:{'-1':1},card_alarm_counts:{baseline_unavailable:1}}]},observations:[{tool:'trend',status:'observed',series:[{cohort_id:'32010/F/60대+',points:[{ym:'2025-12',value:null,change:null,week,alarm_stage:0,baseline_status:'unavailable',source_age_bands:['60대'],v_stages:[0],n_stages:[0]}]}]},{tool:'source_check',status:'completed',items:[]}],blocked_evidence_ids:['v4-test']},matching:{status:'reviewed',summary:'추천 보류'}},assignments:[]};
+ const source={...base,data_mode:'local',period_aggregate:true,segments:[row],weekly:{selected_week:week,signals:[]},metadata:{workflow_version:'regional-workflow-2',methodology_version:'v4-test',dataset_version:'v4-test',selected_week:week,input_schema_version:4,input_hash:'fixture',weekly_scope:'region × sex × source age',source:{source:'fixture',sha256:'fixture'},card_source:{source:'fixture',sha256:'fixture'}}};
+ const overview={run:{id:'v4-run',scenario_id:'regional-workflow-v4',status:'completed',data_mode:'local',started_at:'2026-10-25T00:00:00Z'},review:{approval:{status:'pending'},proposal},traces:[]};
+ await page.route('**/runs',r=>r.fulfill({json:[]}));await page.route('**/runs/v4-run/overview',r=>r.fulfill({json:overview}));await page.route('**/analysis/groups*',r=>r.fulfill({json:source}));
+ await page.goto(`/workspace?run=v4-run&workflow_version=regional-workflow-2&region=32010&sex=F&source_age_band=60%EB%8C%80%2B&card_week=${week}&age=youth&card_age=20s`);
+ await expect(page.locator('.workflow-context')).toContainText('60대+');await expect(page.getByRole('tabpanel')).toContainText('판정 근거 부족');
+ await page.getByRole('tab',{name:'통계 근거'}).click();const panel=page.getByRole('tabpanel');
+ await expect(panel.getByLabel('원천 판정 상태 분포')).toContainText('근거 부족 (−1): 1개');await expect(panel.getByLabel('원천 판정 상태 분포')).toContainText('인구 보류 (0): 0개');
+ await panel.getByText('원천 연령별 상태 분포',{exact:true}).click();await expect(panel.getByRole('table',{name:'원천 연령별 단계와 자료 상태'})).toContainText('60대+');
+ await expect(panel.getByRole('table',{name:'관측 카드 경보 근거 · 월별 지수나 미래 예측이 아닙니다'})).toContainText('기준선 없음 · 신호 미산출');
 });
 
 
