@@ -17,12 +17,21 @@ class AnalystPlan(BaseModel):
     priority_evidence_ids:list[str]=Field(max_length=5)
 
 
+class RegionalNote(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    fact_ids:list[str]=Field(min_length=1,max_length=8)
+    implication:str=Field(min_length=1,max_length=500)
+    hypothesis:str=Field(min_length=1,max_length=500)
+    missing_evidence:list[str]=Field(min_length=1,max_length=5)
+
+
 class StatisticsDecision(BaseModel):
     model_config=ConfigDict(extra='forbid')
     action:Literal['lookup','finish','revise','human']
-    tool:Literal['trend','source_check','sensitivity','policy_insights']
+    tool:Literal['trend','source_check','sensitivity','policy_insights','regional_profile','regional_comparison']
     reason:str=Field(min_length=1,max_length=1000)
     blocked_evidence_ids:list[str]=Field(max_length=50)
+    regional_notes:list[RegionalNote]=Field(default_factory=list,max_length=5)
 
 
 def observations(assessment):
@@ -80,11 +89,18 @@ def analyze(agents,run_id,sim_ts,assessment,feedback=None):
     if feedback and feedback.get('statistics'):
         feedback={**feedback,'statistics':{**feedback['statistics'],'summary':model_summary(feedback['statistics']['summary']),'observations':model_observations(feedback['statistics']['observations'])}}
     plan=agents.call(run_id,sim_ts,'workflow_analyst',{'facts':facts,'task':assessment['task'],
-        'feedback':feedback,'methodology':methodology(assessment),'provisional':True,'period_aggregate':assessment['period_aggregate']}).model_dump()
+        'feedback':feedback,'methodology':methodology(assessment),'provisional':True,'period_aggregate':assessment['period_aggregate'],**context_payload(assessment)}).model_dump()
     allowed={r['evidence_id'] for r in facts}
     if len(set(plan['priority_evidence_ids']))!=len(plan['priority_evidence_ids']) or not set(plan['priority_evidence_ids'])<=allowed:
         raise WorkflowError('unobserved_analyst_evidence')
     return plan
+
+
+def context_payload(assessment,plan=None):
+    if 'regional_context' not in assessment:return {}
+    from backend.context.analysis import briefing
+    codes={r['dong_cd'] for r in assessment['segments'] if not plan or not plan['priority_evidence_ids'] or r['evidence_id'] in plan['priority_evidence_ids']}
+    return {'regional_context':briefing(assessment['regional_context'],codes)}
 
 
 def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadline,cached_observations=()):
@@ -101,12 +117,18 @@ def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadli
             final=current and revised is not None
             context={'review_version':'statistics-review-2','review_phase':'final' if final else 'initial',
                      'revision_reason':result['reason'] if final else None} if current else {}
-            tools=['trend','source_check','sensitivity']+([] if current else ['policy_insights'] if modern else [])
+            tools=['trend','source_check','sensitivity']+(['regional_profile','regional_comparison'] if 'regional_context' in assessment else [])+([] if current else ['policy_insights'] if modern else [])
             decision=agents.call(run_id,sim_ts,'workflow_statistics',{'task':assessment['task'],'plan':plan,
                 'summary':model_summary(base),'facts':observations(assessment),'methodology':methodology(assessment),'period_aggregate':assessment['period_aggregate'],
                 'observations':model_observations(retrieved),'step':step,'available_tools':[] if final else [tool for tool in tools if not any(o['tool']==tool for o in retrieved)] if current else tools,
-                'remaining_lookups':0 if final else (3 if modern else 1)-len(retrieved),**context}).model_dump()
+                'remaining_lookups':0 if final else (3 if modern else 1)-len(retrieved),**context,**context_payload(assessment,plan)}).model_dump()
             if time()>=deadline:raise WorkflowError('deadline')
+            from backend.context.analysis import validate_notes,observed_ids
+            if decision['action']=='lookup' and 'regional_context' not in assessment and decision['tool'].startswith('regional_'):raise WorkflowError('regional_context_not_available')
+            extra_ids={identifier for o in model_observations(retrieved) if o['tool']=='regional_profile' for identifier in observed_ids(o)}
+            extra_ids.update(identifier for o in model_observations(retrieved) if o['tool']=='regional_comparison' for c in o['comparisons'] for identifier in [c['fact_id'],*c['peer_fact_ids']])
+            notes=validate_notes(decision.get('regional_notes',[]),assessment,context_payload(assessment,plan).get('regional_context'),extra_ids)
+            if notes or 'regional_notes' not in result:result['regional_notes']=notes
             blocked=decision['blocked_evidence_ids']
             if len(set(blocked))!=len(blocked) or not set(blocked)<=allowed:raise WorkflowError('unobserved_statistics_evidence')
             result['blocked_evidence_ids']=sorted(set(base['blocked_evidence_ids'])|set(blocked))
@@ -119,6 +141,9 @@ def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadli
                 if len(retrieved)>=(3 if modern else 1) or any(o['tool']==decision['tool'] for o in retrieved):raise WorkflowError('statistics_lookup_limit')
                 if not modern and decision['tool']=='policy_insights':raise WorkflowError('legacy_tool_not_available')
                 observation=next((o for o in cached_observations if o['tool']==decision['tool']),None)
+                if observation is not None and decision['tool'].startswith('regional_'):
+                    from backend.tools.indicators import digest
+                    if observation.get('input_hash')!=digest({code:p['input_hash'] for code,p in assessment['regional_context'].items()}):raise WorkflowError('regional_cached_input_mismatch')
                 if observation is None:observation=run_tool(decision['tool'],settings,assessment)
                 retrieved.append(observation)
                 emit('statistics-tool' if not modern else f'statistics-tool-{len(retrieved)}','statistics','statistics',{'tool':decision['tool'],'observation':observation})
