@@ -44,3 +44,13 @@ uv run python -m scripts.runtime_package verify /private/releases/input-v1
 현재 런타임 패키지 전달 제한(인코딩 48 KiB, 해제 8 MiB)을 최종 v2 결과에 적용한다. 인코딩 제한을 넘을 때만 Render Secret File 등 서버 전용 전달 경로를 사용한다. 제한을 높이거나 입력 일부를 빼서 검사를 통과시키지 않는다. 호스트를 고른 뒤에는 그 플랫폼의 용량·마운트 경로·재시작 동작을 다시 확인한다.
 
 공개 CI는 새 스키마를 검증하는 고정 seed 합성 입력만 사용한다. 실제 자료 검증은 접근 통제된 로컬/비공개 환경에서 실행하고 레코드 대신 패키지 해시, 집계 건수, 통과 여부만 공개 증거로 남긴다. 입력 해시는 파일 동일성 확인값이며 이용 권한이나 출처의 전자서명은 아니다.
+
+### v4 집계 입력 만들기
+
+변환기는 지정 전달본의 동 단계와 서울 구조 위험 집계 CSV를 읽고 선택한 원천 해시를 전후 대조한 뒤, 새 목적지의 local/segments-v4.parquet와 import.json을 원자적으로 만든다. 목적지는 이미 존재하면 거부한다. 개인 단위 파일과 나머지 전달 폴더는 복사하지 않는다.
+
+```sh
+uv run python -m scripts.export_seohee_v4 --source /private/input/agent-bundle --destination /private/releases/seohee-20261025
+```
+
+검증된 버전은 Settings.input_root를 목적지로 지정해 읽는다. 원천 자료는 읽기 전용으로 두고 출력 디렉터리를 원천 폴더 안에 만들지 않는다.
