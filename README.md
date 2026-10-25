@@ -152,6 +152,7 @@ make dev
 |---|---|
 | [시스템 구조](docs/architecture.md) | 에이전트·도구·저장소·이벤트 흐름과 코드 위치 |
 | [지역 업무 방법론](docs/regional-workflow.md) | 잠정 단계 의미, 비교 범위, 욕구 가설 |
+| [지역 정보 입력 계약](docs/regional-context.md) | 집계 문맥의 입력·지역 코드·비교 조건과 합성 검증 범위. 외부 통계 연동 전 단계 |
 | [정책 도구](docs/policy-tools.md) / [정책 설계](docs/policy-design.md) | 정부24·MCP·세 대안·검토·PDF/Word 계약 |
 | [평가 체계](docs/evaluation-quality.md) / [평가 기록](docs/evaluation.md) | 분류·매칭·RAGAS·독립 평정과 한계 |
 | [미래 시나리오](docs/future-simulation.md) | 합성 월 생성과 업무 일괄 실행 |
