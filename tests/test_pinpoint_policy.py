@@ -165,7 +165,8 @@ def test_frozen_context_aggregation_preserves_review_and_official_source_identit
     dong={k:c[k] for k in ('dong_cd','dong_nm')}
     review=deepcopy(c['need_reviews'][0]);review['guidance']=[{
         'id':'G1','title':'공식 관계 사업','support':'관계 활동 제공','eligibility':'지역 주민',
-        'agency':'공식 확인 기관','application':None,'contact':None}]
+        'agency':'공식 확인 기관','application':None,'contact':None,
+        'supportConditions':{'서비스ID':'G1','JA0110':19,'JA0111':34,'JA0101':'Y','JA0102':'Y'}}]
     proposal={'task':{'sex':'F','age_group':'youth'},'assessment':{
         'segments':[{'dong_cd':c['dong_cd'],'evidence_id':'E1','stage':2,'value':.5,
                      'index_name':'S1','source_period':'2025-09','source_bands':{'concept':['19–34']}}],
@@ -213,7 +214,8 @@ def test_model_view_preserves_source_definitions_aliases_and_raw_evidence(servic
     assert view['facts'][0]['evidence_id']=='E1' and view['need_reviews'][0]['need_id']=='N1'
     assert view['need_reviews'][0]['evidence_ids']==['E1'] and view['need_reviews'][0]['regional_fact_ids']==['R1']
     assert 'guidance' not in view['need_reviews'][0] and 'outreach_draft' not in view['need_reviews'][0]
-    shown=view['regional_profile']['areas'][0]['facts'][0];original=c['regional_profile']['facts'][0]
+    columns=view['regional_profile']['fact_columns']
+    shown=dict(zip(columns,view['regional_profile']['areas'][0]['facts'][0]));original=c['regional_profile']['facts'][0]
     fields=('metric','value','unit','reference_year','geography_level','geography_code','geography_version',
         'population','age_definition','sex','source','source_table','source_items','source_dimensions','published_at','status','reason')
     assert set(shown)=={'fact_id',*fields} and shown['fact_id']=='R1'
@@ -223,7 +225,7 @@ def test_model_view_preserves_source_definitions_aliases_and_raw_evidence(servic
     assert len(view['sources'][0]['fields']['support'])==300 and len(c['sources'][0]['fields']['support'])>300
     packet={'prompt':(PROMPTS/'policy_alternatives.txt').read_text(),'payload':view,'schema':PinpointDecision.model_json_schema()}
     assert len(json.dumps(packet,ensure_ascii=False).encode())<=service.settings.llm_max_input_bytes
-    view['regional_profile']['areas'][0]['facts'][0]['source_items'].append('view-only-change')
+    view['regional_profile']['areas'][0]['facts'][0][columns.index('source_items')].append('view-only-change')
     assert c==before
     oversized=deepcopy(c);oversized['need_reviews'][0]['requirements']=['essential requirement '*3000]
     unchanged=deepcopy(oversized)

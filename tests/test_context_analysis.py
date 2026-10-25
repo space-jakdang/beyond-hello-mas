@@ -109,8 +109,9 @@ def test_context_changes_questions_without_inventing_needs(tmp_path):
         results.append((plan,reviewed))
     assert captures[0]['payload']['facts']==captures[2]['payload']['facts']
     assert [f['stage'] for f in captures[0]['payload']['facts']]==[f['stage'] for f in captures[2]['payload']['facts']]
-    inputs=[next(f for f in captures[i]['payload']['regional_context']['areas'][0]['facts']
-                 if f['metric']=='one_person_households') for i in (0,2)]
+    views=[captures[i]['payload']['regional_context'] for i in (0,2)]
+    inputs=[next(dict(zip(view['fact_columns'],f)) for f in view['areas'][0]['facts']
+                 if dict(zip(view['fact_columns'],f))['metric']=='one_person_households') for view in views]
     assert [f['value'] for f in inputs]==[100.0,400.0] and inputs[0]['fact_id']!=inputs[1]['fact_id']
     assert results[0][0]['summary']!=results[1][0]['summary']
     assert results[0][1]['regional_notes'][0]['missing_evidence']!=results[1][1]['regional_notes'][0]['missing_evidence']
@@ -208,9 +209,11 @@ def test_agent_input_filters_and_empty_revision_keep_context(tmp_path):
     source['input_hash']=digest({k:v for k,v in source.items() if k!='input_hash'})
     original=deepcopy(source);current={**assessment,'regional_context':{'11230001':source}}
     analyze(SimpleNamespace(call=call),'run','sim',current)
-    area=inputs[-1]['regional_context']['areas'][0]
+    raw_area=inputs[-1]['regional_context']['areas'][0]
+    area={**raw_area,'facts':[dict(zip(inputs[-1]['regional_context']['fact_columns'],f)) for f in raw_area['facts']]}
     fields=('fact_id','metric','value','unit','reference_year','geography_level','geography_code','geography_version',
             'population','age_definition','sex','source','source_table','source_items','source_dimensions','published_at','status','reason')
+    assert tuple(inputs[-1]['regional_context']['fact_columns'])==fields
     assert area['input_hash']==source['input_hash']
     assert area['facts']==[{key:fact.get(key,defaults.get(key)) for key in fields} for fact in source['facts']]
     population=next(f for f in area['facts'] if f['metric']=='total_population')

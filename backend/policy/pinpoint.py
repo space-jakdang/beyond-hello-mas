@@ -1,15 +1,26 @@
 """Conditional region-grounded drafts; failed generation stays an explicit evidence hold."""
 import json
+import time
 from copy import deepcopy
 from uuid import uuid5,NAMESPACE_URL
 from backend.events import utcnow
 from backend.tools.indicators import digest
 from backend.policy.alternative_contracts import PinpointAlternatives,PinpointDecision
 from backend.policy.alternatives import context_for,research,observed_problem
+from backend.context.contracts import ContextRequest
 
 
 def context_for_region(dong,scope,proposals):
     context=context_for(dong,scope,proposals);profiles=[];reviews=[]
+    seen={};versions={};conflicts=set();unverifiable=set()
+    def observe(policy):
+        pid=policy.get('id')
+        if not pid:return
+        values={k:policy[k] for k in ('title','scope','support','eligibility','criteria','application','deadline','contact','agency','url','source_updated_at','supportConditions') if k in policy}
+        previous=seen.setdefault(pid,{})
+        if any(previous[k]!=values[k] for k in previous.keys()&values.keys()):conflicts.add(pid)
+        previous.update(values)
+        if policy not in versions.setdefault(pid,[]):versions[pid].append(deepcopy(policy))
     evidence_ids={f['evidence_id'] for f in context['facts']}
     for proposal in proposals:
         profile=proposal['assessment'].get('regional_context',{}).get(dong['dong_cd'])
@@ -25,11 +36,20 @@ def context_for_region(dong,scope,proposals):
     reviews=list(by_id.values())
     sources={s['policy_id']:s for s in context['sources']}
     for proposal in proposals:
-        for candidate in proposal.get('policy_research',{}).get('candidates',[]):
+        candidates=proposal.get('policy_research',{}).get('candidates',[])
+        conditions={c['policy']['id'] for c in candidates if c.get('policy') and isinstance(c.get('conditions'),dict)}
+        for review in proposal.get('policy_research',{}).get('need_reviews',[]):
+            if review not in reviews:continue
+            for policy in review.get('guidance',[]):
+                if not policy['id'].startswith('catalog:') and not isinstance(policy.get('supportConditions'),dict) and policy['id'] not in conditions:
+                    unverifiable.add(policy['id'])
+        for candidate in candidates:
             policy=candidate.get('policy') or {}
+            observe({**policy,'supportConditions':candidate['conditions']} if 'conditions' in candidate else policy)
             if policy.get('id') in sources:sources[policy['id']]['agency']=policy.get('agency')
     for review in reviews:
         for policy in review.get('guidance',[]):
+            observe(policy)
             if policy['id'] not in sources:
                 sources[policy['id']]={'policy_id':policy['id'],'title':policy['title'],'url':policy.get('url'),'scope':scope['sgg'],'role':'existing_candidate','agency':policy.get('agency'),
                     'evidence':{'field':'support','value':policy.get('support') or policy.get('eligibility') or policy['title']},'checked_at':None,'detail_status':'frozen_guidance',
@@ -38,6 +58,17 @@ def context_for_region(dong,scope,proposals):
     context['sources']=list(sources.values())
     context.update(design_version='pinpoint-1',regional_profile=profiles[0] if profiles else None,
                    need_reviews=reviews,missing_groups=sorted(set(scope['target_groups'])-{f['target_group'] for f in context['facts'] if observed_problem(f)}))
+    if unverifiable:context['source_provenance_gaps']=sorted(unverifiable)
+    if conflicts:
+        context['source_conflicts']=sorted(conflicts)
+        context['conflicting_sources']={pid:versions[pid] for pid in sorted(conflicts)}
+        context['conflicting_need_reviews']=[deepcopy(r) for r in reviews if set(r.get('policy_ids',[]))&conflicts]
+    affected=conflicts|unverifiable
+    if affected:
+        reason='policy_source_snapshot_conflict' if conflicts else 'policy_source_snapshot_unverifiable'
+        context['unverified_need_reviews']=[deepcopy(r) for r in reviews if set(r.get('policy_ids',[]))&affected]
+        context['need_reviews']=[{**r,'decision':'needs_evidence','policy_ids':[],'citations':[],'guidance':[],'outreach_draft':None,
+            'reason':reason,'missing_evidence':['정책의 고정 원문·공식 대상 조건 확인 필요']} if set(r.get('policy_ids',[]))&affected else r for r in reviews]
     return context
 
 
@@ -80,13 +111,16 @@ def validate(output,context):
 
 def fixture_design(context):
     from backend.policy.alternatives import templates
+    from backend.context.analysis import observed_ids
+    profile=context['regional_profile']
+    regional_ids=observed_ids({'areas':[profile]} if 'facts' in profile else profile)
     result=templates(context);needs=[r for r in context['need_reviews'] if r['decision'] in ('adapt_existing','new_design_needed')]
     source=next(s for s in context['sources'] if any(s.get('fields',{}).get(k) for k in ('support','eligibility','criteria')))
     field=next(k for k in ('support','eligibility','criteria') if source['fields'].get(k))
     for item in result['alternatives']:
         item.update(need_ids=[r['need_id'] for r in needs],target_groups=sorted({r['target_group'] for r in needs}),
             problem_evidence_ids=list(dict.fromkeys(i for r in needs for i in r['evidence_ids'])),source_policy_ids=[source['policy_id']],
-            delivery_model={'outreach':'방문·신청 접점','integrated_support':'기관 간 의뢰·후속 연락','pilot':'동의 기반 소규모 활동'}[item['strategy']],agency_policy_ids=[],context_links=[{'fact_id':next(f['fact_id'] for f in context['regional_profile'].get('facts',context['regional_profile'].get('areas',[{}])[0].get('facts',[])) if f['status']=='observed'),
+            delivery_model={'outreach':'방문·신청 접점','integrated_support':'기관 간 의뢰·후속 연락','pilot':'동의 기반 소규모 활동'}[item['strategy']],agency_policy_ids=[],context_links=[{'fact_id':sorted(regional_ids)[0],
                 'design_choice':'fake: 제공된 지역 집계 문맥에 맞춘 운영 규모·접점을 담당자와 확인합니다.','verification_needed':'현장 접근 방식과 실제 수요'}],
             source_elements=[{'policy_id':source['policy_id'],'field':field,'quote':source['fields'][field]}],
             adaptations=[{'source_policy_ids':[source['policy_id']],'local_difference':'fake: 지역 집계 문맥과 관측 집단이 다릅니다.','proposed_change':item['proposed_service'],'verification_needed':['현지 대상 조건과 운영 역할']}],
@@ -103,7 +137,7 @@ def reference_aliases(context):
 
 def model_view(designer,context):
     from backend.agents.llm import PROMPTS
-    from backend.context.analysis import briefing
+    from backend.context.analysis import briefing,model_briefing
     view=deepcopy(context)
     view['regional_profile']=briefing({context['dong_cd']:context['regional_profile']})
     aliases={value:key for key,value in reference_aliases(context).items()}
@@ -126,13 +160,14 @@ def model_view(designer,context):
     view['need_reviews']=[{k:v for k,v in r.items() if k not in ('guidance','outreach_draft')} for r in view['need_reviews']]
     view['sources']=[{k:s[k] for k in ('policy_id','title','scope','role','agency') if k in s} | {'fields':{k:v[:300] for k,v in s.get('fields',{}).items() if k in ('support','eligibility','criteria')}} for s in view['sources']]
     view['source_view_note']='Exact visible excerpts only; full sources remain stored. No target or feasibility claim beyond supplied fields.'
+    view['regional_profile']=model_briefing(view['regional_profile'])
     overhead=len(json.dumps({'prompt':(PROMPTS/'policy_alternatives.txt').read_text(),'schema':PinpointDecision.model_json_schema()},ensure_ascii=False).encode())
     while len(view['sources'])>1 and len(json.dumps(view,ensure_ascii=False).encode())+overhead+32>designer.settings.llm_max_input_bytes:view['sources'].pop()
     if len(json.dumps(view,ensure_ascii=False).encode())+overhead+32>designer.settings.llm_max_input_bytes:raise ValueError('pinpoint_context_limit')
     return view
 
 
-def generate(designer,owner,run_id,scope,dongs,proposals,contexts=None):
+def generate(designer,owner,run_id,scope,dongs,proposals,contexts=None,deadline=None):
     results=[]
     for dong in sorted(dongs,key=lambda d:d['dong_cd']):
         with designer.store.connection() as db:
@@ -144,23 +179,38 @@ def generate(designer,owner,run_id,scope,dongs,proposals,contexts=None):
             if body['scope']!=scope:raise ValueError('owner scope differs from frozen request')
             results.append(body);continue
         context=deepcopy(contexts[dong['dong_cd']]) if contexts else context_for_region(dong,scope,proposals)
-        if context['dong_cd']!=dong['dong_cd'] or context['target_groups']!=scope['target_groups'] or any(context['scope'].get(k)!=scope.get(k) for k in ('sgg','ym','as_of','target_groups')):raise ValueError('frozen_context_scope_mismatch')
+        if contexts is None:
+            with designer.store.connection() as db:
+                row=db.execute('SELECT body FROM regional_context_snapshots WHERE owner_id=?',(owner,)).fetchone()
+            frozen=json.loads(row[0]).get(dong['dong_cd']) if row else None
+            if frozen:
+                if context['regional_profile'] and context['regional_profile']['input_hash']!=frozen['input_hash']:raise ValueError('owner regional snapshot differs')
+                context['regional_profile']=frozen
+        if context['dong_cd']!=dong['dong_cd'] or context['target_groups']!=scope['target_groups'] or any(context['scope'].get(k)!=scope.get(k) for k in ('sgg','ym','as_of','target_groups','selected_week')):raise ValueError('frozen_context_scope_mismatch')
+        if context['regional_profile']:
+            request=ContextRequest.model_validate(context['regional_profile']['request'])
+            if (request.sgg,request.dong_cd,request.as_of.isoformat())!=(scope['sgg'],dong['dong_cd'],scope['as_of']):raise ValueError('frozen_profile_scope_mismatch')
         design_needs=[r for r in context['need_reviews'] if r['decision'] in ('adapt_existing','new_design_needed')]
         status='needs_evidence';reason='need_review_incomplete';output={'alternatives':[]};mode='not_generated'
-        if context['need_reviews'] and not design_needs:
+        if context.get('source_conflicts'):reason='policy_source_snapshot_conflict'
+        elif context.get('source_provenance_gaps'):reason='policy_source_snapshot_unverifiable'
+        elif context['need_reviews'] and not design_needs:
             status='reuse_existing' if all(r['decision']=='reuse_existing' for r in context['need_reviews']) else 'needs_evidence'
             reason='existing_policy_sufficient' if status=='reuse_existing' else 'material_information_missing'
         elif design_needs:
             try:
+                if deadline is not None and time.time()>=deadline:raise ValueError('deadline')
                 if not any(f['status']=='observed' for f in (context.get('regional_profile') or {}).get('facts',[])):raise ValueError('regional_context_unavailable')
-                if not contexts:context=research(designer,owner,run_id,context)
+                if not contexts:context=research(designer,owner,run_id,context,deadline=deadline)
                 if not any(any(s.get('fields',{}).get(k) for k in ('support','eligibility','criteria')) for s in context['sources']):raise ValueError('substantive_policy_source_unavailable')
                 view=model_view(designer,context)
                 for attempt in range(2):
+                    if deadline is not None and time.time()>=deadline:raise ValueError('deadline')
                     with designer.store.connection() as db:
                         batch=db.execute('SELECT body FROM regional_batches WHERE id=?',(owner,)).fetchone()
                         if batch and json.loads(batch[0])['cancelled']:raise ValueError('cancelled')
                     decision=designer.agents.call(run_id,scope['ym']+'-01T09:00:00+09:00','policy_alternatives',view).model_dump()
+                    if deadline is not None and time.time()>=deadline:raise ValueError('deadline')
                     aliases=reference_aliases(context)
                     for item in decision['alternatives']:
                         item['problem_evidence_ids']=[aliases.get(i,i) for i in item['problem_evidence_ids']]
@@ -191,7 +241,7 @@ def generate(designer,owner,run_id,scope,dongs,proposals,contexts=None):
                 status='draft';reason=None;mode='llm' if designer.settings.llm_mode=='live' else 'fixture'
             except Exception as exc:
                 code=str(exc) if isinstance(exc,ValueError) else ''
-                reason={'LLM call or cost budget exceeded':'budget_exhausted','LLM input budget exceeded':'context_input_limit','pinpoint_context_limit':'context_input_limit'}.get(code,code if code in ('regional_context_unavailable','substantive_policy_source_unavailable','information_request_limit','design_evidence_missing','cancelled') else 'design_model_or_validation_unavailable')
+                reason={'LLM call or cost budget exceeded':'budget_exhausted','LLM input budget exceeded':'context_input_limit','pinpoint_context_limit':'context_input_limit'}.get(code,code if code in ('regional_context_unavailable','substantive_policy_source_unavailable','information_request_limit','design_evidence_missing','cancelled','deadline') else 'design_model_or_validation_unavailable')
         for index,item in enumerate(output['alternatives']):
             item.update(id=str(uuid5(NAMESPACE_URL,owner+':'+dong['dong_cd']+':pinpoint:'+str(index))),generation_mode=mode,
                 evidence_status='concept_only' if mode=='fixture' else 'supported',status='draft',review_status='pending',allocation_performed=False,
