@@ -18,9 +18,7 @@ PROVENANCE = {'purpose': 'synthetic contract test', 'sources': 'generated fixtur
               'permission_status': 'pending', 'disposal': 'delete test directory'}
 
 
-@pytest.fixture
-def source(tmp_path):
-    root = tmp_path/'source'
+def create_source(root):
     geo, _ = boundaries()
     identity = next(f['properties'] for f in geo['features'] if f['properties']['sgg'] == '11230')
     row = generate()[0].model_copy(update={k: identity[k] for k in ('sgg', 'dong_cd', 'dong_nm')})
@@ -45,6 +43,11 @@ def source(tmp_path):
     (root/'local/raw-mdis.csv').write_text('must never be shipped')
     (root/'local/events.sqlite3').write_text('must never be shipped')
     return root
+
+
+@pytest.fixture
+def source(tmp_path):
+    return create_source(tmp_path/'source')
 
 
 def test_package_only_required_inputs_and_rejects_overwrite(source, tmp_path):
@@ -111,8 +114,10 @@ def test_deployment_entrypoint_restores_same_inputs_after_cold_start(confirmed_p
             assert report['catalog']['version'] == 'v3'
             assert report['analysis']['geometry'] == 'administrative_boundaries'
             actual = client.get('/analysis/groups?sex=all&age=all').json()
+            current = client.get('/analysis/groups?workflow_version=current').json()
             assert actual['neighborhoods'] == expected['neighborhoods']
             assert actual['metadata']['input_hash'] == expected['metadata']['input_hash']
+            assert current['metadata']['rule_version'] == 'seohee-region-2'
             assert client.get('/local/segments-v3.parquet').status_code == 404
     assert roots[0] != roots[1]
     assert verify(roots[0]) == verify(roots[1]) == verify(confirmed_package)

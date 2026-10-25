@@ -43,10 +43,14 @@ def main():
     args = parser.parse_args()
     if not 1 <= args.port <= 65535:
         parser.error('port must be between 1 and 65535')
-    with prepare(Settings()) as _manifest:
+    settings = Settings()
+    if settings.input_root is not None:
+        from scripts.runtime_package import settings_from_package
+        settings = settings_from_package(settings.input_root, settings)
+    with prepare(settings) as _manifest:
         import uvicorn
         from backend.app.main import create_app
-        uvicorn.run(create_app(), host='127.0.0.1', port=args.port, workers=1)
+        uvicorn.run(create_app(settings), host='127.0.0.1', port=args.port, workers=1)
 
 
 if __name__ == '__main__':
