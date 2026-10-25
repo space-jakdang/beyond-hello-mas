@@ -27,3 +27,39 @@ class Alternative(BaseModel):
 class Alternatives(BaseModel):
     model_config=ConfigDict(extra='forbid')
     alternatives:list[Alternative]=Field(min_length=3,max_length=3)
+
+
+class ContextLink(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    fact_id:str
+    design_choice:str=Field(min_length=1,max_length=500)
+    verification_needed:str=Field(min_length=1,max_length=500)
+
+
+class PinpointAlternative(Alternative):
+    strategy:str=Field(min_length=1,max_length=60)
+    target_groups:list[str]=Field(min_length=1,max_length=12)
+    need_ids:list[str]=Field(min_length=1,max_length=24)
+    context_links:list[ContextLink]=Field(min_length=1,max_length=5)
+    delivery_model:str=Field(min_length=1,max_length=300)
+    agency_policy_ids:list[str]=Field(max_length=5)
+
+
+class PinpointAlternatives(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    alternatives:list[PinpointAlternative]=Field(min_length=3,max_length=3)
+
+
+class InformationRequest(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    tool:Literal['regional_profile','policy_detail']
+    identifiers:list[str]=Field(min_length=1,max_length=5)
+    reason:str=Field(min_length=1,max_length=500)
+
+
+class PinpointDecision(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    action:Literal['draft','request_information','needs_evidence']
+    information_requests:list[InformationRequest]=Field(max_length=1)
+    missing_evidence:list[str]=Field(default_factory=list,max_length=8)
+    alternatives:list[PinpointAlternative]=Field(max_length=3)
