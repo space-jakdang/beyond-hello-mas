@@ -23,6 +23,12 @@ def templates(context):
         'missing_evidence':['대상별 현장 필요','실제 이용량·수용량','시행 근거·예산']} for key,(title,service,steps) in STRATEGIES.items()]}
 
 
+def observed_problem(fact):
+    if fact.get('methodology_version')=='regional-workflow-2':
+        return fact.get('assessment_status')=='assessed' and type(fact.get('stage')) is int and 1<=fact['stage']<=5
+    return fact.get('stage') is not None and fact.get('value') is not None
+
+
 def validate(output,context):
     result=Alternatives.model_validate(output).model_dump()
     items=result['alternatives']
@@ -42,8 +48,7 @@ def validate(output,context):
         if len(set(item['target_groups']))!=len(item['target_groups']):raise ValueError('duplicate target')
         for identifier in item['problem_evidence_ids']:
             fact=evidence[identifier]
-            v4=fact.get('methodology_version')=='regional-workflow-2'
-            if fact['target_group'] not in item['target_groups'] or fact['stage'] is None or (v4 and fact.get('assessment_status')!='assessed') or (not v4 and fact['value'] is None):
+            if fact['target_group'] not in item['target_groups'] or not observed_problem(fact):
                 raise ValueError('unobserved or unrelated evidence')
     return result
 
@@ -158,6 +163,9 @@ def model_context(context):
 
 
 def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
+    if scope.get('policy_context_version')=='regional-policy-2':
+        from backend.policy.pinpoint import generate as pinpoint_generate
+        return pinpoint_generate(designer,owner_id,run_id,scope,dongs,proposals,contexts)
     results=[]
     for dong in sorted(dongs,key=lambda d:d['dong_cd']):
         with designer.store.connection() as db:
@@ -178,9 +186,7 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
         context['model_view_budget_bytes']=max(1,designer.settings.llm_max_input_bytes-overhead-32)
         if not contexts and any(r['value'] is not None for r in context['facts']):context=research(designer,owner_id,run_id,context)
         reason=None;mode='llm' if designer.settings.llm_mode=='live' else 'fixture';item_modes={}
-        if not any(r['stage'] is not None and (r.get('methodology_version')=='regional-workflow-2'
-                   and r.get('assessment_status')=='assessed' or r.get('value') is not None)
-                   for r in context['facts']):
+        if not any(observed_problem(r) for r in context['facts']):
             output=templates(context);mode='template_fallback';reason='regional_evidence_unavailable'
         else:
             try:
