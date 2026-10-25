@@ -151,16 +151,47 @@ def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadli
             context={'review_version':'statistics-review-2','review_phase':'final' if final else 'initial',
                      'revision_reason':result['reason'] if final else None} if current else {}
             tools=['trend','source_check','sensitivity']+(['regional_profile','regional_comparison'] if 'regional_context' in assessment else [])+([] if current else ['policy_insights'] if modern else [])
-            decision=agents.call(run_id,sim_ts,'workflow_statistics',{'task':assessment['task'],'plan':plan,
+            payload={'task':assessment['task'],'plan':plan,
                 'summary':model_summary(base),'facts':observations(assessment),'methodology':methodology(assessment),'period_aggregate':assessment['period_aggregate'],
                 'observations':model_observations(retrieved),'step':step,'available_tools':[] if final else [tool for tool in tools if not any(o['tool']==tool for o in retrieved)] if current else tools,
-                'remaining_lookups':0 if final else (3 if modern else 1)-len(retrieved),**context,**context_payload(assessment,plan)}).model_dump()
+                'remaining_lookups':0 if final else (3 if modern else 1)-len(retrieved),**context,**context_payload(assessment,plan)}
+            aliases={}
+            if 'regional_context' in assessment:
+                from backend.context.analysis import short_fact_references
+                payload,aliases=short_fact_references(payload,assessment['regional_context'].values())
+                from backend.agents.llm import PROMPTS
+                prompt=(PROMPTS/'workflow_statistics.txt').read_text()
+                schema=StatisticsDecision.model_json_schema()
+                def fits():return len(json.dumps({'prompt':prompt,'payload':payload,'schema':schema},ensure_ascii=False).encode())<=settings.llm_max_input_bytes
+                if not fits():
+                    evidence_aliases={'E'+str(i+1):identifier for i,identifier in enumerate(sorted({f['evidence_id'] for f in payload['facts']}))}
+                    encoded=json.dumps(payload,ensure_ascii=False)
+                    for short,canonical in evidence_aliases.items():encoded=encoded.replace(json.dumps(canonical),json.dumps(short))
+                    payload=json.loads(encoded);aliases.update(evidence_aliases)
+                    payload['regional_reference_note']='Use the supplied short E/R identifiers exactly; the server restores canonical evidence and regional fact IDs.'
+                views=[payload['regional_context'],*[o for o in payload['observations'] if o['tool']=='regional_profile']]
+                repeated={(a['dong_cd'],a.get('input_hash')) for o in views[1:] for a in o['areas']}
+                payload['regional_context']['areas']=[a for a in payload['regional_context']['areas'] if (a['dong_cd'],a.get('input_hash')) not in repeated]
+                payload['regional_context']['profile_dongs_in_observations']=sorted(code for code,_ in repeated)
+                if not fits():
+                    columns=list(dict.fromkeys(k for fact in payload['facts'] for k in fact))
+                    payload['fact_columns']=columns
+                    payload['facts']=[[fact.get(k) for k in columns] for fact in payload['facts']]
+                while not fits():
+                    view=next((v for v in views if len(v['areas'])>1),None)
+                    if view is None:break
+                    omitted=view['areas'].pop()['dong_cd']
+                    view['unshown_dongs']=sorted(set(view.get('unshown_dongs',[]))|{omitted})
+            decision=agents.call(run_id,sim_ts,'workflow_statistics',payload).model_dump()
+            for note in decision.get('regional_notes',[]):note['fact_ids']=[aliases.get(i,i) for i in note['fact_ids']]
+            decision['blocked_evidence_ids']=[aliases.get(i,i) for i in decision['blocked_evidence_ids']]
             if time()>=deadline:raise WorkflowError('deadline')
             from backend.context.analysis import validate_notes,observed_ids
             if decision['action']=='lookup' and 'regional_context' not in assessment and decision['tool'].startswith('regional_'):raise WorkflowError('regional_context_not_available')
-            extra_ids={identifier for o in model_observations(retrieved) if o['tool']=='regional_profile' for identifier in observed_ids(o)}
-            extra_ids.update(identifier for o in model_observations(retrieved) if o['tool']=='regional_comparison' for c in o['comparisons'] for identifier in [c['fact_id'],*c['peer_fact_ids']])
-            notes=validate_notes(decision.get('regional_notes',[]),assessment,context_payload(assessment,plan).get('regional_context'),extra_ids)
+            visible=observed_ids(payload.get('regional_context',{'areas':[]}))
+            visible.update(identifier for o in payload['observations'] if o['tool']=='regional_profile' for identifier in observed_ids(o))
+            visible.update(identifier for o in payload['observations'] if o['tool']=='regional_comparison' for c in o['comparisons'] for identifier in [c['fact_id'],*c['peer_fact_ids']])
+            notes=validate_notes(decision.get('regional_notes',[]),assessment,{'areas':[]},{aliases.get(i,i) for i in visible})
             if notes or 'regional_notes' not in result:result['regional_notes']=notes
             blocked=decision['blocked_evidence_ids']
             if len(set(blocked))!=len(blocked) or not set(blocked)<=allowed:raise WorkflowError('unobserved_statistics_evidence')

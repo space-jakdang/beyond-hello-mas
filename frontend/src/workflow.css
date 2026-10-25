@@ -44,3 +44,7 @@
 
 .review-changes{margin:1rem 0;padding:1rem;border:1px solid var(--border,#ddd);border-radius:8px}.review-changes h4{margin-top:0}.review-changes td{white-space:normal;overflow-wrap:anywhere;min-width:8rem}.policy-gap-summary{border-left:3px solid var(--border,#ddd);padding-left:.75rem}
 .review-changes summary:focus-visible{outline:3px solid #13715b;outline-offset:2px}
+
+.regional-context p,.policy-alternatives blockquote,.policy-alternatives details p{overflow-wrap:anywhere;white-space:pre-wrap}
+
+.outreach-draft { white-space:pre-wrap; overflow-wrap:anywhere; }
