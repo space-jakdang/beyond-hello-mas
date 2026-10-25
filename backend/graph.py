@@ -249,7 +249,7 @@ class GraphService:
 
     def workflow_proposal(self,state):
         started=time.monotonic();workflow=state['workflow']
-        proposal={'scope':'regional_evidence_review','workflow_version':'regional-workflow-1',
+        proposal={'scope':'regional_evidence_review','workflow_version':state['classification']['methodology_version'],
             'task':state['classification']['task'],'assessment':state['classification'],
             'workflow':workflow,'assignments':workflow.get('assignments',[]),
             'human_review_required':True,'provisional':True,'external_delivery':False,
@@ -364,7 +364,7 @@ class GraphService:
             task['goal']='필요 가설과 명시된 조사 사유에 따라 정책 후보를 확인하세요. 후보 수로 정책 부재를 추정하지 말고 개인 자격·정원·배정을 확정하지 마세요. 조사 사유: '+', '.join(sorted({reason for row in gaps for reason in row['policy_gap']['research_reasons']}))
         if proposal.get('workflow_version'):
             task['goal']+=' 검색 후 적합한 후보의 상세 원문을 확인하고 근거를 반환하세요. 욕구 가설: '+', '.join(sorted({n for a in gaps for n in a.get('needs',[])}))+'; 기준일: '+proposal['task']['as_of']
-            task['goal']+=' 요청 집단(관측 모집단과 동등함을 뜻하지 않음): '+json.dumps({k:proposal['task'].get(k) for k in ('sgg','sex','age_group','ym','dong_cd')},ensure_ascii=False)
+            task['goal']+=' 요청 집단(관측 모집단과 동등함을 뜻하지 않음): '+json.dumps({k:proposal['task'].get(k) for k in ('sgg','sex','age_group','source_age_band','ym','card_week','dong_cd')},ensure_ascii=False)
             task['goal']+=' 명백히 대상 연령·관할이 다른 정책은 현행 후보에서 제외하고 대상 조건을 설명하세요.'
         else:
             groups=sorted({str(a.get('sex','미분류'))+'/'+str(a.get('age_group',a.get('age_band','미분류'))) for a in gaps})
@@ -398,7 +398,8 @@ class GraphService:
         started=time.monotonic()
         proposal=dict(state['proposal']);task=proposal['task']
         dongs=list({r['dong_cd']:{'dong_cd':r['dong_cd'],'dong_nm':r['dong_nm']} for r in proposal['assessment']['segments']}.values())
-        scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],'target_groups':[task['sex']+'/'+task['age_group']],'synthetic_future':bool(task.get('future_id'))}
+        scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],'target_groups':[task['sex']+'/'+task.get('source_age_band',task['age_group'])],
+               'selected_week':task.get('card_week'),'synthetic_future':bool(task.get('future_id'))}
         self.regional_emit(state)('alternatives-delegate','supervisor','policy_design',{'goal':'기존 후보 유무와 무관하게 동별 정책 대안 세 개를 작성하세요.','scope':scope})
         result=self.policy_designer.propose(state['run_id'],state['run_id'],scope,dongs,[proposal])
         proposal['policy_alternatives']={'owner_id':state['run_id'],'dong_count':len(result),'alternatives_per_dong':3}
@@ -610,7 +611,8 @@ class GraphService:
             from backend.tools.regional_task import task_from
             if scenario.type != 'monthly':raise ValueError('regional task requires monthly scenario')
             task_from(scenario.payload)
-            scenario=scenario.model_copy(update={'payload':{'policy_proposal_version':'three-1',**scenario.payload,'statistics_version':'2'}})
+            statistics_version='3' if scenario.payload['workflow_version']=='regional-workflow-2' else '2'
+            scenario=scenario.model_copy(update={'payload':{'policy_proposal_version':'three-1',**scenario.payload,'statistics_version':statistics_version}})
         if 'person' in scenario.payload:
             person = PersonCase.model_validate(scenario.payload['person'])
             if person.reply_to:
@@ -631,9 +633,10 @@ class GraphService:
             return run
 
     def new_run(self,scenario,run_id):
+        rule_version='seohee-region-20261025-1' if scenario.payload.get('workflow_version')=='regional-workflow-2' else 'seohee-region-2' if scenario.type=='monthly' and scenario.payload.get('analysis_version')!='legacy-v1' else 'provisional-1'
         return Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
             data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
-            rule_version='person-v02' if 'person' in scenario.payload else 'seohee-region-2' if scenario.type=='monthly' and scenario.payload.get('analysis_version')!='legacy-v1' else 'provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='seohee-resources-3' if self.settings.resource_catalog == 'v3' else 'curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
+            rule_version='person-v02' if 'person' in scenario.payload else rule_version, model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='seohee-resources-3' if self.settings.resource_catalog == 'v3' else 'curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
 
     def start(self, scenario):
         return self.drive(self.register(scenario).id)

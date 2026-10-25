@@ -13,6 +13,7 @@ Sensitivity compact items follow item_columns. A policy_insights tool result_ref
 summary.insights.items are compact rows using the accompanying item_columns; compare only within the stated source scope. Full tool records retain all explanations.
 
 Trend points use point_columns (ym, value, change); null changes are not comparable.
+For regional-workflow-2, the only time series is weekly V/N card alarm evidence. Do not treat it as a monthly stage series. Source stages are ordinal: do not calculate averages, confidence intervals, ±0.01 sensitivity, or a cross-group priority statistic.
 
 regional-needs-2: Source factors and positive field names do not establish service needs. S1/v3 permit only a relationship investigation hypothesis, even at stage 1. If unmapped, request factor definitions, need measurements and field checks; never invent needs or count holds as recommendations.
 

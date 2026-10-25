@@ -175,3 +175,7 @@ regional-workflow-2는 입력 스키마 4와 판정 버전 seohee-region-2026102
 우선집단 신호는 단계 가산 없이 같은 최종 단계 안에서만 정렬에 사용한다. 전체 정렬은 최종 단계, 경보 강도, 우선집단, 약점 수, 인구 순이며 다섯 기준을 모두 내림차순으로 정렬한다. 완전 동률은 원천 입력 순서를 보존한다. 순위는 지원 배정·효과·개인 위험 순위를 뜻하지 않는다. 카드 CSV에 없는 원시 카드 값이나 기준선 수치는 복원·추정하지 않는다.
 
 검증·운영에서 regional-workflow-2는 지역·성별·원천 연령·관측 주·입력 해시와 판정 버전을 한 실행에 고정한다. 지도, 지역 업무, 통계와 보고서는 같은 기본 단계·경보·최종 단계·상태를 사용한다. 공개 문서와 합성 테스트에서는 실제 개인별 레코드를 쓰지 않는다.
+
+### v4 업무 요청
+
+단일 업무는 `/scenarios/run`에 `workflow_version=regional-workflow-2`와 `task`의 `sgg`, `sex`, `source_age_band`, `as_of`, `card_week`를 보낸다. `card_week`는 2025년 월요일 관측 주여야 한다. 이 입력만으로 2025년 기간 집계를 월 관측으로 바꾸지 않으며 결과 행의 `ym`은 비어 있고 실행 참조용 월만 task에 남는다. 전체 업무는 `/regional/batches`에서 같은 `workflow_version`·`task`와 `sex=all`, `source_age_band=all`을 사용한다. v4 배치에서는 과거의 `age_group`, `week`, `card_age` 선택자를 함께 보내지 않는다.

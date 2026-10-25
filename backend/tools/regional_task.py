@@ -33,12 +33,19 @@ class RegionalTask(BaseModel):
 
 
 def task_from(payload):
-    if payload.get('workflow_version') != VERSION:
+    if payload.get('workflow_version') == VERSION:
+        return RegionalTask.model_validate(payload.get('task', {}))
+    if payload.get('workflow_version') == 'regional-workflow-2':
+        from backend.tools.regional_task_v4 import RegionalTaskV4
+        return RegionalTaskV4.model_validate(payload.get('task', {}))
+    else:
         raise ValueError('unsupported regional workflow')
-    return RegionalTask.model_validate(payload.get('task', {}))
 
 
 def assess(settings, task, source_data=None):
+    if task.methodology_version == 'regional-workflow-2':
+        from backend.tools.regional_task_v4 import assess as assess_v4
+        return assess_v4(settings, task, source_data)
     future=None
     if task.future_id:
         from backend.future import scenario_rows

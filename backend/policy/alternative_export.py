@@ -25,11 +25,15 @@ def sections(body,alternative_id=None):
     scope=body['scope'];result=[(1,body['dong_nm']+' 정책 제안 검토 보고서'),
         (0,'검토용 초안 · 예산 승인이나 실제 집행 문서가 아닙니다.'),
         (0,f"제안 버전 {body['version']} / 검토 revision {body['review_revision']} / 출력 {utcnow().isoformat()}"),
-        (0,f"지역 {scope['sgg']} · 동 {body['dong_cd']} · 분석 기준 {scope['ym']} · 대상 {', '.join(map(group_label,scope['target_groups']))}"),
+        (0,f"지역 {scope['sgg']} · 동 {body['dong_cd']} · 분석 기준 {('카드 주 '+scope['selected_week']) if scope.get('selected_week') else scope['ym']} · 대상 {', '.join(map(group_label,scope['target_groups']))}"),
         (0,f"자료 모드 {body['data_mode']} · {MODES.get(body['generation_mode'],body['generation_mode'])} · "+('합성 미래 시나리오·실제 예측 아님' if scope.get('synthetic_future') else '기준 자료 분석')),
         (2,'지역 및 통계 근거')]
     for fact in body['evidence']['facts']:
-        result.append((0,f"{fact['target_group']} · {fact['index_name']} · 값 {fact['value'] if fact['value'] is not None else '결측'} · 단계 {fact['stage'] if fact['stage'] is not None else '보류'} · 원천 기간 {fact['source_period']} · 근거 {fact['evidence_id']}"))
+        if fact.get('methodology_version')=='regional-workflow-2':
+            evidence=f"{fact['target_group']} · 원천 연령 {fact['source_age_band']} · 단계 {fact['final_stage_label'] or '미산출'} · 상태 {fact['assessment_status']} · 카드 {fact['card_alarm_status']} ({fact['card_week']}, 원천 {', '.join(fact['card_source_age_bands'] or [])}) · 연속 지수 미산출 · 근거 {fact['evidence_id']}"
+        else:
+            evidence=f"{fact['target_group']} · {fact['index_name']} · 값 {fact['value'] if fact['value'] is not None else '결측'} · 단계 {fact['stage'] if fact['stage'] is not None else '보류'} · 원천 기간 {fact['source_period']} · 근거 {fact['evidence_id']}"
+        result.append((0,evidence))
     if not body['evidence']['facts']:result.append((0,'지역 관측 근거가 없어 현장 필요 확인이 우선입니다.'))
     for stat in body['evidence'].get('statistics',[]):
         comparison=stat.get('comparison',{})

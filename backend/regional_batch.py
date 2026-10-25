@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 from datetime import date
 from typing import Literal
 from fastapi import APIRouter, BackgroundTasks, HTTPException
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from backend.app.contracts import Scenario
 from backend.tools.regional_task import RegionalTask, assess
 from backend.tools.segments_v3 import load_segments
@@ -21,10 +21,20 @@ class BatchRequest(BaseModel):
     model_config=ConfigDict(extra='forbid')
     request_id:UUID
     task:dict
+    workflow_version:Literal['regional-workflow-1','regional-workflow-2']='regional-workflow-1'
     sex:Literal['all','M','F']='all'
     age_group:Literal['all','youth','midlife','prime','elderly']='all'
+    source_age_band:str='all'
     week:date | Literal['all']='all'
     card_age:Literal['all','20s','30s']='all'
+
+    @model_validator(mode='after')
+    def versioned_scope(self):
+        if self.workflow_version=='regional-workflow-1' and self.source_age_band!='all':
+            raise ValueError('source age band requires regional-workflow-2')
+        if self.workflow_version=='regional-workflow-2' and (self.age_group!='all' or self.week!='all' or self.card_age!='all'):
+            raise ValueError('v4 batch uses source_age_band and task.card_week')
+        return self
 
 
 def initialize(store):
@@ -49,11 +59,15 @@ def read(service,identifier):
 
 def create(service,request):
     identifier=str(request.request_id);intent=request.model_dump(mode='json',exclude={'request_id'})
+    if request.workflow_version=='regional-workflow-1':
+        intent.pop('workflow_version',None);intent.pop('source_age_band',None)
     try:
         existing=read(service,identifier)
         if existing['intent']!=intent:raise BatchConflict('request id used for a different selection')
         return existing
     except KeyError:pass
+    if request.workflow_version=='regional-workflow-2':
+        return create_v4(service,request,identifier,intent)
     task=RegionalTask.model_validate({**request.task,'sex':'M','age_group':'youth'})
     if task.future_id:raise ValueError('use future workflow for synthetic inputs')
     rows,source=load_segments(service.settings)
@@ -79,6 +93,70 @@ def create(service,request):
             prepared.append((run,scenario,assessment))
             body['children'].append({'sex':sex,'age_group':age,'run_id':run.id})
     body['input_hash']=digest([a for _,_,a in prepared])
+    with service.store.connection(write=True) as db:
+        previous=db.execute('SELECT body FROM regional_batches WHERE id=?',(identifier,)).fetchone()
+        if previous:
+            result=json.loads(previous[0])
+            if result['intent']!=intent:raise BatchConflict('request conflict')
+            return result
+        db.execute('INSERT INTO regional_batches VALUES (?,?)',(identifier,json.dumps(body,ensure_ascii=False)))
+        for run,scenario,assessment in prepared:
+            db.execute('INSERT INTO runs VALUES (?,?)',(run.id,run.model_dump_json()))
+            db.execute('INSERT INTO run_clocks VALUES (?,?,?)',(run.id,service.store.clock_id,time.monotonic()))
+            db.execute('INSERT INTO workflows VALUES (?,?)',(run.id,scenario.model_dump_json()))
+            db.execute('INSERT INTO regional_batch_children VALUES (?,?,?)',(run.id,identifier,json.dumps(assessment,ensure_ascii=False)))
+    return body
+
+
+def create_v4(service,request,identifier,intent):
+    from backend.tools.neighborhoods import group_analysis_v4
+    from backend.tools.regional_task_v4 import RegionalTaskV4, VERSION
+    from backend.tools.segments_v4 import SOURCE_AGE_BANDS
+
+    region='강남' if request.task.get('sgg')=='11230' else '춘천' if request.task.get('sgg')=='32010' else None
+    if region is None:raise ValueError('unknown region')
+    bands=SOURCE_AGE_BANDS[region]
+    selected=request.source_age_band
+    if selected=='all' and request.task.get('source_age_band'):
+        selected=request.task['source_age_band']
+    ages=list(bands) if selected=='all' else [selected]
+    if any(age not in bands for age in ages):raise ValueError('source age outside region')
+    base_band=ages[0]
+    task_base=RegionalTaskV4.model_validate({**{k:v for k,v in request.task.items() if k!='source_age_band'},
+                                             'sex':'M','source_age_band':base_band})
+    data=group_analysis_v4(service.settings,task_base.card_week)
+    region_rows=[row for row in data['segments'] if row['sgg']==task_base.sgg
+                 and (not task_base.dong_cd or row['dong_cd']==task_base.dong_cd)]
+    if not region_rows:raise ValueError('unknown region or dong')
+    dongs={row['dong_cd']:row['dong_nm'] for row in region_rows}
+    source={'dataset_version':data['metadata']['dataset_version'],'input_hash':data['metadata']['input_hash'],
+            'selected_week':data['metadata']['selected_week']}
+    body_task={**task_base.model_dump(mode='json'),'source_age_band':selected,
+               'age_group':selected,'ym':task_base.card_week.strftime('%Y-%m')}
+    body={'id':identifier,'intent':intent,'data_mode':service.settings.data_mode,'llm_mode':service.settings.llm_mode,
+          'workflow_version':VERSION,'task':body_task,'source':source,'children':[],'cancelled':False,
+          'policy_proposal_version':'three-1',
+          'dongs':[{'dong_cd':code,'dong_nm':name} for code,name in sorted(dongs.items())]}
+    prepared=[]
+    catalog=[row.model_dump(mode='json') for row in load_catalog(service.settings.catalog_path)]
+    sexes=['M','F'] if request.sex=='all' else [request.sex]
+    for sex in sexes:
+        for age in ages:
+            single=RegionalTaskV4.model_validate({**task_base.model_dump(mode='json'),'sex':sex,'source_age_band':age})
+            available=[row for row in region_rows if row['sex']==sex and row['source_age_band']==age]
+            if not available:
+                body['children'].append({'sex':sex,'age_group':age,'source_age_band':age,'run_id':None,'status':'no_observation'})
+                continue
+            assessment=assess(service.settings,single,source_data=data)
+            assessment['catalog_snapshot']=catalog
+            scenario=Scenario(id='regional-workflow-batch-v4',type='monthly',
+                sim_time=f'{single.as_of.isoformat()}T09:00:00+09:00',
+                payload={'statistics_version':'3','workflow_version':VERSION,'research_gaps':True,
+                         'policy_proposal_version':'batch-child','task':single.model_dump(mode='json')})
+            run=service.new_run(scenario,str(uuid4())).model_copy(update={'status':'pending'})
+            prepared.append((run,scenario,assessment))
+            body['children'].append({'sex':sex,'age_group':age,'source_age_band':age,'run_id':run.id})
+    body['input_hash']=digest([assessment for _,_,assessment in prepared])
     with service.store.connection(write=True) as db:
         previous=db.execute('SELECT body FROM regional_batches WHERE id=?',(identifier,)).fetchone()
         if previous:

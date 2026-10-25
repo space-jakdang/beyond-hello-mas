@@ -9,6 +9,9 @@ def cohort(row):
 
 
 def insights(assessment):
+    if assessment['metadata'].get('analysis_version')=='v4':
+        return {'version':'policy-insights-v4','items':[],'input_hash':assessment['metadata']['input_hash'],
+                'status':'not_applicable','reason':'ordinal stages and card alarms are not continuous comparison measures','causal_claim':False}
     from backend.tools.regional_resources import need_profile
     source=assessment.get('source_observations',assessment['segments'])
     items=[]
@@ -32,6 +35,11 @@ def insights(assessment):
 
 
 def persistence(observation):
+    if observation.get('tool_version')=='regional-statistics-v4':
+        return [{'cohort_id':series['cohort_id'],'direction':'unavailable',
+                 'weeks':[p['week'] for p in series['points']],
+                 'interpretation':'주간 카드 경보는 제공 관측입니다. 단계 변화·월별 추세·효과는 산출하지 않습니다.'}
+                for series in observation.get('series',[])]
     result=[]
     for series in observation.get('series',[]):
         points=series['points'];recent=points[-3:]
