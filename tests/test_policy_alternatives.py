@@ -164,3 +164,36 @@ def test_exact_requested_group_label_maps_back_without_accepting_other_targets(s
     result=service.policy_designer.propose(str(uuid4()),run.id,scope,[{'dong_cd':row['dong_cd'],'dong_nm':row['dong_nm']}],[proposal])[0]
     assert [a['generation_mode'] for a in result['alternatives']]==['fixture','fixture','template_fallback']
     assert result['alternatives'][0]['target_groups']==['M/youth']
+
+
+def test_v4_assessed_stage_can_ground_policy_alternatives_without_continuous_value(service,monkeypatch):
+    from types import SimpleNamespace
+    from backend.policy.alternatives import generate
+
+    target='M/20대';evidence_id='v4-evidence'
+    context={'dong_nm':'개포3동','target_groups':[target],'facts':[{'evidence_id':evidence_id,'target_group':target,'stage':2,'value':None,
+        'methodology_version':'regional-workflow-2','assessment_status':'assessed','source_age_band':'20대',
+        'final_stage_label':'관심','card_week':'2025-12-15','card_source_age_bands':['20대'],'card_alarm_status':'none'}],
+        'analyses':[],'statistics':[],'matching':[],'sources':[],'gap_contract_version':None}
+    calls=[]
+
+    def call(run_id,sim_ts,role,view):
+        calls.append((role,view['facts']))
+        output=templates(context)
+        for alternative in output['alternatives']:
+            alternative['problem_evidence_ids']=["E1"]
+        return SimpleNamespace(model_dump=lambda:output)
+
+    monkeypatch.setattr(service.agents,'call',call)
+    dong={'dong_cd':'11230001','dong_nm':'개포3동','sgg':'11230'}
+    scope={'sgg':'11230','ym':'2025-12','as_of':'2026-10-25','target_groups':[target],
+           'selected_week':'2025-12-15','synthetic_future':False}
+    result=generate(service.policy_designer,'v4-owner','v4-run',scope,[dong],[],contexts={dong['dong_cd']:context})[0]
+
+    assert len(calls)==1 and calls[0][0]=='policy_alternatives'
+    assert result['generation_mode']=='fixture'
+    assert result['alternatives'][0]['problem_evidence_ids']==[evidence_id]
+    assert result['evidence']['facts'][0]['value'] is None
+    from backend.policy.alternative_export import sections
+    evidence_lines=[line for _,line in sections(result) if '연속 지수 미산출' in line]
+    assert len(evidence_lines)==1 and '원천 연령 20대' in evidence_lines[0] and '2025-12-15' in evidence_lines[0] and '원천 20대' in evidence_lines[0]

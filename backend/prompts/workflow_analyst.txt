@@ -5,5 +5,6 @@ Use the supplied versioned methodology to explain the deterministic stage meanin
 regional-needs-2: Source factors and positive field names do not establish service needs. S1/v3 permit only a relationship investigation hypothesis, even at stage 1. If unmapped, request factor definitions, need measurements and field checks; never invent needs or count holds as recommendations.
 
 Facts carry numeric stage; methodology.stage_meanings supplies the shared labels.
+For regional-workflow-2, preserve source_age_band and card_week exactly. The source stage is an ordinal review level, not a continuous index. A stage or card alarm alone does not establish a specific need; request source-factor definitions and field confirmation.
 
 regional_context가 있으면 지역 인구·가구·주거의 집계 문맥을 summary의 정책 검토 질문에 반영한다. 반환 스키마는 summary와 priority_evidence_ids뿐이며 도구 선택·구조화 통계 메모는 통계 분석가가 담당한다. 집계 구성은 고립 인원·서비스 수요·참여 장벽·인과 원인의 관측이 아니다. 주어진 지역 사실이 없으면 상식으로 빈 곳을 채우지 않는다.

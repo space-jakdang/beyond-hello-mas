@@ -42,7 +42,8 @@ def validate(output,context):
         if len(set(item['target_groups']))!=len(item['target_groups']):raise ValueError('duplicate target')
         for identifier in item['problem_evidence_ids']:
             fact=evidence[identifier]
-            if fact['target_group'] not in item['target_groups'] or fact['value'] is None or fact['stage'] is None:
+            v4=fact.get('methodology_version')=='regional-workflow-2'
+            if fact['target_group'] not in item['target_groups'] or fact['stage'] is None or (v4 and fact.get('assessment_status')!='assessed') or (not v4 and fact['value'] is None):
                 raise ValueError('unobserved or unrelated evidence')
     return result
 
@@ -56,7 +57,11 @@ def context_for(dong,scope,proposals):
         ids={r['evidence_id'] for r in selected}
         facts.extend({'evidence_id':r['evidence_id'],'target_group':group,'stage':r['stage'],'index_name':r['index_name'],
                       'base_stage':r.get('base_stage'),'stage_scale':r.get('stage_scale'),'scenario_stage':r.get('scenario_stage'),
-                      'value':r['value'],'source_bands':r.get('source_bands',{}),'source_period':r['source_period'],'flags':r.get('flags',[])} for r in selected)
+                      'value':r['value'],'source_bands':r.get('source_bands',{}),'source_period':r['source_period'],'flags':r.get('flags',[]),
+                      'methodology_version':r.get('methodology_version'),'source_age_band':r.get('source_age_band'),
+                      'assessment_status':r.get('assessment_status'),'final_stage_label':r.get('final_stage_label'),
+                      'card_week':r.get('card_week'),'card_source_age_bands':r.get('card_source_age_bands'),
+                      'card_alarm_status':r.get('card_alarm_status')} for r in selected)
         analyses.append({'target_group':group,'summary':(proposal.get('workflow',{}).get('analysis') or {}).get('summary','분석 미완료')})
         stats=proposal.get('workflow',{}).get('statistics',{})
         statistics.extend(i for i in stats.get('summary',{}).get('insights',{}).get('items',[]) if i['evidence_id'] in ids)
@@ -165,13 +170,15 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
         from pathlib import Path
         from backend.policy.alternative_export import group_label
         age_groups=json.loads((Path(__file__).resolve().parents[2]/'rules/age_crosswalk.json').read_text())['concept']
-        context['target_group_labels']={g:group_label(g)+' ('+', '.join(age_groups[g.split('/')[1]])+')' for g in context['target_groups']}
+        context['target_group_labels']={g:group_label(g)+' ('+', '.join(age_groups.get(g.split('/')[1],[g.split('/')[1]]))+')' for g in context['target_groups']}
         from backend.agents.llm import PROMPTS
         overhead=len(json.dumps({'prompt':(PROMPTS/'policy_alternatives.txt').read_text(),'payload':{},'schema':Alternatives.model_json_schema()},ensure_ascii=False).encode())
         context['model_view_budget_bytes']=max(1,designer.settings.llm_max_input_bytes-overhead-32)
         if not contexts and any(r['value'] is not None for r in context['facts']):context=research(designer,owner_id,run_id,context)
         reason=None;mode='llm' if designer.settings.llm_mode=='live' else 'fixture';item_modes={}
-        if not any(r['value'] is not None and r['stage'] is not None for r in context['facts']):
+        if not any(r['stage'] is not None and (r.get('methodology_version')=='regional-workflow-2'
+                   and r.get('assessment_status')=='assessed' or r.get('value') is not None)
+                   for r in context['facts']):
             output=templates(context);mode='template_fallback';reason='regional_evidence_unavailable'
         else:
             try:
@@ -230,10 +237,21 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
 def failed_run(service,run_id,scenario):
     payload=scenario['payload']
     if payload.get('policy_proposal_version')!='three-1':return
-    from backend.tools.segments_v3 import load_segments
-    task=payload['task'];rows,_=load_segments(service.settings)
-    known={r.dong_cd:r.dong_nm for r in rows if r.sgg==task['sgg'] and (not task.get('dong_cd') or r.dong_cd==task['dong_cd'])}
-    scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],'target_groups':[task['sex']+'/'+task['age_group']],'synthetic_future':bool(task.get('future_id'))}
+    task=payload['task']
+    if payload.get('workflow_version')=='regional-workflow-2':
+        from backend.tools.neighborhoods import group_analysis_v4
+        data=group_analysis_v4(service.settings,task['card_week'])
+        rows=[row for row in data['segments'] if row['sgg']==task['sgg'] and (not task.get('dong_cd') or row['dong_cd']==task['dong_cd'])]
+        known={row['dong_cd']:row['dong_nm'] for row in rows}
+        scope={'sgg':task['sgg'],'ym':task['card_week'][:7],'as_of':task['as_of'],
+               'target_groups':[task['sex']+'/'+task['source_age_band']],
+               'selected_week':task['card_week'],'synthetic_future':False}
+    else:
+        from backend.tools.segments_v3 import load_segments
+        rows,_=load_segments(service.settings)
+        known={r.dong_cd:r.dong_nm for r in rows if r.sgg==task['sgg'] and (not task.get('dong_cd') or r.dong_cd==task['dong_cd'])}
+        scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],
+               'target_groups':[task['sex']+'/'+task['age_group']],'synthetic_future':bool(task.get('future_id'))}
     service.policy_designer.propose(run_id,run_id,scope,[{'dong_cd':k,'dong_nm':v} for k,v in known.items()],[])
 
 
@@ -257,7 +275,8 @@ def complete_batch(service,body):
             try:proposals.append(service.approval(child['run_id'])['proposal'])
             except KeyError:pass
     task=body['task'];scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],
-                            'target_groups':[c['sex']+'/'+c['age_group'] for c in body['children']],'synthetic_future':False}
+                            'target_groups':[c['sex']+'/'+c.get('source_age_band',c['age_group']) for c in body['children']],
+                            'selected_week':task.get('card_week'),'synthetic_future':False}
     sets=service.policy_designer.propose(owner,identifier,scope,body['dongs'],proposals)
     with service.store.connection(write=True) as db:
         latest=json.loads(db.execute('SELECT body FROM regional_batches WHERE id=?',(owner,)).fetchone()[0])
