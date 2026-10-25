@@ -66,7 +66,7 @@ class PolicyDesigner:
         local_scope={'11230':'gangnam','32010':'chuncheon'}[task['sgg']]
         needs=[{'evidence_id':a['evidence_id'],'dong_nm':a['dong_nm'],'stage':a['stage'],'needs':a['needs'],
                 'uncovered_needs':a.get('uncovered_needs',[]),'statistical_context':{k:v for k,v in (a.get('statistical_context') or {}).items() if k in ('priority_midrank','need_basis','measured_components','base_stage_stable')}} for a in gaps[:5]]
-        target=f"{task['sgg']} / {task['sex']} / {dict(youth='청년',midlife='중년',prime='장년',elderly='노년')[task['age_group']]} / {task['ym']}"
+        target=f"{task['sgg']} / {task['sex']} / {task.get('source_age_band',dict(youth='청년',midlife='중년',prime='장년',elderly='노년').get(task['age_group'],task['age_group']))} / {task['ym']}"
         try:
             for step in range(1 if observation else 0,2):
                 view=None
