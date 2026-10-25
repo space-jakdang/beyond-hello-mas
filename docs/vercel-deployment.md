@@ -48,7 +48,7 @@ Git에서 제외된 `data/local`은 Git 연동 배포에 포함되지 않습니�
    ```
 
 3. 이 파일의 내용 전체를 Vercel 프로젝트의 서버 전용 `RUNTIME_INPUT_PACKAGE` 환경변수로 등록하고 사용할 Production/Preview 환경에 적용합니다. `VITE_` 접두사를 붙이지 않습니다. 서버만 읽는 값이며 Git·정적 폴더·공개 CI artifact에 넣지 않습니다. 압축과 Base64는 암호화가 아닙니다.
-4. 이후 새 배포와 새 함수 인스턴스는 같은 패키지에서 입력을 복원하고 `local`/`v3`를 선택합니다. 이전 `DATA_MODE=sample`, `RESOURCE_CATALOG=fixture`, `INPUT_ROOT`보다 이 패키지가 우선합니다. 누락·변조·잘못된 출처/경계·미확인 반입은 합성 자료로 대체하지 않고 시작을 실패시킵니다.
+4. 이후 새 배포와 새 함수 인스턴스는 같은 패키지에서 입력을 복원하고 `local`/`v3`를 선택합니다. 패키지 v1은 `regional-workflow-1`, v2는 `regional-workflow-2`를 선택합니다. 이전 `DATA_MODE=sample`, `RESOURCE_CATALOG=fixture`, `INPUT_ROOT`보다 이 패키지가 우선합니다. 누락·변조·잘못된 출처/경계·미확인 반입은 합성 자료로 대체하지 않고 시작을 실패시킵니다.
 5. 인증된 `/readiness`에서 `data_mode=local`, `analysis.geometry=administrative_boundaries`, `catalog.version=v3`, `ready=true`를 확인하고 실제 동 이름을 점검합니다. 코드의 기존 `create_app` 개발/시험 factory는 환경 패키지를 자동 반입하지 않습니다. Vercel은 루트 `app.py`를 진입점으로 사용해야 합니다.
 
 현재 전송 방식은 인코딩 후 48 KiB, 압축 해제 후 8 MiB 이하의 작은 고정 입력용입니다. [Vercel 환경변수 제한](https://vercel.com/docs/environment-variables#environment-variable-size)은 Python 배포의 모든 환경변수를 합쳐 64 KB이므로 키 등 다른 값도 합산해야 합니다. 입력이 커지면 비공개 객체 저장소나 [상주 서버](private-service.md)를 사용합니다. 환경변수 변경은 새 배포부터 적용됩니다.

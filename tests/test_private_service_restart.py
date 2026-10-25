@@ -80,15 +80,27 @@ def approval(client, identifier):
         time.sleep(.1)
 
 
-@pytest.mark.parametrize('hosted', [False, True])
-def test_process_restart_preserves_pending_review_and_input(source, tmp_path, hosted):
+@pytest.mark.parametrize(('hosted', 'package_version'), [(False, 1), (True, 1), (False, 2), (True, 2)])
+def test_process_restart_preserves_pending_review_and_input(source, tmp_path, hosted, package_version):
     # This permission assertion applies only to generated test fixtures.
     inputs = tmp_path/'release'
-    build(source, inputs, {**PROVENANCE, 'permission_status':'private_contest_use_confirmed'})
+    provenance = {**PROVENANCE, 'permission_status':'private_contest_use_confirmed'}
+    if package_version == 1:
+        build(source, inputs, provenance)
+    else:
+        from tests.test_runtime_package import create_source
+        from tests.test_runtime_package_v2 import v2_source
+        catalog = tmp_path/'catalog-v1'
+        build(source, catalog, provenance)
+        build(v2_source(tmp_path/'source-v2'), inputs, provenance,
+              package_version=2, catalog_from_package=catalog)
     manifest = verify(inputs)
     state = tmp_path/'state'
     with server(inputs, state, tmp_path/'first.log', hosted=hosted) as client:
         if hosted:
+            service = yaml.safe_load((ROOT/'deploy/render.yaml').read_text())['services'][0]
+            assert service['healthCheckPath'] == '/healthz'
+            assert 'maxShutdownDelaySeconds' not in service
             assert client.get('/healthz', auth=None).status_code == 200
             assert client.head('/healthz', auth=None).status_code == 200
             assert client.post('/healthz', auth=None).status_code == 401
@@ -103,14 +115,26 @@ def test_process_restart_preserves_pending_review_and_input(source, tmp_path, ho
             assert client.get('/runs', auth=None, headers={'Authorization':'Bearer invalid'}).status_code == 401
             assert client.post('/scenarios/run', auth=None, json={}).status_code == 401
         ready = client.get('/readiness').json()
-        assert ready['ready'] and ready['analysis']['geometry'] == 'administrative_boundaries'
-        row = client.get('/analysis/groups?week=all&card_age=all').json()['segments'][0]
+        assert ready['ready']
+        if package_version == 1:
+            assert ready['analysis']['geometry'] == 'administrative_boundaries'
+            row = client.get('/analysis/groups?week=all&card_age=all').json()['segments'][0]
+            workflow = {'workflow_version':'regional-workflow-1', 'research_gaps':False,
+                        'task':{'sgg':row['sgg'], 'dong_cd':row['dong_cd'], 'sex':row['sex'],
+                                'age_group':row['age_group'], 'ym':row['ym'], 'as_of':'2025-07-01'}}
+        else:
+            groups = client.get('/analysis/groups?workflow_version=current').json()
+            assert groups['metadata']['workflow_version'] == 'regional-workflow-2'
+            assert ready['analysis']['workflow_version'] == 'regional-workflow-2'
+            assert ready['analysis']['boundary'] == {'matched': 47, 'total': 47}
+            row = next(row for row in groups['segments'] if row['assessment_status'] == 'assessed')
+            workflow = {'workflow_version':'regional-workflow-2', 'research_gaps':False,
+                        'task':{'sgg':row['sgg'], 'dong_cd':row['dong_cd'], 'sex':row['sex'],
+                                'source_age_band':row['source_age_band'],
+                                'as_of':'2025-07-01', 'card_week':groups['metadata']['selected_week']}}
         response = client.post('/scenarios/run', json={'id':'restart-fixture', 'type':'monthly',
-            'sim_time':'2025-07-01T09:00:00+09:00',
-            'payload':{'workflow_version':'regional-workflow-1', 'research_gaps':False,
-                       'task':{'sgg':row['sgg'], 'dong_cd':row['dong_cd'], 'sex':row['sex'],
-                               'age_group':row['age_group'], 'ym':row['ym'], 'as_of':'2025-07-01'}}}, timeout=10)
-        assert response.status_code == 202
+            'sim_time':'2025-07-01T09:00:00+09:00', 'payload':workflow}, timeout=10)
+        assert response.status_code == 202, response.text
         identifier = response.json()['id']
         before = approval(client, identifier)
         assert before['approval']['status'] == 'pending'
@@ -134,4 +158,6 @@ def test_process_restart_preserves_pending_review_and_input(source, tmp_path, ho
         with sqlite3.connect(state/'local/events.sqlite3') as db:
             assert db.execute('SELECT * FROM llm_calls ORDER BY run_id,call_key').fetchall() == ledger
         assert client.get('/readiness').json()['ready']
+        if package_version == 2:
+            assert client.get('/analysis/groups?workflow_version=current').json()['metadata']['workflow_version'] == 'regional-workflow-2'
     assert verify(inputs) == manifest
