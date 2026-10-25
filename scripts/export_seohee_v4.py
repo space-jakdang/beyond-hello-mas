@@ -8,6 +8,8 @@ import unicodedata
 from pathlib import Path
 
 from backend.app.config import ROOT
+from backend.tools.card_alarm_v4 import parse as parse_card_alarms
+from backend.tools.indicators import digest
 from backend.tools.neighborhoods import boundaries
 from backend.tools.segments_v4 import (
     DATASET_VERSION,
@@ -23,6 +25,7 @@ GENERATOR_VERSION = "1"
 SOURCE_FILES = {
     "1_탐지/dong_stage_age.csv": "stage",
     "1_탐지/structural_risk_seoul.csv": "structure",
+    "1_탐지/card_alarm_weekly.csv": "card",
 }
 REGION_NAME = {"강남": "강남구", "춘천": "춘천시"}
 SEX = {"남": "M", "여": "F"}
@@ -186,6 +189,8 @@ def export(source_root, destination):
                           ("지역", "자치구", "행정동", "성", "연령대", "월평균인구", "틀", "단계", "단계명", "약점수", "이유"))
     structure_rows = read_csv(paths["1_탐지/structural_risk_seoul.csv"],
                               ("자치구", "행정동", "성", "연령대", "서울대비"))
+    card_raw = paths["1_탐지/card_alarm_weekly.csv"].read_bytes()
+    parse_card_alarms(card_raw)
     rows = build_rows(stage_rows, structure_rows, boundary_body["features"])
     after = source_hashes(checked_paths)
     if before != after:
@@ -197,19 +202,26 @@ def export(source_root, destination):
         local = output / "local"
         local.mkdir(parents=True)
         metadata = write_segments(local / "segments-v4.parquet", rows, "local", before)
-        artifact_hash = sha256(local / "segments-v4.parquet")
+        card_path = local / "seohee/card_alarm_weekly.csv"
+        card_path.parent.mkdir(parents=True)
+        card_path.write_bytes(card_raw)
         manifest = {
             "manifest_version": "1",
             "generator": f"scripts.export_seohee_v4:{GENERATOR_VERSION}",
             "input_schema_version": 4,
+            "data_mode": "local",
             "geography_version": boundary_metadata["version"],
             "geography_hash": boundary_metadata["subset_sha256"],
             "dataset_version": DATASET_VERSION,
             "observation_year": 2025,
             "local_only": True,
             "source_hashes": before,
-            "artifact_hashes": {"segments-v4.parquet": artifact_hash},
-            "input_hash": metadata["input_hash"],
+            "artifact_hashes": {
+                "segments-v4.parquet": sha256(local / "segments-v4.parquet"),
+                "seohee/card_alarm_weekly.csv": sha256(card_path),
+            },
+            "segment_input_hash": metadata["input_hash"],
+            "input_hash": digest(before),
         }
         (local / "import.json").write_text(json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
         if source_hashes(checked_paths) != before:

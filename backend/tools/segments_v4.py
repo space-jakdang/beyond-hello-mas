@@ -1,4 +1,5 @@
 """Versioned group-stage input for Seohee's 2026-10-25 regional data."""
+import hashlib
 import json
 from typing import Literal
 
@@ -112,6 +113,16 @@ def write_segments(path, rows, data_mode, source_hashes):
 
 def load_segments(settings):
     path = settings.data_dir / "segments-v4.parquet"
+    manifest_path = settings.data_dir / "import.json"
+    if any(p.is_symlink() for p in (path, manifest_path, *path.parents, *manifest_path.parents)):
+        raise ValueError("symlink v4 input")
+    manifest = json.loads(manifest_path.read_text())
+    if (manifest.get("input_schema_version") != 4
+            or manifest.get("dataset_version") != DATASET_VERSION
+            or manifest.get("data_mode") != settings.data_mode
+            or hashlib.sha256(path.read_bytes()).hexdigest()
+            != manifest.get("artifact_hashes", {}).get("segments-v4.parquet")):
+        raise ValueError("v4 package version or artifact checksum mismatch")
     table = pq.read_table(path)
     metadata = json.loads(table.schema.metadata[b"beyond_hello"])
     if metadata["schema_version"] != "4" or metadata["dataset_version"] != DATASET_VERSION:

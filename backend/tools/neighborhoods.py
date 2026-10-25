@@ -116,3 +116,43 @@ def group_analysis(settings,week=None,card_age="20s"):
             'neighborhoods':list(dongs.values()),'geometry':geo,'geography':provenance,
             'coverage':{'matched':len(geo['features']),'total':len(dongs),'unmatched_codes':unmatched},
             'period_aggregate':any(r.ym is None for r in rows),'metadata':{**result['metadata'],'source':source}}
+
+
+def group_analysis_v4(settings, week=None):
+    from backend.tools.card_alarm_v4 import load as load_cards
+    from backend.tools.region_stage_v4 import classify
+    from backend.tools.segments_v4 import load_segments as load_groups
+
+    rows, source = load_groups(settings)
+    cards, card_source = load_cards(settings)
+    result = classify(rows, cards, week)
+    dongs = {}
+    for row in rows:
+        info = {'dong_cd': row.dong_cd, 'dong_nm': row.dong_nm, 'sgg': row.sgg}
+        if row.dong_cd in dongs and dongs[row.dong_cd] != info:
+            raise ValueError('neighborhood identity changed')
+        dongs[row.dong_cd] = info
+    by_dong = {code: [] for code in dongs}
+    for segment in result['segments']:
+        by_dong[segment['dong_cd']].append(segment)
+    dong_rows = [
+        {**info, 'stage': max((row['final_stage'] for row in by_dong[code] if row['final_stage'] is not None), default=None),
+         'missing_age_bands': sum(not any(row['final_stage'] is not None for row in by_dong[code]
+                                           if row['source_age_band'] == age)
+                                  for age in {row['source_age_band'] for row in by_dong[code]})}
+        for code, info in dongs.items()
+    ]
+    geo, provenance, unmatched = geometry(settings, dongs)
+    return {
+        'data_mode': settings.data_mode,
+        'period_aggregate': True,
+        'segments': result['segments'],
+        'dongs': dong_rows,
+        'neighborhoods': list(dongs.values()),
+        'geometry': geo,
+        'geography': provenance,
+        'coverage': {'matched': len(geo['features']), 'total': len(dongs), 'unmatched_codes': unmatched},
+        'weekly': {'selected_week': result['metadata']['selected_week'],
+                   'signals': [row.model_dump(mode='json') for row in cards]},
+        'metadata': {**result['metadata'], 'source': source, 'card_source': card_source},
+    }

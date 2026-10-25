@@ -6,6 +6,7 @@
 |---|---|---|
 | 실제 동네·집단 분석, 통계, 근거 조회 | `local/segments-v3.parquet` | 최소 패키지 |
 | 주간 카드 신호 | `local/seohee/card_weekly_signals.csv`, `import.json` | 기존 해시 검증 후 필요한 파일만 표준 경로로 복사 |
+| 2026-10-25 지역 판정 v4 | `local/segments-v4.parquet`, `local/seohee/card_alarm_weekly.csv`, `local/import.json` | 명시적으로 선택한 v4 reader가 각 artifact 해시와 데이터 버전을 확인 |
 | 지역 자원 후보 | `local/resources-v3.csv` | 최소 패키지 |
 | 실제 지도 | `data/geography/` 경계·manifest·라이선스 | 기존 코드 배포, 패키지 검증 시 동일 경계 확인 |
 | 단계·연령 규칙, 프롬프트 | `rules/`, `backend/prompts/` | 코드 버전과 함께 배포 |
@@ -47,7 +48,7 @@ uv run python -m scripts.runtime_package verify /private/releases/input-v1
 
 ### v4 집계 입력 만들기
 
-변환기는 지정 전달본의 동 단계와 서울 구조 위험 집계 CSV를 읽고 선택한 원천 해시를 전후 대조한 뒤, 새 목적지의 local/segments-v4.parquet와 import.json을 원자적으로 만든다. 목적지는 이미 존재하면 거부한다. 개인 단위 파일과 나머지 전달 폴더는 복사하지 않는다.
+변환기는 지정 전달본의 동 단계, 서울 구조 위험 집계, 주간 카드 집계 CSV를 검증한다. 단계 artifact와 V/N 비율·단계·경보·기준선을 보존한 카드 CSV만 새 목적지에 쓰고, 선택한 원천 해시를 전후 대조한 뒤 import.json과 함께 새 패키지를 원자적으로 완성한다. v4 reader는 schema/dataset version과 각 파일 해시를 확인한다. 목적지는 이미 존재하면 거부한다. 개인 단위 파일과 나머지 전달 폴더는 복사하지 않는다.
 
 ```sh
 uv run python -m scripts.export_seohee_v4 --source /private/input/agent-bundle --destination /private/releases/seohee-20261025
