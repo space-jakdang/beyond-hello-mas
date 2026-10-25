@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=ROOT / ".env", extra="ignore", allow_inf_nan=False)
     data_mode: Literal["sample", "local"] = "sample"
+    regional_workflow_version: Literal["regional-workflow-1", "regional-workflow-2"] | None = None
     input_root: Path | None = None
     runtime_storage_root: Path | None = None
     llm_mode: Literal["fake", "live"] = "fake"
@@ -54,6 +55,8 @@ class Settings(BaseSettings):
             self.openai_api_key and self.openai_api_key.get_secret_value().strip()
         ):
             raise ValueError("live mode requires OPENAI_API_KEY")
+        if self.regional_workflow_version == "regional-workflow-2" and self.data_mode != "local":
+            raise ValueError("regional-workflow-2 requires local data")
         return self
 
     @property
