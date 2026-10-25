@@ -59,9 +59,11 @@ def context_for(dong,scope,proposals):
                       'base_stage':r.get('base_stage'),'stage_scale':r.get('stage_scale'),'scenario_stage':r.get('scenario_stage'),
                       'value':r['value'],'source_bands':r.get('source_bands',{}),'source_period':r['source_period'],'flags':r.get('flags',[]),
                       'methodology_version':r.get('methodology_version'),'source_age_band':r.get('source_age_band'),
+                      'frame':r.get('frame'),'source_stage':r.get('source_stage'),'source_stage_label':r.get('source_stage_label'),
                       'assessment_status':r.get('assessment_status'),'final_stage_label':r.get('final_stage_label'),
+                      'final_stage':r.get('final_stage'),'stage_adjustment':r.get('stage_adjustment'),'priority_rank':r.get('priority_rank'),
                       'card_week':r.get('card_week'),'card_source_age_bands':r.get('card_source_age_bands'),
-                      'card_alarm_status':r.get('card_alarm_status')} for r in selected)
+                      'card_alarm_status':r.get('card_alarm_status'),'card_evidence':r.get('card_evidence')} for r in selected)
         analyses.append({'target_group':group,'summary':(proposal.get('workflow',{}).get('analysis') or {}).get('summary','분석 미완료')})
         stats=proposal.get('workflow',{}).get('statistics',{})
         statistics.extend(i for i in stats.get('summary',{}).get('insights',{}).get('items',[]) if i['evidence_id'] in ids)
