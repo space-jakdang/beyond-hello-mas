@@ -1,4 +1,5 @@
 from datetime import date
+from zoneinfo import ZoneInfo
 from typing import Literal
 
 from pydantic import Field
@@ -52,7 +53,7 @@ def filter_catalog(resources, request, *, regional_ages=None):
         reasons = []; conditions = {}; overlaps = []
         if not resource.active or (resource.valid_until and resource.valid_until < request.as_of):
             reasons.append('inactive_or_expired')
-        if resource.collected_at.date() > request.as_of:
+        if resource.collected_at.astimezone(ZoneInfo('Asia/Seoul')).date() > request.as_of:
             reasons.append('not_yet_collected')
         if not allowed.intersection(resource.jurisdiction):
             reasons.append('jurisdiction')
