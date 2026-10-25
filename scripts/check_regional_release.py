@@ -114,7 +114,8 @@ def _check_v2(root, source_delivery, before):
                             runtime_storage_root=Path(state), resource_catalog='v3',
                             regional_workflow_version='regional-workflow-2', llm_mode='fake',
                             person_mcp_mode='stub', openai_api_key=None,
-                            gov24_service_key=None, kosis_api_key=None, llm_max_calls=10)
+                            kosis_api_key=None, llm_max_calls=10,
+                            **{'GOV24_API_KEY': None})
         results = []
         if (settings.openai_api_key is not None or settings.gov24_service_key is not None
                 or settings.kosis_api_key is not None or settings.llm_mode != 'fake'
