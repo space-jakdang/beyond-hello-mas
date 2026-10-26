@@ -1,0 +1,73 @@
+{
+  "dependencies": {
+    ".env.example": [
+      "tests/test_regional_context_service.py"
+    ],
+    "backend/prompts/workflow_analyst.txt": [
+      "tests/test_context_analysis.py",
+      "tests/test_workflow_agents.py"
+    ],
+    "backend/prompts/workflow_statistics.txt": [
+      "tests/test_context_analysis.py",
+      "tests/test_workflow_agents.py",
+      "tests/test_regional_policy_input.py"
+    ],
+    "backend/prompts/policy_decision.txt": [
+      "tests/test_regional_research.py",
+      "tests/test_policy_agent.py",
+      "tests/test_regional_orchestration.py"
+    ],
+    "backend/prompts/policy_alternatives.txt": [
+      "tests/test_pinpoint_policy.py",
+      "tests/test_policy_alternatives.py",
+      "tests/test_alternative_review.py",
+      "tests/test_regional_orchestration.py"
+    ],
+    "rules/regional_response_reasons.json": [
+      "tests/test_regional_policy_exports.py"
+    ],
+    "frontend/src/BatchProgress.tsx": [
+      "frontend/e2e/regional-context.spec.ts",
+      "frontend/e2e/workflow.spec.ts"
+    ],
+    "frontend/src/PolicyAlternatives.tsx": [
+      "frontend/e2e/regional-context.spec.ts",
+      "frontend/e2e/workflow.spec.ts"
+    ],
+    "frontend/src/PolicyCandidates.tsx": [
+      "frontend/e2e/regional-context.spec.ts",
+      "frontend/e2e/workflow.spec.ts"
+    ],
+    "frontend/src/RegionalContext.tsx": [
+      "frontend/e2e/regional-context.spec.ts",
+      "frontend/e2e/workflow.spec.ts"
+    ],
+    "frontend/src/ReportDownloads.tsx": [
+      "frontend/e2e/regional-context.spec.ts",
+      "frontend/e2e/workflow.spec.ts"
+    ],
+    "frontend/src/Workflow.tsx": [
+      "frontend/e2e/regional-context.spec.ts",
+      "frontend/e2e/workflow.spec.ts"
+    ],
+    "frontend/src/workflow.css": [
+      "frontend/e2e/regional-context.spec.ts",
+      "frontend/e2e/workflow.spec.ts"
+    ],
+    "frontend/tsconfig.json": [
+      "frontend/e2e/regional-context.spec.ts",
+      "frontend/e2e/workflow.spec.ts"
+    ],
+    "scripts/run_selected.py": [
+      "tests/test_regional_policy_exports.py",
+      "frontend/e2e/regional-context.spec.ts"
+    ],
+    "frontend/src/AlternativeQuality.tsx": [
+      "frontend/e2e/alternative-quality.spec.ts"
+    ],
+    "eval/fixtures/pinpoint-policy-cases.json": [
+      "tests/test_pinpoint_acceptance.py"
+    ]
+  },
+  "runner": "uv run python -m scripts.run_selected {files}"
+}

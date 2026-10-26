@@ -5,6 +5,23 @@ from backend.tools.indicators import digest
 
 
 def readiness(assessment):
+    if assessment['metadata'].get('analysis_version')=='v4':
+        groups=defaultdict(list)
+        for row in assessment['segments']:
+            groups[(row['sgg'],row['sex'],row['source_age_band'])].append(row)
+        return {'version':'statistical-sources-v4','input_hash':assessment['metadata']['input_hash'],
+                'cohorts':[{'id':digest(key),'sgg':key[0],'sex':key[1],'source_age_band':key[2],
+                            'segments':len(rows),'observed':sum(r['assessment_status']=='assessed' for r in rows),
+                            'holds':sum(r['assessment_status']=='small_population_hold' for r in rows),
+                            'insufficient_evidence':sum(r['assessment_status']=='insufficient_evidence' for r in rows),
+                            'monthly_points':0,'weekly_card_points':len({r['week'] for r in assessment.get('weekly_observations',[])}),
+                            'period_aggregate':True,'population_context_only':True,
+                            'unavailable':['continuous_index','verified_target_population','service_capacity','service_usage'],
+                            'source_files':['local/segments-v4.parquet','local/seohee/card_alarm_weekly.csv']}
+                           for key,rows in sorted(groups.items())],
+                'external_source_added':False,'limitations':['원천 단계의 상태와 카드 관측 범위를 확인합니다. 단계는 연속 지수가 아니므로 평균·신뢰구간을 산출하지 않습니다.',
+                    '주간 카드는 집단별 경보 신호이며 동별 카드 관측이나 개인 위험을 뜻하지 않습니다.',
+                    '집단 인구는 복지 수혜자 분모가 아니며 서비스 수용량·이용량은 없습니다.']}
     groups=defaultdict(list)
     for row in assessment['segments']:
         key=(row['sgg'],row['sex'],row['age_group'],row['index_name'],row['source_period'],digest(row['source_bands']))

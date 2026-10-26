@@ -17,17 +17,31 @@ class AnalystPlan(BaseModel):
     priority_evidence_ids:list[str]=Field(max_length=5)
 
 
+class RegionalNote(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    fact_ids:list[str]=Field(min_length=1,max_length=8)
+    implication:str=Field(min_length=1,max_length=500)
+    hypothesis:str=Field(min_length=1,max_length=500)
+    missing_evidence:list[str]=Field(min_length=1,max_length=5)
+
+
 class StatisticsDecision(BaseModel):
     model_config=ConfigDict(extra='forbid')
     action:Literal['lookup','finish','revise','human']
-    tool:Literal['trend','source_check','sensitivity','policy_insights']
+    tool:Literal['trend','source_check','sensitivity','policy_insights','regional_profile','regional_comparison']
     reason:str=Field(min_length=1,max_length=1000)
     blocked_evidence_ids:list[str]=Field(max_length=50)
+    regional_notes:list[RegionalNote]=Field(default_factory=list,max_length=5)
 
 
 def observations(assessment):
     from backend.tools.regional_resources import need_profile
     return [{'evidence_id':r['evidence_id'],**{k:r.get(k) for k in ('dong_nm','stage','index_name','value','source_period','source_bands','flags')},
+             **({'source_age_band':r['source_age_band'],'assessment_status':r['assessment_status'],
+                 'base_stage':r['base_stage'],'final_stage':r['final_stage'],
+                 'card_alarm_status':r['card_alarm_status'],'card_week':r['card_week'],
+                 'card_source_age_bands':r['card_source_age_bands']}
+                if assessment['metadata'].get('analysis_version')=='v4' else {}),
              **({'observed_factors':need_profile(r)['observed_factors']} if r.get('components') else {})} for r in assessment['segments']]
 
 
@@ -36,17 +50,28 @@ def model_observations(items):
     result=[]
     for observation in items:
         view=dict(observation)
-        if observation['tool']=='policy_insights':
+        if observation['tool']=='regional_profile':
+            from backend.context.analysis import model_briefing
+            view=model_briefing({**observation,'areas':observation['areas'][:3]})
+            view['unshown_dongs']=[a['dong_cd'] for a in observation['areas'][3:]]
+        elif observation['tool']=='regional_comparison':
+            view={**observation,'comparisons':observation['comparisons'][:12],'omitted_comparisons':max(0,len(observation['comparisons'])-12)}
+        elif observation['tool']=='policy_insights':
             view={'tool':'policy_insights','version':observation['version'],'result_reference':'summary.insights'}
         elif observation['tool']=='sensitivity':
             view={**observation,'item_columns':['evidence_id','stages','base_stage_stable'],'items':[[i['evidence_id'],i['stages'],i['base_stage_stable']] for i in observation['items']]}
         elif observation['tool']=='source_check':
-            sources=list(dict.fromkeys(r['source_file'] for r in observation['items']))
-            view['sources']=sources
-            view['item_columns']=['evidence_id','status','value_missing','stage_missing','source_index']
-            view['items']=[[r[k] for k in view['item_columns'][:-1]]+[sources.index(r['source_file'])] for r in observation['items']]
+            if observation.get('tool_version')=='regional-statistics-v4':
+                view['item_columns']=['evidence_id','source_age_band','source_stage','assessment_status','final_stage','selected_week','card_source_age_bands','card_evidence','card_alarm_status']
+                view['items']=[[r[k] for k in view['item_columns']] for r in observation['items']]
+            else:
+                sources=list(dict.fromkeys(r['source_file'] for r in observation['items']))
+                view['sources']=sources
+                view['item_columns']=['evidence_id','status','value_missing','stage_missing','source_index']
+                view['items']=[[r[k] for k in view['item_columns'][:-1]]+[sources.index(r['source_file'])] for r in observation['items']]
         elif observation['tool']=='trend':
-            view['point_columns']=['ym','value','change']
+            view['point_columns']=(['week','alarm_stage','baseline_status','source_age_bands','v_stages','n_stages']
+                                   if observation.get('tool_version')=='regional-statistics-v4' else ['ym','value','change'])
             view['series']=[{**series,'points':[[point[k] for k in view['point_columns']] for point in series['points']]} for series in observation['series']]
         result.append(view)
     return result
@@ -56,14 +81,28 @@ def model_summary(summary):
     summary=dict(summary)
     if 'data_readiness' in summary:
         source=summary['data_readiness']
-        summary['data_readiness']={**source,'cohorts':[{k:v for k,v in c.items() if k in ('id','observed','missing','comparison_ready','monthly_points','unavailable','synthetic')} for c in source['cohorts']]}
+        summary['data_readiness']={**source,'cohorts':[{k:v for k,v in c.items() if k in ('id','observed','missing','comparison_ready','monthly_points','unavailable','synthetic','source_age_band','holds','insufficient_evidence','weekly_card_points','period_aggregate')} for c in source['cohorts']]}
     if 'insights' in summary:
-        summary['insights']={'version':summary['insights']['version'],'item_columns':['evidence_id','peer_count','risk_direction_difference','need_signals'],'items':[[i['evidence_id'],i['comparison']['peer_count'],i['comparison']['risk_direction_difference'],i['measured_need_signals']] for i in summary['insights']['items']]}
+        source=summary['insights']
+        summary['insights']={**{k:v for k,v in source.items() if k in ('version','status','reason')},
+                             'item_columns':['evidence_id','peer_count','risk_direction_difference','need_signals'],
+                             'items':[[i['evidence_id'],i['comparison']['peer_count'],i['comparison']['risk_direction_difference'],i['measured_need_signals']] for i in source['items']]}
     needs=summary.get('policy_needs')
     return {**summary,'policy_needs':{k:v for k,v in needs.items() if k!='profiles'}} if needs else summary
 
 
 def methodology(assessment):
+    if assessment['metadata'].get('analysis_version')=='v4':
+        from backend.tools.region_stage_v4 import STAGE_LABEL
+        task=assessment['task']
+        return {'version':assessment['methodology_version'],'stage_meanings':STAGE_LABEL,
+                'stage_scope':'Source stages -1/0 distinguish insufficient evidence and population hold. Assessed stages 1-5 are ordinal review priorities; no continuous index or cross-region absolute risk.',
+                'source_age_band':task['source_age_band'],'source_age_coverage':task['source_age_band'],
+                'selected_card_week':task['card_week'],'card_rule':'min(V,N); strong alone raises an assessed base stage by one, capped at five; no hold/insufficient status uplift',
+                'period_role':'2025 stage input is a period aggregate; selected card week is the only weekly observation used for the final stage.',
+                'continuous_metric':False,'provisional':True,
+                'purpose':'within-source-group outreach review; not individual diagnosis, eligibility, or absolute cross-region risk',
+                'need_mapping':'regional-needs-3: stage and card signals alone do not establish a service need; require source factor definitions and field confirmation'}
     from backend.tools.regional_task import STAGES
     return {'version':assessment['methodology_version'],'stage_meanings':STAGES,'stage_scope':'S1/v3 base stages 1-3; other source/rank stages 1-5. Common priority criterion is unvalidated; no cross-scale comparison. Weekly exploration is separate.',
             'group_definition':', '.join(json.loads((Path(__file__).resolve().parents[2]/'rules/age_crosswalk.json').read_text())['concept'][assessment['task']['age_group']]),
@@ -80,11 +119,21 @@ def analyze(agents,run_id,sim_ts,assessment,feedback=None):
     if feedback and feedback.get('statistics'):
         feedback={**feedback,'statistics':{**feedback['statistics'],'summary':model_summary(feedback['statistics']['summary']),'observations':model_observations(feedback['statistics']['observations'])}}
     plan=agents.call(run_id,sim_ts,'workflow_analyst',{'facts':facts,'task':assessment['task'],
-        'feedback':feedback,'methodology':methodology(assessment),'provisional':True,'period_aggregate':assessment['period_aggregate']}).model_dump()
+        'feedback':feedback,'methodology':methodology(assessment),'provisional':True,'period_aggregate':assessment['period_aggregate'],**context_payload(assessment)}).model_dump()
     allowed={r['evidence_id'] for r in facts}
     if len(set(plan['priority_evidence_ids']))!=len(plan['priority_evidence_ids']) or not set(plan['priority_evidence_ids'])<=allowed:
         raise WorkflowError('unobserved_analyst_evidence')
     return plan
+
+
+def context_payload(assessment,plan=None):
+    if 'regional_context' not in assessment:return {}
+    from backend.context.analysis import briefing,model_briefing
+    codes={r['dong_cd'] for r in assessment['segments'] if not plan or not plan['priority_evidence_ids'] or r['evidence_id'] in plan['priority_evidence_ids']}
+    available=sorted(codes)
+    view=model_briefing(briefing(assessment['regional_context'],set(available[:3])))
+    view['available_dongs']=available;view['unshown_dongs']=available[3:]
+    return {'regional_context':view}
 
 
 def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadline,cached_observations=()):
@@ -101,12 +150,49 @@ def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadli
             final=current and revised is not None
             context={'review_version':'statistics-review-2','review_phase':'final' if final else 'initial',
                      'revision_reason':result['reason'] if final else None} if current else {}
-            tools=['trend','source_check','sensitivity']+([] if current else ['policy_insights'] if modern else [])
-            decision=agents.call(run_id,sim_ts,'workflow_statistics',{'task':assessment['task'],'plan':plan,
+            tools=['trend','source_check','sensitivity']+(['regional_profile','regional_comparison'] if 'regional_context' in assessment else [])+([] if current else ['policy_insights'] if modern else [])
+            payload={'task':assessment['task'],'plan':plan,
                 'summary':model_summary(base),'facts':observations(assessment),'methodology':methodology(assessment),'period_aggregate':assessment['period_aggregate'],
                 'observations':model_observations(retrieved),'step':step,'available_tools':[] if final else [tool for tool in tools if not any(o['tool']==tool for o in retrieved)] if current else tools,
-                'remaining_lookups':0 if final else (3 if modern else 1)-len(retrieved),**context}).model_dump()
+                'remaining_lookups':0 if final else (3 if modern else 1)-len(retrieved),**context,**context_payload(assessment,plan)}
+            aliases={}
+            if 'regional_context' in assessment:
+                from backend.context.analysis import short_fact_references
+                payload,aliases=short_fact_references(payload,assessment['regional_context'].values())
+                from backend.agents.llm import PROMPTS
+                prompt=(PROMPTS/'workflow_statistics.txt').read_text()
+                schema=StatisticsDecision.model_json_schema()
+                def fits():return len(json.dumps({'prompt':prompt,'payload':payload,'schema':schema},ensure_ascii=False).encode())<=settings.llm_max_input_bytes
+                if not fits():
+                    evidence_aliases={'E'+str(i+1):identifier for i,identifier in enumerate(sorted({f['evidence_id'] for f in payload['facts']}))}
+                    encoded=json.dumps(payload,ensure_ascii=False)
+                    for short,canonical in evidence_aliases.items():encoded=encoded.replace(json.dumps(canonical),json.dumps(short))
+                    payload=json.loads(encoded);aliases.update(evidence_aliases)
+                    payload['regional_reference_note']='Use the supplied short E/R identifiers exactly; the server restores canonical evidence and regional fact IDs.'
+                views=[payload['regional_context'],*[o for o in payload['observations'] if o['tool']=='regional_profile']]
+                repeated={(a['dong_cd'],a.get('input_hash')) for o in views[1:] for a in o['areas']}
+                payload['regional_context']['areas']=[a for a in payload['regional_context']['areas'] if (a['dong_cd'],a.get('input_hash')) not in repeated]
+                payload['regional_context']['profile_dongs_in_observations']=sorted(code for code,_ in repeated)
+                if not fits():
+                    columns=list(dict.fromkeys(k for fact in payload['facts'] for k in fact))
+                    payload['fact_columns']=columns
+                    payload['facts']=[[fact.get(k) for k in columns] for fact in payload['facts']]
+                while not fits():
+                    view=next((v for v in views if len(v['areas'])>1),None)
+                    if view is None:break
+                    omitted=view['areas'].pop()['dong_cd']
+                    view['unshown_dongs']=sorted(set(view.get('unshown_dongs',[]))|{omitted})
+            decision=agents.call(run_id,sim_ts,'workflow_statistics',payload).model_dump()
+            for note in decision.get('regional_notes',[]):note['fact_ids']=[aliases.get(i,i) for i in note['fact_ids']]
+            decision['blocked_evidence_ids']=[aliases.get(i,i) for i in decision['blocked_evidence_ids']]
             if time()>=deadline:raise WorkflowError('deadline')
+            from backend.context.analysis import validate_notes,observed_ids
+            if decision['action']=='lookup' and 'regional_context' not in assessment and decision['tool'].startswith('regional_'):raise WorkflowError('regional_context_not_available')
+            visible=observed_ids(payload.get('regional_context',{'areas':[]}))
+            visible.update(identifier for o in payload['observations'] if o['tool']=='regional_profile' for identifier in observed_ids(o))
+            visible.update(identifier for o in payload['observations'] if o['tool']=='regional_comparison' for c in o['comparisons'] for identifier in [c['fact_id'],*c['peer_fact_ids']])
+            notes=validate_notes(decision.get('regional_notes',[]),assessment,{'areas':[]},{aliases.get(i,i) for i in visible})
+            if notes or 'regional_notes' not in result:result['regional_notes']=notes
             blocked=decision['blocked_evidence_ids']
             if len(set(blocked))!=len(blocked) or not set(blocked)<=allowed:raise WorkflowError('unobserved_statistics_evidence')
             result['blocked_evidence_ids']=sorted(set(base['blocked_evidence_ids'])|set(blocked))
@@ -119,6 +205,9 @@ def statistical_review(agents,settings,run_id,sim_ts,assessment,plan,emit,deadli
                 if len(retrieved)>=(3 if modern else 1) or any(o['tool']==decision['tool'] for o in retrieved):raise WorkflowError('statistics_lookup_limit')
                 if not modern and decision['tool']=='policy_insights':raise WorkflowError('legacy_tool_not_available')
                 observation=next((o for o in cached_observations if o['tool']==decision['tool']),None)
+                if observation is not None and decision['tool'].startswith('regional_'):
+                    from backend.tools.indicators import digest
+                    if observation.get('input_hash')!=digest({code:p['input_hash'] for code,p in assessment['regional_context'].items()}):raise WorkflowError('regional_cached_input_mismatch')
                 if observation is None:observation=run_tool(decision['tool'],settings,assessment)
                 retrieved.append(observation)
                 emit('statistics-tool' if not modern else f'statistics-tool-{len(retrieved)}','statistics','statistics',{'tool':decision['tool'],'observation':observation})

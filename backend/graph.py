@@ -118,6 +118,13 @@ class GraphService:
                 frozen=db.execute('SELECT assessment FROM regional_batch_children WHERE run_id=?',(state['run_id'],)).fetchone()
             result=json.loads(frozen[0]) if frozen else assess(self.settings,task_from(scenario.payload))
             if scenario.payload.get('statistics_version')=='2':result['metadata']['statistics_version']='2'
+            if scenario.payload.get('policy_context_version')=='regional-policy-2':
+                if 'regional_context' not in result:
+                    from backend.context.orchestration import freeze
+                    result['regional_context']=freeze(self,state['run_id'],result['task'],result['dongs'],deadline=state['workflow_deadline'])
+                if 'catalog_snapshot' not in result:
+                    result['catalog_snapshot']=[r.model_dump(mode='json') for r in load_catalog(self.settings.catalog_path)]
+                result['metadata']['policy_context_version']='regional-policy-2'
             self.node_event(state, 'classify', result, started)
             return {'classification':result}
         elif scenario.type == 'admin' or 'person' in scenario.payload:
@@ -249,7 +256,7 @@ class GraphService:
 
     def workflow_proposal(self,state):
         started=time.monotonic();workflow=state['workflow']
-        proposal={'scope':'regional_evidence_review','workflow_version':'regional-workflow-1',
+        proposal={'scope':'regional_evidence_review','workflow_version':state['classification']['methodology_version'],
             'task':state['classification']['task'],'assessment':state['classification'],
             'workflow':workflow,'assignments':workflow.get('assignments',[]),
             'human_review_required':True,'provisional':True,'external_delivery':False,
@@ -349,14 +356,16 @@ class GraphService:
         proposal=dict(state['proposal'])
         current=(proposal.get('assessment') or {}).get('metadata',{}).get('policy_gap_version')=='policy-gap-1'
         gaps=[a for a in proposal['assignments'] if a.get('policy_gap',{}).get('research_needed')] if current else [a for a in proposal['assignments'] if a.get('shortfall',0)>0 and (not proposal.get('workflow_version') or a.get('catalog_filter_performed'))]
+        context_mode=state['scenario']['payload'].get('policy_context_version')=='regional-policy-2'
         scopes={'central'}
         jurisdiction={'11230':('seoul','gangnam'),'32010':('gangwon','chuncheon')}
+        if context_mode:scopes.update(jurisdiction[proposal['task']['sgg']])
         unsupported=any(a['dong_cd'][:5] not in jurisdiction for a in gaps)
         for assignment in gaps:
             scopes.update(jurisdiction.get(assignment['dong_cd'][:5],()))
         with self.store.connection() as db:
             calls=db.execute('SELECT COUNT(*) FROM llm_calls WHERE run_id=?',(state['run_id'],)).fetchone()[0]
-        limit=self.settings.llm_max_calls if proposal.get('workflow_version')=='regional-workflow-1' else min(6,self.settings.llm_max_calls)
+        limit=self.settings.llm_max_calls if context_mode or proposal.get('workflow_version')=='regional-workflow-1' else min(6,self.settings.llm_max_calls)
         remaining=max(0,limit-calls)
         task={'goal':'지역 집단 자원 부족을 보완할 정책 후보를 조사하세요. 개인 자격·정원·배정은 확정하지 마세요.',
               'scopes':sorted(scopes),'query':'','max_steps':max(1,remaining-2 if proposal.get('workflow_version') and remaining>=5 else remaining)}
@@ -364,26 +373,38 @@ class GraphService:
             task['goal']='필요 가설과 명시된 조사 사유에 따라 정책 후보를 확인하세요. 후보 수로 정책 부재를 추정하지 말고 개인 자격·정원·배정을 확정하지 마세요. 조사 사유: '+', '.join(sorted({reason for row in gaps for reason in row['policy_gap']['research_reasons']}))
         if proposal.get('workflow_version'):
             task['goal']+=' 검색 후 적합한 후보의 상세 원문을 확인하고 근거를 반환하세요. 욕구 가설: '+', '.join(sorted({n for a in gaps for n in a.get('needs',[])}))+'; 기준일: '+proposal['task']['as_of']
-            task['goal']+=' 요청 집단(관측 모집단과 동등함을 뜻하지 않음): '+json.dumps({k:proposal['task'].get(k) for k in ('sgg','sex','age_group','ym','dong_cd')},ensure_ascii=False)
+            task['goal']+=' 요청 집단(관측 모집단과 동등함을 뜻하지 않음): '+json.dumps({k:proposal['task'].get(k) for k in ('sgg','sex','age_group','source_age_band','ym','card_week','dong_cd')},ensure_ascii=False)
             task['goal']+=' 명백히 대상 연령·관할이 다른 정책은 현행 후보에서 제외하고 대상 조건을 설명하세요.'
         else:
             groups=sorted({str(a.get('sex','미분류'))+'/'+str(a.get('age_group',a.get('age_band','미분류'))) for a in gaps})
             task['goal']+=' 요청 집단(성별/연령; 개별 자격 미확인): '+', '.join(groups)
             task['goal']+=' 요청 집단에 명백히 해당하지 않는 정책은 제외하세요.'
+        if context_mode:
+            from backend.context.orchestration import research_task
+            task=research_task(proposal,task)
+            task['max_steps']=max(1,remaining-1 if remaining>=2 and state['scenario']['payload'].get('policy_proposal_version')!='batch-child' else remaining)
         emit=self.regional_emit(state)
         emit('policy-delegate','supervisor','policy',{'goal':task['goal'],'task':task,'gap_count':len(gaps),'remaining_calls':remaining})
         cached=next((t['payload']['result'] for t in self.store.traces(state['run_id'],limit=1000)
                      if t['kind']=='agent_message' and t['payload'].get('result_kind')=='regional_policy_candidates'),None)
         result=cached
         if result is None:
-            result=self.policy_agent.run(state['run_id'],state['scenario']['sim_time'],task) if remaining and not unsupported else {
-                'status':'unsupported_scope' if unsupported else 'call_limit','recommendations':[],'human_review_required':True,'allocation_performed':False}
+            if context_mode:
+                status='deadline' if time.time()>=state['workflow_deadline'] else 'need_not_established' if not task['needs'] else 'unsupported_scope' if unsupported else 'call_limit'
+                result=self.policy_agent.run(state['run_id'],state['scenario']['sim_time'],task,deadline=state['workflow_deadline']) if remaining and not unsupported and task['needs'] and status!='deadline' else {
+                    'status':status,'recommendations':[],'human_review_required':True,'allocation_performed':False}
+            else:
+                result=self.policy_agent.run(state['run_id'],state['scenario']['sim_time'],task) if remaining and not unsupported else {
+                    'status':'unsupported_scope' if unsupported else 'call_limit','recommendations':[],'human_review_required':True,'allocation_performed':False}
             emit('policy-result','policy','supervisor',{'result_kind':'regional_policy_candidates','result':result})
         self.node_event(state,'policy',result,started)
         proposal['policy_research']={'candidate_funnel':result.get('candidate_funnel'),'status':result['status'],'candidates':result.get('recommendations',[]),
             'search_complete_within_scope':result.get('search_complete_within_scope',False),'search_scope':result.get('search_scope'),
             'gap_count':len(gaps),'task':task,'coverage':result.get('coverage'),'steps':result.get('steps',0),'eligibility_verified':False,'remaining_capacity':None,
             'allocation_performed':False,'human_review_required':True}
+        if context_mode:
+            from backend.context.orchestration import complete_reviews
+            proposal['policy_research'].update(need_reviews=complete_reviews(proposal,result,task),research_version='regional-research-2')
         if current:
             from backend.tools.regional_resources import policy_gap
             proposal['policy_research']['research_request_count']=len(gaps)
@@ -398,12 +419,22 @@ class GraphService:
         started=time.monotonic()
         proposal=dict(state['proposal']);task=proposal['task']
         dongs=list({r['dong_cd']:{'dong_cd':r['dong_cd'],'dong_nm':r['dong_nm']} for r in proposal['assessment']['segments']}.values())
-        scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],'target_groups':[task['sex']+'/'+task['age_group']],'synthetic_future':bool(task.get('future_id'))}
-        self.regional_emit(state)('alternatives-delegate','supervisor','policy_design',{'goal':'기존 후보 유무와 무관하게 동별 정책 대안 세 개를 작성하세요.','scope':scope})
-        result=self.policy_designer.propose(state['run_id'],state['run_id'],scope,dongs,[proposal])
+        scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],'target_groups':[task['sex']+'/'+task.get('source_age_band',task['age_group'])],
+               'selected_week':task.get('card_week'),'synthetic_future':bool(task.get('future_id'))}
+        context_mode=state['scenario']['payload'].get('policy_context_version')=='regional-policy-2'
+        if context_mode:scope['policy_context_version']='regional-policy-2'
+        self.regional_emit(state)('alternatives-delegate','supervisor','policy_design',{'goal':'필요별 활용·보완·신규·근거 부족을 구분하고 검증된 설계 필요에만 대안을 작성하세요.' if context_mode else '기존 후보 유무와 무관하게 동별 정책 대안 세 개를 작성하세요.','scope':scope})
+        result=self.policy_designer.propose(state['run_id'],state['run_id'],scope,dongs,[proposal],deadline=state['workflow_deadline']) if context_mode else self.policy_designer.propose(state['run_id'],state['run_id'],scope,dongs,[proposal])
         proposal['policy_alternatives']={'owner_id':state['run_id'],'dong_count':len(result),'alternatives_per_dong':3}
-        self.regional_emit(state)('alternatives-result','policy_design','supervisor',{'dong_count':len(result),'alternatives_per_dong':3,'template_sets':sum(r['generation_mode']=='template_fallback' for r in result)})
-        self.node_event(state,'policy_design',{'status':'needs_evidence','dong_count':len(result)},started)
+        outcome={'dong_count':len(result),'alternatives_per_dong':3,'template_sets':sum(r['generation_mode']=='template_fallback' for r in result)}
+        if context_mode:
+            counts={r['dong_cd']:len(r['alternatives']) for r in result}
+            proposal['policy_alternatives'].pop('alternatives_per_dong')
+            proposal['policy_alternatives'].update(generation_rule='conditional_three',actual_counts=counts)
+            outcome.pop('alternatives_per_dong')
+            outcome.update(actual_counts=counts,status='needs_evidence' if any(r['status']=='needs_evidence' for r in result) else 'reuse_existing' if result and all(r['status']=='reuse_existing' for r in result) else 'draft')
+        self.regional_emit(state)('alternatives-result','policy_design','supervisor',outcome)
+        self.node_event(state,'policy_design',{'status':outcome.get('status','needs_evidence'),'dong_count':len(result)},started)
         proposal.pop('snapshot_version',None);proposal['snapshot_version']=digest(proposal)
         return {'proposal':proposal}
 
@@ -507,11 +538,12 @@ class GraphService:
             builder.add_edge('workflow_statistics','workflow_match')
             builder.add_edge('workflow_match','workflow_proposal')
             def after_research(s):
-                if s['scenario']['payload'].get('policy_proposal_version')=='three-1':return 'policy_alternatives'
+                if s['scenario']['payload'].get('policy_proposal_version') in ('three-1','regional-policy-2'):return 'policy_alternatives'
                 return 'approval'
             builder.add_node('policy_alternatives',self.policy_alternatives_node)
             builder.add_edge('policy_alternatives','approval')
             def workflow_research(s):
+                if s['scenario']['payload'].get('policy_context_version')=='regional-policy-2':return 'regional_policy'
                 if s['classification']['metadata'].get('policy_gap_version')=='policy-gap-1':
                     return 'regional_policy' if (s['scenario']['payload'].get('research_gaps') is True or s['scenario']['payload'].get('policy_research_requested') is True) and any(a.get('policy_gap',{}).get('research_needed') for a in s['proposal']['assignments']) else after_research(s)
                 return 'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and any(a.get('catalog_filter_performed') and a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else after_research(s)
@@ -530,7 +562,7 @@ class GraphService:
             builder.add_node('regional_policy',self.regional_policy_node)
             builder.add_conditional_edges('match',lambda s:'regional_policy' if s['scenario']['payload'].get('research_gaps') is True and s['proposal'].get('collaboration') and any(a.get('shortfall',0)>0 for a in s['proposal']['assignments']) else 'approval')
             builder.add_node('policy_design',self.policy_design_node)
-            builder.add_conditional_edges('regional_policy',lambda s:'policy_alternatives' if s['scenario']['payload'].get('policy_proposal_version')=='three-1' else 'approval' if s['scenario']['payload'].get('policy_proposal_version')=='batch-child' else 'policy_design' if s['proposal'].get('workflow_version') and not s['proposal']['policy_research'].get('candidates') else 'approval')
+            builder.add_conditional_edges('regional_policy',lambda s:'policy_alternatives' if s['scenario']['payload'].get('policy_proposal_version') in ('three-1','regional-policy-2') else 'approval' if s['scenario']['payload'].get('policy_proposal_version')=='batch-child' else 'policy_design' if s['proposal'].get('workflow_version') and not s['proposal']['policy_research'].get('candidates') else 'approval')
             builder.add_edge('policy_design','approval')
             builder.add_conditional_edges('approval', lambda s: 'link' if s['decision']['status'] == 'approved' else 'reject')
             builder.add_edge('link', END)
@@ -605,12 +637,20 @@ class GraphService:
 
     def register(self, scenario):
         self.check_evaluation(scenario.payload)
+        if scenario.type=='policy' and any(k in scenario.payload for k in ('research_version','regional_profiles','existing_resources','needs','statistical_notes')):
+            raise ValueError('regional research inputs must be supplied by the regional workflow')
+        context_version=scenario.payload.get('policy_context_version')
+        if context_version not in (None,'regional-policy-2') or context_version and not scenario.payload.get('workflow_version'):
+            raise ValueError('unsupported regional policy context')
         if 'revision' in scenario.payload:raise ValueError('use the revision endpoint for linked reruns')
         if scenario.payload.get('workflow_version'):
             from backend.tools.regional_task import task_from
             if scenario.type != 'monthly':raise ValueError('regional task requires monthly scenario')
             task_from(scenario.payload)
-            scenario=scenario.model_copy(update={'payload':{'policy_proposal_version':'three-1',**scenario.payload,'statistics_version':'2'}})
+            statistics_version='3' if scenario.payload['workflow_version']=='regional-workflow-2' else '2'
+            scenario=scenario.model_copy(update={'payload':{'policy_proposal_version':'three-1',**scenario.payload,'statistics_version':statistics_version}})
+            if context_version:
+                scenario=scenario.model_copy(update={'payload':{**scenario.payload,'policy_proposal_version':'regional-policy-2'}})
         if 'person' in scenario.payload:
             person = PersonCase.model_validate(scenario.payload['person'])
             if person.reply_to:
@@ -631,9 +671,10 @@ class GraphService:
             return run
 
     def new_run(self,scenario,run_id):
+        rule_version='seohee-region-20261025-1' if scenario.payload.get('workflow_version')=='regional-workflow-2' else 'seohee-region-2' if scenario.type=='monthly' and scenario.payload.get('analysis_version')!='legacy-v1' else 'provisional-1'
         return Run(id=run_id, scenario_id=scenario.id, thread_id=run_id, status='running',
             data_mode=self.settings.data_mode, llm_mode=self.settings.llm_mode, input_version=digest(scenario.model_dump(mode='json')),
-            rule_version='person-v02' if 'person' in scenario.payload else 'seohee-region-2' if scenario.type=='monthly' and scenario.payload.get('analysis_version')!='legacy-v1' else 'provisional-1', model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='seohee-resources-3' if self.settings.resource_catalog == 'v3' else 'curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
+            rule_version='person-v02' if 'person' in scenario.payload else rule_version, model_version=(self.settings.openai_model or 'unconfigured') if self.settings.llm_mode == 'live' else 'fake-v1', prompt_version='agents-v1', catalog_version='seohee-resources-3' if self.settings.resource_catalog == 'v3' else 'curated-20261018-1' if self.settings.resource_catalog == 'curated' else ('synthetic-1' if self.settings.data_mode == 'sample' else 'local'), started_at=utcnow())
 
     def start(self, scenario):
         return self.drive(self.register(scenario).id)

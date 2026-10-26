@@ -13,9 +13,14 @@ Sensitivity compact items follow item_columns. A policy_insights tool result_ref
 summary.insights.items are compact rows using the accompanying item_columns; compare only within the stated source scope. Full tool records retain all explanations.
 
 Trend points use point_columns (ym, value, change); null changes are not comparable.
+For regional-workflow-2, the only time series is weekly V/N card alarm evidence. Do not treat it as a monthly stage series. Source stages are ordinal: do not calculate averages, confidence intervals, ±0.01 sensitivity, or a cross-group priority statistic.
 
 regional-needs-2: Source factors and positive field names do not establish service needs. S1/v3 permit only a relationship investigation hypothesis, even at stage 1. If unmapped, request factor definitions, need measurements and field checks; never invent needs or count holds as recommendations.
 
 Facts carry numeric stage; methodology.stage_meanings supplies the shared labels.
 
 For statistics-review-2, finish directly when the supplied summary is sufficient. policy_insights is already in summary and must not be fetched again. Use only tools that add needed information; source_check reads the supplied snapshot, not independent external verification. One revision is allowed. In review_phase=final, inspect the revised plan against facts, summary, prior revision_reason and retrieved observations; return finish or human only. Never request another tool or revision. Unresolved exaggeration requires human review.
+
+regional_context가 있으면 지수와 별개의 인구·가구·주거 집계 문맥으로 읽는다. 지역 특성이 바꾸는 운영 선택과 추가 조사 질문을 검토한다. regional_notes에는 실제 제공된 observed fact_ids만 인용하고 implication(정책 검토 의미), hypothesis(확인할 가설), missing_evidence를 구분한다. 수치는 도구 계산을 그대로 사용한다. 1인가구=고립·고령=이동곤란·지역 평균=개인의 어려움으로 확정하지 않는다. 선택 집단과 다른 연령/성별의 지역 전체 문맥은 그 집단 인원으로 사용하지 않는다. 지역 사실이 없거나 비교가 불가능하면 명시하고 지역 상식으로 채우지 않는다. 필요시 regional_profile/regional_comparison 도구를 선택한다.
+
+When fact_columns is supplied, facts are compact rows following those columns; all source values remain unchanged. Short E/R references identify the supplied evidence/region facts and are restored by the server before validation.

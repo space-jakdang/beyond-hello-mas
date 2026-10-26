@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from backend.app.config import Settings
 from scripts.serve_private import prepare
+from tests.test_runtime_package import confirmed_package, source
 
 
 def settings(tmp_path, **changes):
@@ -82,18 +83,58 @@ sys.exit(1)
     assert result.returncode == 0, result.stderr.decode()
 
 
-def test_entrypoint_binds_only_loopback_one_worker(tmp_path, monkeypatch):
+@pytest.mark.parametrize(('version', 'workflow'), [(1, 'regional-workflow-1'), (2, 'regional-workflow-2')])
+def test_entrypoint_binds_only_loopback_one_worker(tmp_path, monkeypatch, version, workflow):
     import sys
     import uvicorn
     import backend.app.main
     import scripts.serve_private as entry
     cfg = settings(tmp_path)
     monkeypatch.setattr(entry, 'Settings', lambda: cfg)
-    monkeypatch.setattr('scripts.runtime_package.verify', lambda _: {'provenance': {'permission_status': 'private_contest_use_confirmed'}})
+    monkeypatch.setattr('scripts.runtime_package.verify', lambda _: {
+        'version': version, 'provenance': {'permission_status': 'private_contest_use_confirmed'}})
     app = object()
-    monkeypatch.setattr(backend.app.main, 'create_app', lambda: app)
+    configs = []
+    monkeypatch.setattr(backend.app.main, 'create_app', lambda config: configs.append(config) or app)
     calls = []
     monkeypatch.setattr(uvicorn, 'run', lambda *args, **kwargs: calls.append((args, kwargs)))
     monkeypatch.setattr(sys, 'argv', ['serve_private', '--port', '8123'])
     entry.main()
     assert calls == [((app,), {'host':'127.0.0.1', 'port':8123, 'workers':1})]
+    assert configs[0].regional_workflow_version == workflow
+
+
+def test_hosted_entrypoint_requires_authentication_and_a_mounted_disk(tmp_path, monkeypatch):
+    import scripts.serve_hosted as entry
+    monkeypatch.setenv('PRIVATE_HTTP_USER', 'reviewer')
+    monkeypatch.setenv('PRIVATE_HTTP_PASSWORD', 'too-short')
+    with pytest.raises(ValueError, match='PRIVATE_HTTP_PASSWORD'):entry.main()
+    monkeypatch.setenv('PRIVATE_HTTP_PASSWORD', 'synthetic-fixture-password-1234')
+    for username in [' ', 'bad:user']:
+        monkeypatch.setenv('PRIVATE_HTTP_USER', username)
+        with pytest.raises(ValueError, match='PRIVATE_HTTP_USER'):entry.main()
+    monkeypatch.setenv('PRIVATE_HTTP_USER', 'reviewer')
+    monkeypatch.delenv('RUNTIME_STORAGE_ROOT', raising=False)
+    with pytest.raises(ValueError, match='absolute RUNTIME_STORAGE_ROOT'):entry.main()
+    monkeypatch.setenv('RUNTIME_STORAGE_ROOT', str(tmp_path))
+    monkeypatch.setenv('RENDER', 'true')
+    with pytest.raises(ValueError, match='mounted persistent disk'):entry.main()
+    monkeypatch.delenv('RENDER')
+    monkeypatch.setenv('PORT', '65536')
+    with pytest.raises(ValueError, match='PORT'):entry.main()
+    monkeypatch.setenv('PORT', '10000')
+    monkeypatch.delenv('RUNTIME_INPUT_PACKAGE', raising=False)
+    with pytest.raises(ValueError, match='RUNTIME_INPUT_PACKAGE'):entry.main()
+
+
+def test_hosted_service_cannot_switch_to_an_empty_evaluation_ledger(confirmed_package, tmp_path, monkeypatch):
+    from uuid import uuid4
+    from scripts.runtime_package import encode
+    from scripts.serve_hosted import main
+    monkeypatch.delenv('RENDER', raising=False)
+    for name,value in {'PRIVATE_HTTP_USER':'reviewer', 'PRIVATE_HTTP_PASSWORD':'synthetic-fixture-password-1234',
+                       'RUNTIME_STORAGE_ROOT':str(tmp_path/'state'), 'PORT':'10000', 'LLM_MODE':'fake',
+                       'RUNTIME_INPUT_PACKAGE':encode(confirmed_package), 'EVALUATION_ID':str(uuid4())}.items():
+        monkeypatch.setenv(name,value)
+    with pytest.raises(ValueError, match='clear EVALUATION_ID'):main()
+    assert not (tmp_path/'state').exists()

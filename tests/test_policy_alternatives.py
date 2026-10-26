@@ -164,3 +164,45 @@ def test_exact_requested_group_label_maps_back_without_accepting_other_targets(s
     result=service.policy_designer.propose(str(uuid4()),run.id,scope,[{'dong_cd':row['dong_cd'],'dong_nm':row['dong_nm']}],[proposal])[0]
     assert [a['generation_mode'] for a in result['alternatives']]==['fixture','fixture','template_fallback']
     assert result['alternatives'][0]['target_groups']==['M/youth']
+
+
+def test_v4_assessed_stage_can_ground_policy_alternatives_without_continuous_value(service,monkeypatch):
+    from types import SimpleNamespace
+    from backend.policy.alternatives import generate
+
+    target='F/60대+';evidence_id='v4-evidence'
+    context={'dong_nm':'개포3동','target_groups':[target],'facts':[{'evidence_id':evidence_id,'target_group':target,'stage':2,'value':None,
+        'methodology_version':'regional-workflow-2','assessment_status':'assessed','source_age_band':'60대+',
+        'frame':'노년','source_stage':2,'source_stage_label':'관심','base_stage':2,'final_stage':2,'stage_adjustment':0,'priority_rank':7,
+        'final_stage_label':'관심','card_week':'2025-12-15','card_source_age_bands':['60대','70대+'],'card_alarm_status':'none',
+        'card_evidence':[{'source_age_band':'60대','baseline_status':'observed','v_ratio':1.1234,'n_ratio':None,'v_stage':1,'n_stage':0,'alarm_stage':0},
+                         {'source_age_band':'70대+','baseline_status':'unavailable','v_ratio':None,'n_ratio':None,'v_stage':0,'n_stage':0,'alarm_stage':0}]}],
+        'analyses':[],'statistics':[],'matching':[],'sources':[],'gap_contract_version':None}
+    calls=[]
+
+    def call(run_id,sim_ts,role,view):
+        calls.append((role,view['facts']))
+        output=templates(context)
+        for alternative in output['alternatives']:
+            alternative['problem_evidence_ids']=["E1"]
+        return SimpleNamespace(model_dump=lambda:output)
+
+    monkeypatch.setattr(service.agents,'call',call)
+    dong={'dong_cd':'11230001','dong_nm':'개포3동','sgg':'11230'}
+    scope={'sgg':'11230','ym':'2025-12','as_of':'2026-10-25','target_groups':[target],
+           'selected_week':'2025-12-15','synthetic_future':False}
+    result=generate(service.policy_designer,'v4-owner','v4-run',scope,[dong],[],contexts={dong['dong_cd']:context})[0]
+
+    assert len(calls)==1 and calls[0][0]=='policy_alternatives'
+    assert result['generation_mode']=='fixture'
+    assert result['alternatives'][0]['problem_evidence_ids']==[evidence_id]
+    assert result['evidence']['facts'][0]['value'] is None
+    from backend.policy.alternative_export import sections,render_pdf,render_docx
+    evidence_lines=[line for _,line in sections(result) if '연속 지수 미산출' in line]
+    assert len(evidence_lines)==1 and all(value in evidence_lines[0] for value in ('여성 60대+','원천 연령 60대+','노년','기본 단계 2','2025-12-15','V 1.123배/1단계','N 기준선 없음/0단계','부분 기준선','동별 확인 순서 7'))
+    from io import BytesIO
+    from pypdf import PdfReader
+    from zipfile import ZipFile
+    pdf='\n'.join(page.extract_text() for page in PdfReader(BytesIO(render_pdf(sections(result)))).pages)
+    with ZipFile(BytesIO(render_docx(sections(result)))) as archive:docx=archive.read('word/document.xml').decode()
+    assert 'V 1.123배/1단계' in pdf and 'N 기준선 없음/0단계' in docx and '부분 기준선' in pdf and '2025-12-15' in docx

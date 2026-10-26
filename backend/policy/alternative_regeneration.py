@@ -1,5 +1,6 @@
 """Explicit regeneration preserves the original and shares its call/cost budget."""
 import json
+import time
 from uuid import UUID, uuid5, NAMESPACE_URL
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel, ConfigDict
@@ -26,7 +27,7 @@ def execute(service,identifier):
         context={**context,'regeneration_id':identifier}
         from backend.policy.alternatives import generate
         try:
-            generate(service.policy_designer,identifier,job['run_id'],source['scope'],[{'dong_cd':source['dong_cd'],'dong_nm':source['dong_nm']}],[],contexts={source['dong_cd']:context})
+            generate(service.policy_designer,identifier,job['run_id'],source['scope'],[{'dong_cd':source['dong_cd'],'dong_nm':source['dong_nm']}],[],contexts={source['dong_cd']:context},**({'deadline':time.time()+120} if source.get('proposal_version')=='regional-policy-2' else {}))
             job['status']='completed'
         except Exception as exc:job.update(status='failed',error_type=type(exc).__name__)
         with service.store.connection(write=True) as db:db.execute('UPDATE policy_regenerations SET body=? WHERE id=?',(json.dumps(job,ensure_ascii=False),identifier))

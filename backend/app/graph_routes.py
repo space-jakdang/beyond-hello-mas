@@ -24,6 +24,8 @@ def graph_router(service):
     @router.post('/scenarios/run', status_code=202)
     def start(body: Scenario, background: BackgroundTasks):
         try:
+            if body.type=='policy' and {'research_version','needs','regional_profiles','statistical_notes','existing_resources'}&body.payload.keys():
+                raise ValueError('regional research inputs are supplied by the server')
             run = service.register(body)
             background.add_task(service.execute, run.id)
             return run

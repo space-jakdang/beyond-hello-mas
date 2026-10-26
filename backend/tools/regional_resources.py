@@ -13,6 +13,7 @@ def source_age_ranges(bands):
             v=value.replace('–','-').replace('~','-')
             if re.fullmatch(r'\d{2}s',v):low=int(v[:2]);high=low+9
             elif re.fullmatch(r'\d{2}(plus|\+)',v):low=int(v[:2]);high=120
+            elif match:=re.fullmatch(r'(\d{2})대(\+)?',v):low=int(match[1]);high=120 if match[2] else low+9
             elif re.fullmatch(r'\d{1,3}-\d{1,3}',v):low,high=map(int,v.split('-'))
             else:return None
             if not 0<=low<=high<=120:return None
@@ -30,6 +31,14 @@ def source_ages(bands):
 
 
 def need_profile(row):
+    if row.get('methodology_version')=='regional-workflow-2':
+        observed=row.get('assessment_status')=='assessed' and row.get('stage') is not None
+        return {'mapping_version':'regional-needs-3','needs':[],
+            'need_basis':'stage_only_no_need_inference',
+            'mapping_status':'needs_field_confirmation' if observed else 'insufficient_observation',
+            'observed_factors':{},'population_context':{},'invalid_factors':[],
+            'needed_data':['개별 욕구 측정 자료','현장 필요·접근 장벽 확인','대상 인구 분모','기존 서비스 이용·수용량'],
+            'next_action':'지역 단계와 카드 신호만으로 개인 욕구를 추정하지 않습니다. 원천 설문 근거와 현장 확인 후 후보를 검토합니다.'}
     valid=lambda value:type(value) in (float,int) and isfinite(value)
     observed=valid(row.get('value'))
     components={key:value for key,value in (row.get('components') or {}).items() if valid(value)}
@@ -59,6 +68,7 @@ def candidates(assessment,statistics,resources):
     insights={i['evidence_id']:i for i in statistics.get('summary',{}).get('insights',{}).get('items',[])}
     for row in assessment['segments']:
         base={k:row[k] for k in ('evidence_id','dong_cd','dong_nm','sgg','sex','age_group','stage','source_bands')}
+        if 'source_age_band' in row:base['source_age_band']=row['source_age_band']
         profile=need_profile(row);needs=profile['needs'];ranges=source_age_ranges(row['source_bands']);ages=(ranges[0][0],ranges[-1][1]) if ranges else None
         reason=('statistics_unreviewed' if statistics.get('status')!='reviewed' else
                 'insufficient_observation' if row['stage'] is None or row['evidence_id'] in blocked else
@@ -71,7 +81,7 @@ def candidates(assessment,statistics,resources):
             result=match(resources,request,regional_ages=ranges)
             if not result['recommendations']:reason='no_eligible_catalog_candidates'
         evidence={'version':'resource-decision-2', 'decision_contract_version':'regional-decision-2', 'observation':{k:row.get(k) for k in
-                    ('evidence_id','index_name','value','source_period','components','source_bands')},
+                    ('evidence_id','index_name','value','source_period','components','source_bands','source_age_band','methodology_version')},
                   'mapping_version':MAPPING_VERSION,'need_profile':profile,'provisional_needs':needs,'statistical_context':({**profiles.get(row['evidence_id'],{}),'insight':insights.get(row['evidence_id'])}),
                   'filter_request':request.model_dump(mode='json') if filtered else None,
                   'catalog_metadata':result.get('metadata'),

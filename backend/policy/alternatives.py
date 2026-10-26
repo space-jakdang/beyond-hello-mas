@@ -23,6 +23,12 @@ def templates(context):
         'missing_evidence':['대상별 현장 필요','실제 이용량·수용량','시행 근거·예산']} for key,(title,service,steps) in STRATEGIES.items()]}
 
 
+def observed_problem(fact):
+    if fact.get('methodology_version')=='regional-workflow-2':
+        return fact.get('assessment_status')=='assessed' and type(fact.get('stage')) is int and 1<=fact['stage']<=5
+    return fact.get('stage') is not None and fact.get('value') is not None
+
+
 def validate(output,context):
     result=Alternatives.model_validate(output).model_dump()
     items=result['alternatives']
@@ -42,7 +48,7 @@ def validate(output,context):
         if len(set(item['target_groups']))!=len(item['target_groups']):raise ValueError('duplicate target')
         for identifier in item['problem_evidence_ids']:
             fact=evidence[identifier]
-            if fact['target_group'] not in item['target_groups'] or fact['value'] is None or fact['stage'] is None:
+            if fact['target_group'] not in item['target_groups'] or not observed_problem(fact):
                 raise ValueError('unobserved or unrelated evidence')
     return result
 
@@ -56,7 +62,13 @@ def context_for(dong,scope,proposals):
         ids={r['evidence_id'] for r in selected}
         facts.extend({'evidence_id':r['evidence_id'],'target_group':group,'stage':r['stage'],'index_name':r['index_name'],
                       'base_stage':r.get('base_stage'),'stage_scale':r.get('stage_scale'),'scenario_stage':r.get('scenario_stage'),
-                      'value':r['value'],'source_bands':r.get('source_bands',{}),'source_period':r['source_period'],'flags':r.get('flags',[])} for r in selected)
+                      'value':r['value'],'source_bands':r.get('source_bands',{}),'source_period':r['source_period'],'flags':r.get('flags',[]),
+                      'methodology_version':r.get('methodology_version'),'source_age_band':r.get('source_age_band'),
+                      'frame':r.get('frame'),'source_stage':r.get('source_stage'),'source_stage_label':r.get('source_stage_label'),
+                      'assessment_status':r.get('assessment_status'),'final_stage_label':r.get('final_stage_label'),
+                      'final_stage':r.get('final_stage'),'stage_adjustment':r.get('stage_adjustment'),'priority_rank':r.get('priority_rank'),
+                      'card_week':r.get('card_week'),'card_source_age_bands':r.get('card_source_age_bands'),
+                      'card_alarm_status':r.get('card_alarm_status'),'card_evidence':r.get('card_evidence')} for r in selected)
         analyses.append({'target_group':group,'summary':(proposal.get('workflow',{}).get('analysis') or {}).get('summary','분석 미완료')})
         stats=proposal.get('workflow',{}).get('statistics',{})
         statistics.extend(i for i in stats.get('summary',{}).get('insights',{}).get('items',[]) if i['evidence_id'] in ids)
@@ -76,7 +88,7 @@ def context_for(dong,scope,proposals):
             'sources':list(sources.values()),'limits':['예산·정원·효과는 미확인','정책 부재를 증명한 것이 아닙니다.']}
 
 
-def research(designer,owner_id,run_id,context):
+def research(designer,owner_id,run_id,context,deadline=None):
     if context.get('gap_contract_version')=='policy-gap-1' and (not any((row.get('policy_gap') or {}).get('research_needed') for row in context['matching']) or
             (context['sources'] and not any(row['uncovered_needs'] for row in context['matching']))):
         context['research_steps']=[{'status':'existing_snapshot_reused' if context['sources'] else 'not_requested','purpose':'operating_alternatives_not_slot_filling','absence_established':False,
@@ -93,6 +105,10 @@ def research(designer,owner_id,run_id,context):
     targets=[g for g in context['target_groups'] if g in focus] or context['target_groups']
     observations=[];sources={source['policy_id']:source for source in context['sources']}
     for query in queries:
+        if deadline is not None and time.time()>=deadline:raise ValueError('deadline')
+        if context.get('design_version')=='pinpoint-1':
+            with designer.store.connection() as db:batch=db.execute('SELECT body FROM regional_batches WHERE id=?',(owner_id,)).fetchone()
+            if batch and json.loads(batch[0])['cancelled']:raise ValueError('cancelled')
         args={'local_scope':{'11230':'gangnam','32010':'chuncheon'}[context['scope']['sgg']],
               'query':query,'target_group':', '.join(group_label(g) for g in targets)}
         cache_key=digest({'arguments':args,'as_of':context['scope'].get('as_of')})
@@ -150,7 +166,10 @@ def model_context(context):
     return view
 
 
-def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
+def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None,deadline=None):
+    if scope.get('policy_context_version')=='regional-policy-2':
+        from backend.policy.pinpoint import generate as pinpoint_generate
+        return pinpoint_generate(designer,owner_id,run_id,scope,dongs,proposals,contexts,deadline=deadline)
     results=[]
     for dong in sorted(dongs,key=lambda d:d['dong_cd']):
         with designer.store.connection() as db:
@@ -165,13 +184,13 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
         from pathlib import Path
         from backend.policy.alternative_export import group_label
         age_groups=json.loads((Path(__file__).resolve().parents[2]/'rules/age_crosswalk.json').read_text())['concept']
-        context['target_group_labels']={g:group_label(g)+' ('+', '.join(age_groups[g.split('/')[1]])+')' for g in context['target_groups']}
+        context['target_group_labels']={g:group_label(g)+' ('+', '.join(age_groups.get(g.split('/')[1],[g.split('/')[1]]))+')' for g in context['target_groups']}
         from backend.agents.llm import PROMPTS
         overhead=len(json.dumps({'prompt':(PROMPTS/'policy_alternatives.txt').read_text(),'payload':{},'schema':Alternatives.model_json_schema()},ensure_ascii=False).encode())
         context['model_view_budget_bytes']=max(1,designer.settings.llm_max_input_bytes-overhead-32)
         if not contexts and any(r['value'] is not None for r in context['facts']):context=research(designer,owner_id,run_id,context)
         reason=None;mode='llm' if designer.settings.llm_mode=='live' else 'fixture';item_modes={}
-        if not any(r['value'] is not None and r['stage'] is not None for r in context['facts']):
+        if not any(observed_problem(r) for r in context['facts']):
             output=templates(context);mode='template_fallback';reason='regional_evidence_unavailable'
         else:
             try:
@@ -229,11 +248,23 @@ def generate(designer,owner_id,run_id,scope,dongs,proposals,contexts=None):
 
 def failed_run(service,run_id,scenario):
     payload=scenario['payload']
-    if payload.get('policy_proposal_version')!='three-1':return
-    from backend.tools.segments_v3 import load_segments
-    task=payload['task'];rows,_=load_segments(service.settings)
-    known={r.dong_cd:r.dong_nm for r in rows if r.sgg==task['sgg'] and (not task.get('dong_cd') or r.dong_cd==task['dong_cd'])}
-    scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],'target_groups':[task['sex']+'/'+task['age_group']],'synthetic_future':bool(task.get('future_id'))}
+    if payload.get('policy_proposal_version') not in ('three-1','regional-policy-2'):return
+    task=payload['task']
+    if payload.get('workflow_version')=='regional-workflow-2':
+        from backend.tools.neighborhoods import group_analysis_v4
+        data=group_analysis_v4(service.settings,task['card_week'])
+        rows=[row for row in data['segments'] if row['sgg']==task['sgg'] and (not task.get('dong_cd') or row['dong_cd']==task['dong_cd'])]
+        known={row['dong_cd']:row['dong_nm'] for row in rows}
+        scope={'sgg':task['sgg'],'ym':task['card_week'][:7],'as_of':task['as_of'],
+               'target_groups':[task['sex']+'/'+task['source_age_band']],
+               'selected_week':task['card_week'],'synthetic_future':False}
+    else:
+        from backend.tools.segments_v3 import load_segments
+        rows,_=load_segments(service.settings)
+        known={r.dong_cd:r.dong_nm for r in rows if r.sgg==task['sgg'] and (not task.get('dong_cd') or r.dong_cd==task['dong_cd'])}
+        scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],
+               'target_groups':[task['sex']+'/'+task['age_group']],'synthetic_future':bool(task.get('future_id'))}
+    if payload.get('policy_context_version'):scope.update(policy_context_version=payload['policy_context_version'],selected_week=task.get('card_week'))
     service.policy_designer.propose(run_id,run_id,scope,[{'dong_cd':k,'dong_nm':v} for k,v in known.items()],[])
 
 
@@ -257,13 +288,19 @@ def complete_batch(service,body):
             try:proposals.append(service.approval(child['run_id'])['proposal'])
             except KeyError:pass
     task=body['task'];scope={'sgg':task['sgg'],'ym':task['ym'],'as_of':task['as_of'],
-                            'target_groups':[c['sex']+'/'+c['age_group'] for c in body['children']],'synthetic_future':False}
-    sets=service.policy_designer.propose(owner,identifier,scope,body['dongs'],proposals)
+                            'target_groups':[c['sex']+'/'+c.get('source_age_band',c['age_group']) for c in body['children']],
+                            'selected_week':task.get('card_week'),'synthetic_future':False}
+    if body.get('policy_context_version'):scope['policy_context_version']=body['policy_context_version']
+    sets=service.policy_designer.propose(owner,identifier,scope,body['dongs'],proposals,deadline=time.time()+120) if body.get('policy_context_version') else service.policy_designer.propose(owner,identifier,scope,body['dongs'],proposals)
     with service.store.connection(write=True) as db:
         latest=json.loads(db.execute('SELECT body FROM regional_batches WHERE id=?',(owner,)).fetchone()[0])
         service.update_run(db,identifier,status='cancelled' if latest['cancelled'] else 'completed',ended_at=utcnow())
         if latest['cancelled']:return
         latest['policy_proposals']={'owner_id':owner,'dong_count':len(sets),'fallback_count':sum(any(a['generation_mode']=='template_fallback' for a in s['alternatives']) for s in sets),'status':'completed_with_fallback' if any(a['generation_mode']=='template_fallback' for s in sets for a in s['alternatives']) else 'completed'}
+        if body.get('policy_context_version'):
+            holds=sum(s.get('status')=='needs_evidence' for s in sets)
+            latest['policy_proposals'].update(evidence_hold_count=holds,reuse_count=sum(s.get('status')=='reuse_existing' for s in sets),generation_rule='conditional_three',
+                actual_counts={s['dong_cd']:len(s['alternatives']) for s in sets},status='completed_with_evidence_hold' if holds else 'completed')
         db.execute('UPDATE regional_batches SET body=? WHERE id=?',(json.dumps(latest,ensure_ascii=False),owner))
 
 

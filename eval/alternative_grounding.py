@@ -16,7 +16,7 @@ async def evaluate(store,settings,owner,other_ledgers=()):
     from ragas.metrics import Faithfulness
     with store.connection() as db:
         sets=[json.loads(r[0]) for r in db.execute('SELECT body FROM policy_alternative_sets WHERE owner_id=? ORDER BY dong_cd',(owner,))]
-        calls=[json.loads(r[0]) for r in db.execute("SELECT body FROM llm_calls WHERE role='policy_alternatives' AND status='ok'")]
+        calls=[{**json.loads(r[1]),'ledger_run_id':r[0]} for r in db.execute("SELECT run_id,body FROM llm_calls WHERE role='policy_alternatives' AND status='ok'")]
     if not sets:raise ValueError('no policy alternatives')
     report=quality(sets);rows=[];judge=None
     with store.connection(write=True) as db:
@@ -26,8 +26,11 @@ async def evaluate(store,settings,owner,other_ledgers=()):
         db.execute('INSERT INTO alternative_grounding VALUES (?,?,?)',(owner,report['input_hash'],json.dumps({'state':'pending','rows':[],'input_hash':report['input_hash'],'limitation':'평가 진행 중 또는 중단됨. 자동 유료 재시도하지 않습니다.'})))
     try:
         for body in sets:
-            expected=model_context(body['evidence'])
-            call=next((c for c in calls if c.get('mode')=='live' and c.get('input')==expected),None)
+            if body.get('proposal_version')=='regional-policy-2':
+                call=next((c for c in calls if c.get('mode')=='live' and c['ledger_run_id']==body.get('generation_run_id') and digest(c.get('input'))==body.get('model_input_hash')),None)
+            else:
+                expected=model_context(body['evidence'])
+                call=next((c for c in calls if c.get('mode')=='live' and c.get('input')==expected),None)
             for alternative in body['alternatives']:
                 eligible=next(r['grounding_eligible'] for r in report['rows'] if r['alternative_id']==alternative['id'])
                 row={'alternative_id':alternative['id'],'value':None,'state':'not_evaluated','reason':'no_recorded_grounded_explanation'}

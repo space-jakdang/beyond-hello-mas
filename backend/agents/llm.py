@@ -34,6 +34,9 @@ def fake(role, payload):
                               'reason':'fake: 관측 욕구 가설과 필수 필터를 통과한 조건부 후보'} for r in payload['choices']],
                 'summary':'fake: 담당자 확인이 필요한 지역 자원 제안입니다.'}
     if role == 'policy_alternatives':
+        if payload.get('design_version')=='pinpoint-1':
+            from backend.policy.pinpoint import fixture_design
+            return {'action':'draft','information_requests':[],**fixture_design(payload)}
         from backend.policy.alternatives import templates
         return templates(payload)
     if role == 'policy_design':
@@ -75,7 +78,7 @@ def fake(role, payload):
 
 
 def validate_output(role, output, payload):
-    parsed = SCHEMAS[role].model_validate(output)
+    parsed = schema_for(role,payload).model_validate(output)
     if role == 'recommendations':
         candidates = {r['id']: r for r in payload['candidates']}
         ids = [r.resource_id for r in parsed.items]
@@ -92,6 +95,13 @@ def validate_output(role, output, payload):
     return parsed
 
 
+def schema_for(role,payload):
+    if role=='policy_alternatives' and payload.get('design_version')=='pinpoint-1':
+        from backend.policy.alternative_contracts import PinpointDecision
+        return PinpointDecision
+    return SCHEMAS[role]
+
+
 class Agents:
     def __init__(self, store, settings):
         self.store, self.settings = store, settings
@@ -105,7 +115,7 @@ class Agents:
         prompt = (PROMPTS / f'{role}.txt').read_text()
         model = self.settings.openai_model if self.settings.llm_mode == 'live' else 'fake-v1'
         call_key = digest({'role': role, 'payload': payload, 'prompt': prompt, 'model': model})
-        schema = SCHEMAS[role]
+        schema = schema_for(role,payload)
         metadata = {'role': role, 'model': model, 'prompt_hash': digest(prompt), 'prompt': prompt,
                     'input': payload, 'mode': self.settings.llm_mode, 'retry': 0}
         output_limit = self.settings.policy_design_max_output_tokens if role == 'policy_alternatives' else self.settings.llm_max_output_tokens
@@ -132,6 +142,8 @@ class Agents:
             batch_table=db.execute("SELECT 1 FROM sqlite_master WHERE name='regional_batch_children'").fetchone()
             parent=db.execute('SELECT batch_id FROM regional_batch_children WHERE run_id=?',(run_id,)).fetchone() if batch_table else None
             if parent:
+                batch=db.execute('SELECT body FROM regional_batches WHERE id=?',(parent[0],)).fetchone()
+                if not batch or json.loads(batch[0])['cancelled']:raise ValueError('cancelled')
                 run_spent=db.execute('SELECT COALESCE(SUM(reserve_usd),0) FROM llm_calls WHERE run_id IN (SELECT run_id FROM regional_batch_children WHERE batch_id=?)',(parent[0],)).fetchone()[0]
             over_run_budget = self.settings.llm_run_budget_usd is not None and run_spent + reserve > self.settings.llm_run_budget_usd
             if count >= self.settings.llm_max_calls or (reserve and (cumulative_spent + reserve > self.settings.llm_budget_usd or over_run_budget)):

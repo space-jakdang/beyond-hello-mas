@@ -10,6 +10,28 @@ def summary(assessment):
     from backend.tools.statistical_sources import readiness
     from backend.tools.policy_insights import insights
     rows=assessment['segments']
+    if assessment['metadata'].get('analysis_version')=='v4':
+        groups={}
+        for row in rows:
+            key=(row['sgg'],row['sex'],row['source_age_band'])
+            groups.setdefault(key,[]).append(row)
+        distributions=[{'sgg':key[0],'sex':key[1],'source_age_band':key[2],
+                        'n':len(values),'stage_counts':dict(sorted(Counter(str(r['stage']) if r['stage'] is not None else str(r['source_stage']) for r in values).items())),
+                        'assessment_counts':dict(sorted(Counter(r['assessment_status'] for r in values).items())),
+                        'card_alarm_counts':dict(sorted(Counter(r['card_alarm_status'] for r in values).items())),
+                        'scope':'within-source-age-and-sex; stage counts only'}
+                       for key,values in sorted(groups.items())]
+        blocked=[r['evidence_id'] for r in rows if r['assessment_status']!='assessed']
+        return {'tool':'summary','tool_version':'regional-statistics-v4','total':len(rows),
+                'observed':len(rows)-len(blocked),'missing':len(blocked),
+                'missing_rate':len(blocked)/len(rows) if rows else None,
+                'stage_counts':dict(sorted(Counter(str(r['stage']) if r['stage'] is not None else str(r['source_stage']) for r in rows).items())),
+                'distributions':distributions,'blocked_evidence_ids':blocked,
+                'input_hash':assessment['metadata']['input_hash'],'causal_claim':False,
+                'data_readiness':readiness(assessment),'insights':insights(assessment),
+                'confidence_interval':None,'cross_region_comparable':False,
+                'continuous_index_summary':None,'period_aggregate':True,
+                'policy_needs':policy_needs(assessment)}
     valid=[r for r in rows if r['value'] is not None and isfinite(r['value']) and r['stage'] is not None]
     groups={}
     for row in valid:
@@ -29,6 +51,27 @@ def summary(assessment):
 
 
 def trend(settings,assessment):
+    if assessment['metadata'].get('analysis_version')=='v4':
+        grouped={}
+        for row in assessment.get('weekly_observations',[]):
+            grouped.setdefault(row['week'],[]).append(row)
+        points=[]
+        for week,rows in sorted(grouped.items()):
+            observed=[row for row in rows if row['baseline_status']=='observed']
+            statuses={row['baseline_status'] for row in rows}
+            points.append({'week':week,'alarm_stage':max((row['alarm_stage'] for row in observed),default=None),
+                           'baseline_status':'observed' if statuses=={'observed'} else 'unavailable' if not observed else 'partial',
+                           'source_age_bands':sorted(row['source_age_band'] for row in rows),
+                           'v_stages':[row['v_stage'] for row in rows],
+                           'n_stages':[row['n_stage'] for row in rows]})
+        series=[{'cohort_id':f"{assessment['task']['sgg']}/{assessment['task']['sex']}/{assessment['task']['source_age_band']}",
+                 'points':points}] if points else []
+        output={'tool':'trend','tool_version':'regional-statistics-v4','status':'available' if points else 'unavailable',
+                'reason':None if points else 'no_weekly_card_observations','scope':'weekly card alarms; no monthly stage series',
+                'series':series,'data_mode':assessment['data_mode'],'input_hash':digest(assessment.get('weekly_observations',[])),
+                'forecast':False,'period_aggregate':True}
+        output['output_hash']=digest(output)
+        return output
     task=assessment['task']
     if task.get('future_id'):
         from backend.future import scenario_rows
@@ -62,6 +105,16 @@ def trend(settings,assessment):
 
 
 def source_check(assessment):
+    if assessment['metadata'].get('analysis_version')=='v4':
+        return {'tool':'source_check','tool_version':'regional-statistics-v4','items':[
+            {'evidence_id':r['evidence_id'],'source_file':r['source_file'],'source_period':r['source_period'],
+             'source_age_band':r['source_age_band'],'source_stage':r['source_stage'],
+             'assessment_status':r['assessment_status'],'base_stage':r['base_stage'],
+             'final_stage':r['final_stage'],'selected_week':r['card_week'],
+             'card_source_age_bands':r['card_source_age_bands'],'card_evidence':r['card_evidence'],
+             'card_alarm_status':r['card_alarm_status'],'stage_missing':r['final_stage'] is None,
+             'status':'observed' if r['assessment_status']=='assessed' else r['assessment_status']}
+            for r in assessment['segments']]}
     return {'tool':'source_check','tool_version':'regional-statistics-1','items':[
         {'evidence_id':r['evidence_id'],'source_file':r['source_file'],'source_period':r['source_period'],
          'source_bands':r['source_bands'],'flags':r.get('flags',[]),'value_missing':r['value'] is None,
@@ -69,6 +122,9 @@ def source_check(assessment):
 
 
 def run_tool(name,settings,assessment):
+    if name in ('regional_profile','regional_comparison'):
+        from backend.context.analysis import context_tool
+        return context_tool(name,assessment)
     if name=='summary':return summary(assessment)
     if name=='trend':return trend(settings,assessment)
     if name=='source_check':return source_check(assessment)
@@ -80,6 +136,11 @@ def run_tool(name,settings,assessment):
 
 
 def sensitivity(assessment):
+    if assessment['metadata'].get('analysis_version')=='v4':
+        return {'tool':'sensitivity','tool_version':'regional-statistics-v4','status':'not_applicable',
+                'reason':'ordinal stage input has no continuous measure for numeric perturbation',
+                'items':[{'evidence_id':r['evidence_id'],'stages':None,'base_stage_stable':None}
+                         for r in assessment['segments']]}
     from backend.tools.region_stage import level_band,youth_stage
     items=[]
     for row in assessment['segments']:
@@ -101,7 +162,7 @@ def policy_needs(assessment):
     cohorts=[];profiles=[]
     stable_by_id={r['evidence_id']:r['base_stage_stable'] for r in sensitivity(assessment)['items']}
     for key,rows in sorted(groups.items()):
-        valid=[r for r in rows if r['stage'] is not None and r['value'] is not None and isfinite(r['value'])]
+        valid=[r for r in rows if r['stage'] is not None and (r.get('assessment_status')=='assessed' if assessment['metadata'].get('analysis_version')=='v4' else r['value'] is not None and isfinite(r['value']))]
         stages=[r['stage'] for r in valid];n=len(valid);counts=Counter();pairs=Counter();cohort_id=digest(key)
         for row in rows:
             observed=row in valid;profile=need_profile(row);needs=profile['needs'] if observed else []
@@ -109,7 +170,7 @@ def policy_needs(assessment):
             for i,first in enumerate(needs):
                 for second in needs[i+1:]:pairs[(first,second)]+=1
             profiles.append({'evidence_id':row['evidence_id'],'cohort_id':cohort_id,'dong_nm':row['dong_nm'],'comparable_segments':n,
-                'priority_midrank':(sum(s<row['stage'] for s in stages)+.5*sum(s==row['stage'] for s in stages))/n if observed and n>=3 else None,
+                'priority_midrank':(sum(s<row['stage'] for s in stages)+.5*sum(s==row['stage'] for s in stages))/n if observed and n>=3 and assessment['metadata'].get('analysis_version')!='v4' else None,
                 'priority_review':None,'priority_criterion_status':'not_established','base_stage_stable':stable_by_id[row['evidence_id']],
                 **profile,'needs':needs,'need_basis':profile['need_basis'] if observed else 'insufficient_evidence',
                 'measured_components':{},
